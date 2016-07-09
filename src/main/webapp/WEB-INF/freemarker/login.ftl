@@ -8,12 +8,7 @@
 	<title>Login Form</title>
 </head>
 <body>
-	
 	<div class="container">
-		<div class="jumbotron">
-	  		 <h1>University Site</h1>
-		    <p>In this site we can find students from all groups in our university</p>
-	  	</div>
 	  	<div class="panel panel-default">
 			<div class="panel-heading">
 				<a href = "<@spring.url "/registration"/>" class="btn btn-info" role="button">Sign In</a>
@@ -32,6 +27,14 @@
 										<@spring.message "login.badcredentials"/>
 									</div>
 								</#if> 
+								<#if (param.error)??>
+									<p>Invalid username or password
+									</p>
+								</#if>
+								<#if (param.logout)??>
+									<p> You have been logget out
+									</p>
+								</#if>
 								<input type = "text" id= "userLogin" name = "username"
 								class="form-control" placeholder = "Login" />
 								<br/>

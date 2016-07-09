@@ -1,5 +1,6 @@
 package org.dream.university.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -10,6 +11,7 @@ import org.dream.university.model.User;
 import org.dream.university.service.StudentService;
 import org.dream.university.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
@@ -27,9 +29,6 @@ public class InitController {
 	@Autowired
 	private UserService userService;
 	
-	@Autowired
-	private StudentService studentService;
-	
 	@InitBinder
 	public void initBinder(WebDataBinder dataBinder){
 		dataBinder.registerCustomEditor(String.class, "studentGroup", new StudentNameEditor());
@@ -40,6 +39,12 @@ public class InitController {
 		return new ModelAndView("login");
 	}
 	
+	@RequestMapping(value = "/bulbular", method = RequestMethod.GET)
+	public ModelAndView getAdminForm(){
+		return new ModelAndView("bulbular");
+	}
+	
+	
 	@RequestMapping(value = "/registration",method = RequestMethod.GET)
 	public ModelAndView getRegistrationForm(){
 		ModelAndView model = new ModelAndView("registration");
@@ -48,34 +53,6 @@ public class InitController {
 		return model;
 	}
 	
-	@RequestMapping(value = "/students",method = RequestMethod.GET)
-	public ModelAndView getGroupForm(){
-		ModelAndView model = new ModelAndView("searchStudents");
-		Student student = new Student();
-		model.addObject("student", student);
-		return model;
-	}
-	
-	
-	@RequestMapping(value = "/getStudents",method = RequestMethod.POST)
-	public ModelAndView getStudents(@Valid @ModelAttribute("student") Student student,
-								BindingResult result){
-		if(result.hasErrors()){
-			return new ModelAndView("searchStudents");
-		}
-		List<Student> students = studentService.getStudentOfGroup(student);
-		if(!students.isEmpty()){
-			ModelAndView studentsTableView = new ModelAndView("searchStudents");
-			studentsTableView.addObject("studentsList", students);
-			studentsTableView.addObject("groupName", student.getStudentGroup());
-			return studentsTableView;
-		}else{
-			ModelAndView messageErrorView = new ModelAndView("searchStudents");
-			messageErrorView.addObject("studentsList", students);
-			return messageErrorView;
-		}
-		
-	}
 	
 	@RequestMapping(value = "/registrationConfirm",method = RequestMethod.POST)
 	public ModelAndView registration(@Valid @ModelAttribute("user") User user,

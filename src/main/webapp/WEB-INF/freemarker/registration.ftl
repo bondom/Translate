@@ -25,24 +25,24 @@
 							<#if resultRegistration??>
 								<div class="alert alert-danger">${resultRegistration}</div>
 							</#if>
-							<@spring.bind "user.userLogin"/>
-							<input type = "text" id= "userLogin" name="${(spring.status.expression)!"userLogin"}"
+							<@spring.bind "user.login"/>
+							<input type = "text" id= "login" name="${(spring.status.expression)!"login"}"
 							value = "${spring.status.value!""}" class="form-control" placeholder = "Login" />
 							<br>
 							<#list spring.status.errorMessages as error>
 								<div class="alert alert-warning">${error}</div>
 							</#list>
 							
-							<@spring.bind "user.userPassword"/>
-							<input type = "password" id = "userPassword" name = "${(spring.status.expression)!"userPassword"}" 
+							<@spring.bind "user.password"/>
+							<input type = "password" id = "password" name = "${(spring.status.expression)!"password"}" 
 							class="form-control" placeholder = "Password"/>
 							<br>
 							<#list spring.status.errorMessages as error>
 								<div class="alert alert-warning">${error}</div>
 							</#list>
 							
-							<@spring.bind "user.userEmail"/>
-							<input type = "text" id = "userEmail" name = "${(spring.status.expression)!"userEmail"}" 
+							<@spring.bind "user.email"/>
+							<input type = "text" id = "userEmail" name = "${(spring.status.expression)!"email"}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "Email"/>
 							</br>
 							<#list spring.status.errorMessages as error>

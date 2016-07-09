@@ -17,7 +17,10 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
 import org.springframework.core.env.Environment;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -103,6 +106,13 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 		messageSource.setBasename("/WEB-INF/propertyFiles/messagesource");
 		messageSource.setDefaultEncoding("UTF-8");
 		return messageSource;
+	}
+	
+	@Bean(name = "multipartResolver")
+	public MultipartResolver getMultipartResolver(){
+		CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+		multipartResolver.setMaxUploadSize(100000);
+		return multipartResolver;
 	}
 	
 	@Override

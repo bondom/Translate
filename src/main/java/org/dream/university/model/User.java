@@ -9,6 +9,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -21,13 +22,13 @@ import org.springframework.stereotype.Component;
 @Entity
 @NamedQueries({
 		@NamedQuery(name =  "userByLoginAndPassword", 
-					query = "from User user where user.userLogin = :userLogin and user.userPassword = :userPassword"),
+					query = "from User user where user.login = :login and user.password = :password"),
 		@NamedQuery(name =  "userByLogin",
-					query = "from User user where user.userLogin = :userLogin"),
+					query = "from User user where user.login = :login"),
 		@NamedQuery(name =  "userByEmail",
-					query = "from User user where user.userEmail = :userEmail")
+					query = "from User user where user.email = :email")
 })
-@Table(name = "USER_UNIVERSITY_SITE")
+@Table(name = "USER_UPDATED_SITE")
 @Component
 public class User implements Serializable{
 	@Id
@@ -37,30 +38,35 @@ public class User implements Serializable{
 	
 	@Size(min = 4,max = 15)
 	@Column(name = "USER_LOGIN")
-	private String userLogin;
+	private String login;
 	
 	@Size(min = 4,max = 15)
 	@Column(name = "USER_PASSWORD")
-	private String userPassword;
+	private String password;
 
+	@Lob
+	@Column(name = "USER_IMAGE")
+	private byte[] image;
+	
 	@Email
 	@NotEmpty
 	@Column(name = "USER_EMAIL")
-	private String userEmail;
+	private String email;
 	
 	
-	@Column(name = "ROLE")
+	@Column(name = "USER_ROLE")
 	private String role;
 
 	@Enumerated(EnumType.STRING)
-	private UserStatus userStatus;
+	@Column(name = "USER_STATUS")
+	private UserStatus status;
 
 	public User(){}
-	public User(int id,String userLogin,String userEmail,String userPassword){
+	public User(int id,String login,String email,String password){
 		this.id = id;
-		this.userLogin = userLogin;
-		this.userPassword = userPassword;
-		this.userEmail = userEmail;
+		this.login = login;
+		this.email= email;
+		this.password = password;
 	}
 	
 	public int getId() {
@@ -69,30 +75,31 @@ public class User implements Serializable{
 	public void setId(int id) {
 		this.id = id;
 	}
-	public String getUserEmail() {
-		return userEmail;
+	
+	public String getLogin() {
+		return login;
 	}
-	public void setUserEmail(String userEmail) {
-		this.userEmail = userEmail;
+	public void setLogin(String login) {
+		this.login = login;
 	}
-	public String getUserLogin() {
-		return userLogin;
+	public String getPassword() {
+		return password;
 	}
-	public void setUserLogin(String userLogin) {
-		this.userLogin = userLogin;
+	public void setPassword(String password) {
+		this.password = password;
 	}
-	public String getUserPassword() {
-		return userPassword;
+	public String getEmail() {
+		return email;
 	}
-	public void setUserPassword(String userPassword) {
-		this.userPassword = userPassword;
+	public void setEmail(String email) {
+		this.email = email;
 	}
 	
-	public UserStatus getUserStatus() {
-		return userStatus;
+	public UserStatus getStatus() {
+		return status;
 	}
-	public void setUserStatus(UserStatus userStatus) {
-		this.userStatus = userStatus;
+	public void setStatus(UserStatus status) {
+		this.status = status;
 	}
 	public String getRole() {
 		return role;
@@ -101,11 +108,17 @@ public class User implements Serializable{
 		this.role = role;
 	}
 	
+	public byte[] getImage() {
+		return image;
+	}
+	public void setImage(byte[] image) {
+		this.image = image;
+	}
 	@Override
 	public boolean equals(Object obj){
 		User user = (User)obj;
 		return ((this.getId() ==user.getId())&&
-				(this.getUserLogin() == user.getUserLogin()));
+				(this.getLogin() == user.getLogin()));
 	}
 	
 		
