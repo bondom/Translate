@@ -40,7 +40,7 @@ public class User implements Serializable{
 	@Column(name = "USER_LOGIN")
 	private String login;
 	
-	@Size(min = 4,max = 15)
+	@Size(min = 6, max = 20)
 	@Column(name = "USER_PASSWORD")
 	private String password;
 
@@ -61,13 +61,11 @@ public class User implements Serializable{
 	@Column(name = "USER_STATUS")
 	private UserStatus status;
 
-	@NotEmpty
-	@Size(max = 15)
+	@Size(min = 3, max = 15)
 	@Column(name = "NAME")
 	private String name;
 	
-	@NotEmpty
-	@Size(max = 15)
+	@Size(min = 3, max = 15)
 	@Column(name = "SURNAME")
 	private String surname;
 	

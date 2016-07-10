@@ -17,6 +17,8 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 
@@ -37,7 +39,9 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 	
 	@Autowired
 	public void configureGlobal(AuthenticationManagerBuilder auth, UserDetailsService uds) throws Exception{
-		auth.userDetailsService(uds);
+		auth.userDetailsService(uds)
+			.passwordEncoder(bcryptEncoder());
+		
 	}
 		
 	
@@ -68,7 +72,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 				
 	}
 		
-/*	@Bean(name = "authenticationManager")
+	/*@Bean(name = "authenticationManager")
 	@Autowired
 	public ProviderManager getProviderManager(DaoAuthenticationProvider daoAuthenticationProvider){
 		List<AuthenticationProvider> providers = new ArrayList<>();
@@ -79,10 +83,16 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 		
 	@Bean
 	@Autowired
-	public DaoAuthenticationProvider daoAuthenticationProvider(UserDetailsService userDetailsService){
+	public DaoAuthenticationProvider daoAuthenticationProvider(
+			UserDetailsService userDetailsService){
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
 		provider.setUserDetailsService(userDetailsService);
+		provider.setPasswordEncoder(new BCryptPasswordEncoder());
 		return provider;
-	}*/
-		
+	}
+		*/
+	@Bean
+	public PasswordEncoder bcryptEncoder(){
+		return new BCryptPasswordEncoder();
+	}
 }

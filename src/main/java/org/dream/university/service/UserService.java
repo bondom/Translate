@@ -27,7 +27,7 @@ public interface UserService {
 	 * Gets user from db by login
 	 * 
 	 * @param login - login of user
-	 * @return registered user, or {code.null} if user with that login
+	 * @return registered user, or {code null} if user with that login
 	 * is not registered
 	 */
 	public User getUserByLogin(String login);
@@ -36,7 +36,7 @@ public interface UserService {
 	 * Gets user from db by email
 	 * 
 	 * @param email - email of user
-	 * @return registered user, or {code.null} if user with that email
+	 * @return registered user, or {code null} if user with that email
 	 * is not registered
 	 */
 	public User getUserByEmail(String email);
@@ -47,7 +47,7 @@ public interface UserService {
 	 * @param login - login of existed user,
 	 * usually is retrieving from {Principal.class} object 
 	 * @param avatar
-	 * @return updated user
+	 * @return updated user, never {@code null}
 	 */
 	public User updateAvatar(String login,byte[] avatar);
 }
