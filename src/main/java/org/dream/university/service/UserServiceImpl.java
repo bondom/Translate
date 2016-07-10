@@ -49,25 +49,22 @@ public class UserServiceImpl implements UserService, UserDetailsService{
 		
 	}
 	@Override
-	public User getUser(String login) {
-		User authenticatedUser= userDao.getUserByLogin(login);
-		return authenticatedUser;
+	public User getUserByLogin(String login) {
+		User userFromDB = userDao.getUserByLogin(login);
+		return userFromDB;
 	}
 	
 	@Override
-	public User update(String login, byte[] image){
+	public User getUserByEmail(String email){
+		User userFromDB = userDao.getUserByEmail(email);
+		return userFromDB;
+	}
+	@Override
+	public User updateAvatar(String login, byte[] image){
 		User userFromDB = userDao.getUserByLogin(login);
-		if(userFromDB == null){
-			/**
-			 * «аглушка, помен€€€ть!!!
-			 */
-			System.out.println("HREEEN");
-			return null;
-		}else{
-			userFromDB.setImage(image);
-			User savedUser =userDao.update(userFromDB);
-			return savedUser;
-		}
+		userFromDB.setImage(image);
+		User savedUser = userDao.update(userFromDB);
+		return savedUser;
 		
 	}
 
@@ -93,6 +90,15 @@ public class UserServiceImpl implements UserService, UserDetailsService{
 		}else{
 			throw new UsernameNotFoundException("Invalid user login");
 		}
+	}
+	@Override
+	public User editUserProfile(User user, User newUser) {
+		user.setName(newUser.getName());
+		user.setPhoneNumber(newUser.getPhoneNumber());
+		user.setSurname(newUser.getSurname());
+		user.setEmail(newUser.getEmail());
+		User updatedUser = userDao.update(user);
+		return updatedUser;
 	}
 
 }

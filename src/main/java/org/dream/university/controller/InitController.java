@@ -69,7 +69,7 @@ public class InitController {
 			//Registration failed
 			ModelAndView registrationView = new ModelAndView("registration");
 			registrationView.addObject("resultRegistration", 
-									"User with the same login or password "
+									"User with the same login or email "
 									+ "is registered in system already");
 			return registrationView;
 		}

@@ -32,39 +32,100 @@ public class LoggedUserController {
 	@Autowired
 	private StudentService studentService;
 	
+	/**
+	 * Returns ModelAndView object with user's profile view
+	 * 
+	 * @param user
+	 * @return user's profile
+	 * @throws UnsupportedEncodingException
+	 */
 	@RequestMapping(value = "/profile", method = RequestMethod.GET)
-	public ModelAndView profile(){
-		return new ModelAndView("/personal/profile");
-	}
-	
-	@RequestMapping(value = "/profileInfo", method = RequestMethod.GET)
-	public ModelAndView info(Principal user) throws UnsupportedEncodingException{
-		User authenticatedUser = userService.getUser(user.getName());
+	public ModelAndView profile(Principal user) throws UnsupportedEncodingException{
+		User userFromDB = userService.getUserByLogin(user.getName());
 		ModelAndView model = new ModelAndView("/personal/profile");
-		model.addObject("authenticatedUser", authenticatedUser);
-		if(authenticatedUser.getImage() == null){
+		model.addObject("user", userFromDB);
+		if(userFromDB.getImage() == null){
 			System.out.println("OOPS");
+			/**
+			 * Поменять!!!
+			 */
 		}else{
-			model.addObject("image", encoding64Image(authenticatedUser.getImage()));
+			model.addObject("image", convertImageForRendering(userFromDB.getImage()));
 		}
 		return model;
 	}
 	
-	@RequestMapping(value = "/settings",method = RequestMethod.GET)
-	public ModelAndView settings(){
-		return new ModelAndView("/personal/settings");
+	/**
+	 * @param user
+	 * @return page for editing a user's profile
+	 */
+	@RequestMapping(value = "/edit",method = RequestMethod.GET)
+	public ModelAndView editPage(Principal user){
+		User userFromDB = userService.getUserByLogin(user.getName());
+		ModelAndView model = new ModelAndView("/personal/edit");
+		model.addObject("user", userFromDB);
+		return model;
 	}
-	@RequestMapping(value = "/save",method = RequestMethod.POST)
-	public ModelAndView saveSettings(Principal user, 
+	
+	/**
+	 * Checks if new email exist and
+	 * if some errors exist returns initial page(for editing user's profile)
+	 * 
+	 * If no errors exist updates the user and returns user's profile page
+	 * @param newUser - {User.class} object with changes made by user
+	 * @param result
+	 * @param user - {Principal.class} object with name equals to {User.class} object's login
+	 * @return
+	 */
+	@RequestMapping(value = "/saveEdits",method = RequestMethod.POST)
+	public ModelAndView saveEdits(
+			@Valid @ModelAttribute("user") User newUser,
+			BindingResult result,
+			Principal user){
+		if(result.hasErrors()){
+			return new ModelAndView("/personal/edit");
+		}else if(!emailIsUnique(newUser.getEmail())){
+			ModelAndView model = new ModelAndView("/personal/edit");
+			model.addObject("emailExists","Such email is registered in system already");
+			return model;
+		}else{
+			//All data entered by user is valid and we can save refreshed user's profile
+			User userFromDB = userService.getUserByLogin(user.getName());
+			User refreshedUser = userService.editUserProfile(userFromDB, newUser);
+			ModelAndView browseRefreshedProfile = new ModelAndView("/personal/profile");
+			browseRefreshedProfile.addObject("user", refreshedUser);
+			return browseRefreshedProfile;
+		}
+	}
+	
+	/**
+	 * Saves new avatar in DB
+	 * 
+	 * @param user - {Principal.class} object with name equals to {User.class} object's login
+	 * @param file - file chosen to be a avatar
+	 * @return user's profile page or page for editing profile if no file is chosen
+	 * or file is not image
+	 */
+	@RequestMapping(value = "/saveAvatar",method = RequestMethod.POST)
+	public ModelAndView saveAvatar(Principal user, 
 						@RequestParam("file") MultipartFile file){
 		if(!file.isEmpty()){
 			try {
-				byte[] image = file.getBytes();
-				User updatedUser = userService.update(user.getName(), image);
-				ModelAndView model = new ModelAndView("/personal/profile");
-				model.addObject("authenticatedUser", updatedUser);
-				model.addObject("image", encoding64Image(updatedUser.getImage()));
-				return model;
+				String contentType = file.getContentType();
+				if(contentType.startsWith("image/")){
+					byte[] avatar = file.getBytes();
+					User updatedUser = userService.updateAvatar(user.getName(), avatar);
+					ModelAndView model = new ModelAndView("/personal/profile");
+					model.addObject("user", updatedUser);
+					model.addObject("image", convertImageForRendering(updatedUser.getImage()));
+					return model;
+				}else{
+					User userFromDB = userService.getUserByLogin(user.getName());
+					ModelAndView model = new ModelAndView("/personal/edit");
+					model.addObject("user", userFromDB);
+					model.addObject("wrongFile", "Please, choose image.");
+					return model;
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -74,9 +135,29 @@ public class LoggedUserController {
 				return new ModelAndView("/personal/exception");
 			}
 		}else{
-			return new ModelAndView("/personal/settings");
+			ModelAndView model = new ModelAndView("/personal/edit");
+			User userFromDB = userService.getUserByLogin(user.getName());
+			model.addObject("user", userFromDB);
+			return model;
 		}
 		
+	}
+	
+	private String convertImageForRendering(byte[] image) throws UnsupportedEncodingException{
+		byte[] encodeBase64 = Base64.encodeBase64(image); 
+		String base64Encoded = new String(encodeBase64,"UTF-8");
+		return base64Encoded;
+	}
+	
+	private boolean emailIsUnique(String email){
+		User userFromDB = userService.getUserByEmail(email);
+		if(userFromDB==null){
+			//such email doesn't exist
+			return true;
+		}else{
+			//user with the same email is registered in system already
+			return false;
+		}
 	}
 	
 	@RequestMapping(value = "/search",method = RequestMethod.GET)
@@ -107,10 +188,5 @@ public class LoggedUserController {
 		
 	}
 	
-	public String encoding64Image(byte[] image) throws UnsupportedEncodingException{
-		byte[] encodeBase64 = Base64.encodeBase64(image); 
-		String base64Encoded = new String(encodeBase64,"UTF-8");
-		return base64Encoded;
-	}
 	
 }

@@ -42,8 +42,32 @@
 							</#list>
 							
 							<@spring.bind "user.email"/>
-							<input type = "text" id = "userEmail" name = "${(spring.status.expression)!"email"}" 
+							<input type = "text" id = "email" name = "${(spring.status.expression)!"email"}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "Email"/>
+							</br>
+							<#list spring.status.errorMessages as error>
+								<div class="alert alert-warning">${error}</div>
+							</#list>
+
+							<@spring.bind "user.name"/>
+							<input type = "text" id = "name" name = "${(spring.status.expression)!"name"}" 
+							value = "${spring.status.value!""}" class="form-control" placeholder = "Name"/>
+							</br>
+							<#list spring.status.errorMessages as error>
+								<div class="alert alert-warning">${error}</div>
+							</#list>
+
+							<@spring.bind "user.surname"/>
+							<input type = "text" id = "surname" name = "${(spring.status.expression)!"surname"}" 
+							value = "${spring.status.value!""}" class="form-control" placeholder = "Surname"/>
+							</br>
+							<#list spring.status.errorMessages as error>
+								<div class="alert alert-warning">${error}</div>
+							</#list>
+
+							<@spring.bind "user.phoneNumber"/>
+							<input type = "text" id = "phoneNumber" name = "${(spring.status.expression)!"phoneNumber"}" 
+							value = "${spring.status.value!""}" class="form-control" placeholder = "Phone number"/>
 							</br>
 							<#list spring.status.errorMessages as error>
 								<div class="alert alert-warning">${error}</div>

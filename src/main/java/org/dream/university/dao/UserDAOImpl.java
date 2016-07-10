@@ -75,13 +75,4 @@ public class UserDAOImpl implements UserDAO{
 		return user;
 	}
 	
-/*	public User setBlobImage(String login, MultipartFile file){
-		User userFromDB = getUserByLogin(login);
-		Session session = sessionFactory.getCurrentSession();
-		session.doWork(connection ->{
-			userFromDB.setImage(connection.createBlob());
-			userFromDB.getImage().setBytes(1,file.getBytes());
-		});
-		return update(userFromDB);
-	}*/
 }

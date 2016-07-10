@@ -61,6 +61,19 @@ public class User implements Serializable{
 	@Column(name = "USER_STATUS")
 	private UserStatus status;
 
+	@NotEmpty
+	@Size(max = 15)
+	@Column(name = "NAME")
+	private String name;
+	
+	@NotEmpty
+	@Size(max = 15)
+	@Column(name = "SURNAME")
+	private String surname;
+	
+	@Column(name = "PHONE_NUMBER")
+	private String phoneNumber;
+	
 	public User(){}
 	public User(int id,String login,String email,String password){
 		this.id = id;
@@ -113,6 +126,25 @@ public class User implements Serializable{
 	}
 	public void setImage(byte[] image) {
 		this.image = image;
+	}
+	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getSurname() {
+		return surname;
+	}
+	public void setSurname(String surname) {
+		this.surname = surname;
+	}
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
 	}
 	@Override
 	public boolean equals(Object obj){
