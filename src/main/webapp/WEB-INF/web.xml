@@ -8,7 +8,7 @@
 	  <display-name>University Site</display-name>
 	 
 	  <welcome-file-list>
-	  	<welcome-file>login</welcome-file>
+	  	<welcome-file>index</welcome-file>
 	  </welcome-file-list>
 	 
 	  <context-param>
@@ -59,7 +59,7 @@
 	  </servlet-mapping>
 	  
 	  <session-config>
-	  	<session-timeout>5</session-timeout>
+	  	<session-timeout>1</session-timeout>
 	  </session-config>
 	  
 </web-app>

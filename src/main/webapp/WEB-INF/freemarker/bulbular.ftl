@@ -32,6 +32,10 @@
 				<button type = "submit" class="btn btn-info">
 					Log In
 				</button>
+				<input type="hidden"
+					name="${_csrf.parameterName}"
+					value="${_csrf.token}"/>
+			</form>
 			</div>
 		</form>
 	</div>

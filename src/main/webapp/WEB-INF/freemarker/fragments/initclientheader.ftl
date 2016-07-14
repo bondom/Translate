@@ -10,21 +10,10 @@
 <body>
 	<div class="panel-heading">
 		<a href = "<@spring.url "/index"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
-		<kbd>
-			<@security.authentication property = "principal.username"/>
-		</kbd>
-		<a href = "<@spring.url "/client/profile"/>" class="btn btn-info" role="button">My Profile</a>
-		<a href = "javascript:formSubmit()" class="btn btn-info" role="button">Log out</a>
+		<a href = "<@spring.url "/translators"/>" class="btn btn-info" role="button">Find translators</a>
+		<a href = "<@spring.url "/client/login"/>" class="btn btn-info" role="button">Log In</a>
+		<a href = "<@spring.url "/translator"/> class="btn btn-info" role="button">To Translator</a>
 	</div>
-	<form action = "<@spring.url "/client/logout"/>" method = "post" id = "logoutForm">
-			<input type = "hidden" 
-					name = "${_csrf.parameterName}"
-					value = "${_csrf.token}"/>
-		</form>
-		<script>
-			function formSubmit() {
-				document.getElementById("logoutForm").submit();
-			}
-		</script>
+
 </body>
 </html>

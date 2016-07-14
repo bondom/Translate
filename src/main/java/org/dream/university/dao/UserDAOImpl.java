@@ -11,24 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
 
-@Repository
-public class UserDAOImpl implements UserDAO{
+@Repository("userDao")
+public class UserDaoImpl extends AbstractDao<Integer, User> implements UserDao<User>{
 
 	@Autowired
 	SessionFactory sessionFactory;
 	
-	public UserDAOImpl(){}
+	public UserDaoImpl(){}
 	
-	
-	@Override
-	public User getUserByLogin(String login) {
-		Session session = sessionFactory.getCurrentSession();
-		Query query = session.getNamedQuery("userByLogin");
-		query.setParameter("login", login);
-		User user = (User)query.uniqueResult(); 
-		return user;
-	}
-
 	@Override
 	public User getUserByEmail(String email) {
 	    Session session = sessionFactory.getCurrentSession();
@@ -38,41 +28,5 @@ public class UserDAOImpl implements UserDAO{
 		return user;
 	}
 
-	@Override
-	public void create(User user) {
-		user.setRole("ROLE_USER");
-		user.setStatus(UserStatus.ACTIVE);
-		Session session = sessionFactory.getCurrentSession();
-		session.persist(user);
-	}
-
-
-	@Override
-	public User get(int id) {
-		Session session = sessionFactory.getCurrentSession();
-		User user = session.get(User.class, id);
-		return user;
-	}
-
-	@Override
-	public boolean delete(int id) {
-		User user = this.get(id);
-		Session session = sessionFactory.getCurrentSession();
-		if(user!=null){
-			//User with the same id exists in DB table
-			session.delete(user);
-			return true;
-		}else return false;
-	}
-
-
-	@Override
-	public User update(User user) {
-		user.setRole("ROLE_USER");
-		user.setStatus(UserStatus.ACTIVE);
-		Session session = sessionFactory.getCurrentSession();
-		session.update(user);
-		return user;
-	}
 	
 }

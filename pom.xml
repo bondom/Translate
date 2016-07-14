@@ -159,6 +159,13 @@
 			    <version>1.10</version>
 			</dependency>
 			
+			<!-- For converting java.time.* to SQL types  -->
+			<dependency>
+			    <groupId>org.hibernate</groupId>
+			    <artifactId>hibernate-java8</artifactId>
+			    <version>5.1.0.Final</version>
+			</dependency>
+			
 		</dependencies>
 
 	<repositories>

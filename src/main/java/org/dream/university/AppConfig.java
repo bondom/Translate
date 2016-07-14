@@ -17,7 +17,11 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
 import org.springframework.core.env.Environment;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
@@ -42,10 +46,13 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	
 	private final static String HIBERNATE_SHOW_SQL = "hibernate.show_sql";
 	private final static String HIBERNATE_DIALECT = "hibernate.dialect";
+	private final static String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
 	private final static String SCAN_PACKAGES = "scan_packages";
 	
 	@Autowired
 	private Environment env;
+	
+
 	
 	@Bean(name = "viewResolver")
 	public FreeMarkerViewResolver getViewResolver() {
@@ -87,6 +94,7 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	    Properties properties = new Properties();
 	    properties.put("hibernate.show_sql", env.getProperty(HIBERNATE_SHOW_SQL));
 	    properties.put("hibernate.dialect", env.getProperty(HIBERNATE_DIALECT));
+	    properties.put("hibernate.hbm2ddl.auto", env.getProperty(HIBERNATE_HBM2DDL_AUTO));
 	    return properties;
 	}
 	
@@ -119,4 +127,10 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	public void addResourceHandlers(final ResourceHandlerRegistry registry) {
 	    registry.addResourceHandler("/resources/**").addResourceLocations("/resources/");
 	}
+	
+	@Bean
+    public AuthenticationTrustResolver getAuthenticationTrustResolver() {
+        return new AuthenticationTrustResolverImpl();
+    }
+	
 }

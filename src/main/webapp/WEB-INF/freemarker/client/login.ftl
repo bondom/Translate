@@ -10,9 +10,7 @@
 <body>
 	<div class="container">
 	  	<div class="panel panel-default">
-			<div class="panel-heading">
-				<a href = "<@spring.url "/registration"/>" class="btn btn-info" role="button">Sign In</a>
-			</div>
+			<#include "/fragments/initclientheader.ftl">
 			<div class="panel-body" style = "margin: 0px">
 				<#if resultRegistration??>
 					<div class="alert alert-success">${resultRegistration}</div>
@@ -21,19 +19,15 @@
 					
 					<form action = "<@spring.url "/j_spring_security_check"/>" method = "Post" role = "form">
 						<div class="form-group col-xs-5" >
-								<#if Session.SPRING_SECURITY_LAST_EXCEPTION?? && 
-								Session.SPRING_SECURITY_LAST_EXCEPTION.message?has_content>
-								    <div class="alert alert-danger">
-										<@spring.message "login.badcredentials"/>
+								<#if error??>
+									<div class="alert alert-danger">
+										${error}
 									</div>
-								</#if> 
-								<#if (param.error)??>
-									<p>Invalid username or password
-									</p>
 								</#if>
-								<#if (param.logout)??>
-									<p> You have been logget out
-									</p>
+								<#if logout??>
+									<div class="alert alert-danger">
+										${logout}
+									</div>
 								</#if>
 								<input type = "text" id= "userLogin" name = "username"
 								class="form-control" placeholder = "Login" />
@@ -45,6 +39,15 @@
 								<button type = "submit" class="btn btn-info">
 									Log In
 								</button>
+								<#if loginUpdate??>
+								<#else>
+								Remember Me: <input type="checkbox" name="remember-me" />
+								</#if>
+								<a href = "<@spring.url "/client/registration"/>" role="button">Sign In</a>
+								<input type="hidden"
+									name="${_csrf.parameterName}"
+									value="${_csrf.token}"/>
+								</form>
 							</div>
 					</form>
 				</div>

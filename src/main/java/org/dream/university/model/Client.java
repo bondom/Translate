@@ -1,0 +1,45 @@
+package org.dream.university.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
+import org.dream.university.model.ad.Ad;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+
+@Entity
+@NamedQueries({
+	@NamedQuery(name =  "clientByEmail",
+				query = "from Client client where client.email = :email")
+})
+@Table(name = "CLIENT_TEST")
+public class Client extends User{
+	
+	/**
+	 * Version of this class in production 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	@OneToMany(/*mappedBy = "client",*/fetch = FetchType.EAGER,orphanRemoval = true)
+	@Cascade(CascadeType.ALL)
+	public List<Ad> ads = new ArrayList<>();
+	
+	public Client(){}
+
+	public List<Ad> getAds() {
+		return ads;
+	}
+
+	public void setAds(List<Ad> ads) {
+		this.ads = ads;
+	}
+	
+	
+}
