@@ -10,7 +10,7 @@
 <body>
 	<div class="container">
 	<div class="panel panel-default">
-		<#include "/fragments/authheader.ftl">
+		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
 			<#if client??>
 				<img  src="data:image/jpeg;base64,${image!""}" />

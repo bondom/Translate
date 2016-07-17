@@ -9,10 +9,10 @@
 <body>
 	<div class="container">
 		<div class="panel panel-default">
-			<#include "/fragments/authclientheader.ftl">
+			<#include "/fragments/authtranslatorheader.ftl">
 			<div class="panel-body" style = "margin: 0px">
 				<h5>Please upload a image</h5>
-				<form method="post" action="<@spring.url "/client/saveAvatar?${_csrf.parameterName}=${_csrf.token}"/>" enctype="multipart/form-data">
+				<form method="post" action="<@spring.url "/translator/saveAvatar?${_csrf.parameterName}=${_csrf.token}"/>" enctype="multipart/form-data">
 					<input type="file" name="file"/>
 					<input type="submit"/>
 					<#if wrongFile??>
@@ -20,10 +20,10 @@
 					</#if>
 				</form>
 				
-				<form method="post" action="<@spring.url "/client/saveEdits"/>">
+				<form method="post" action="<@spring.url "/translator/saveEdits"/>">
 				<table>
 					<tr><td>First Name: </td><td>
-										<@spring.bind "client.firstName"/>
+										<@spring.bind "translator.firstName"/>
 										<input type = "text" id = "firstName" name = "${(spring.status.expression)!"firstName"}" 
 										value = "${spring.status.value!""}" class="form-control" placeholder = "First Name"/>
 										</br>
@@ -32,7 +32,7 @@
 										</#list>
 					</td></tr>
 					<tr><td>Last Name: </td><td>
-										<@spring.bind "client.lastName"/>
+										<@spring.bind "translator.lastName"/>
 										<input type = "text" id = "lastName" name = "${(spring.status.expression)!"lastName"}" 
 										value = "${spring.status.value!""}" class="form-control" placeholder = "Last Name"/>
 										</br>
@@ -40,17 +40,8 @@
 											<div class="alert alert-warning">${error}</div>
 										</#list>
 					</td></tr>
-					<tr><td>Birthday: </td><td>
-										<@spring.bind "client.birthday"/>
-										<input type = "text" id = "birthday" name = "${(spring.status.expression)!"birthday"}" 
-										value = "${spring.status.value!""}" class="form-control" placeholder = "Birthday"/>
-										</br>
-										<#list spring.status.errorMessages as error>
-											<div class="alert alert-warning">${error}</div>
-										</#list>
-					</td></tr>
 					<tr><td>Country: </td><td>
-										<@spring.bind "client.country"/>
+										<@spring.bind "translator.country"/>
 										<input type = "text" id = "country" name = "${(spring.status.expression)!"country"}" 
 										value = "${spring.status.value!""}" class="form-control" placeholder = "Country"/>
 										</br>
@@ -59,7 +50,7 @@
 										</#list>
 					</td></tr>
 					<tr><td>City: </td><td>
-										<@spring.bind "client.city"/>
+										<@spring.bind "translator.city"/>
 										<input type = "text" id = "city" name = "${(spring.status.expression)!"city"}" 
 										value = "${spring.status.value!""}" class="form-control" placeholder = "City"/>
 										</br>
@@ -67,8 +58,31 @@
 											<div class="alert alert-warning">${error}</div>
 										</#list>
 					</td></tr>
+					<tr><td>Date of Birth: </td><td>
+										<@spring.bind "translator.birthday"/>
+										<input type = "text" id = "birthday" name = "${(spring.status.expression)!"birthday"}" 
+										value = "${spring.status.value!""}" class="form-control" placeholder = "Date of birth"/>
+										</br>
+										<#list spring.status.errorMessages as error>
+											<div class="alert alert-warning">${error}</div>
+										</#list>
+					</td></tr>
+					<tr><td>Added info: </td><td>
+										<@spring.bind "translator.addedInfo"/>
+										<textarea id = "addedInfo" name = "${(spring.status.expression)!"addedInfo"}" cols = 20 rows = 4>
+										<#if translator.addedInfo??>
+										${translator.addedInfo}
+										</#if>
+										</textarea>
+										<#--<input type = "text" id = "addedInfo" name = "${(spring.status.expression)!"addedInfo"}" 
+										value = "${spring.status.value!""}" class="form-control" placeholder = "AddedInfo"/>
+										</br>-->
+										<#list spring.status.errorMessages as error>
+											<div class="alert alert-warning">${error}</div>
+										</#list>
+					</td></tr>
 					<tr><td>Email: </td><td>
-										<@spring.bind "client.email"/>
+										<@spring.bind "translator.email"/>
 										<input type = "text" id = "email" name = "${(spring.status.expression)!"email"}" 
 										value = "${spring.status.value!""}" class="form-control" placeholder = "Email"/>
 										</br>
@@ -80,7 +94,7 @@
 										</#if>
 					</td></tr>
 					<tr><td>Phone Number: </td><td>
-											<@spring.bind "client.phoneNumber"/>
+											<@spring.bind "translator.phoneNumber"/>
 											<input type = "text" id = "phoneNumber" name = "${(spring.status.expression)!"phoneNumber"}" 
 											value = "${spring.status.value!""}" class="form-control" placeholder = "Phone number"/>
 											</br>

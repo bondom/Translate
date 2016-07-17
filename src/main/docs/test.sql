@@ -8,7 +8,8 @@ BIRTHDAY DATE,COUNTRY VARCHAR2(225CHAR),CITY VARCHAR2(225CHAR),REGISTRATION_DATE
  Select * from CLIENT_TEST;
  Select * from USER_TEST;
  Select * from TRANSLATOR_TEST;
- 
+ Select * from TRANSLATOR_LANGUAGES;
+ Delete  from CLIENT_TEST where id = 1;
 
  
  CREATE TABLE persistent_logins (

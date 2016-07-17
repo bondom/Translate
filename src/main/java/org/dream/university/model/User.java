@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 					query = "from User user where user.email = :email")
 })
 @Table(name = "USER_TEST")
-@Inheritance(strategy=InheritanceType.TABLE_PER_CLASS)
+@Inheritance(strategy=InheritanceType.JOINED)
 @Component
 public class User implements Serializable{
 	

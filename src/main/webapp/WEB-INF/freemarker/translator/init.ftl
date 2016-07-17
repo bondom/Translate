@@ -11,14 +11,15 @@
 <body>
 	<div class="container">
 	<div class="panel panel-default">
-		<@security.authorize access="hasRole('ROLE_CLIENT')">
-			<#include "/fragments/authclientheader.ftl">
+		<@security.authorize access = "hasRole('ROLE_TRANSLATOR')">
+			<#include "/fragments/authtranslatorheader.ftl">
 		</@security.authorize>
-		<@security.authorize access = "hasRole('ROLE_TRANSLATOR') or !isAuthenticated()">
-			<#include "/fragments/initclientheader.ftl">
+		<@security.authorize access = "hasRole('ROLE_CLIENT') or !isAuthenticated()">
+			<#include "/fragments/inittranslatorheader.ftl">
 		</@security.authorize>
+			
 		<div class="panel-body" style = "margin: 0px">
-			There is info about our company to clients!!!
+			There is info about our company to translators
 		</div>
 	</div>
 	</div>

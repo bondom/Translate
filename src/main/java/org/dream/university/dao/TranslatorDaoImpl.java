@@ -8,7 +8,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-@Repository
+@Repository("translatorDao")
 public class TranslatorDaoImpl extends AbstractDao<Integer,Translator> implements UserDao<Translator> {
 
 	@Autowired

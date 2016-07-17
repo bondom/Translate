@@ -6,16 +6,19 @@ import org.dream.university.model.ad.Language;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.PrimaryKeyJoinColumn;
 
 @Entity
 @NamedQueries({
@@ -23,6 +26,7 @@ import javax.persistence.OneToMany;
 				query = "from Translator translator where translator.email = :email")
 })
 @Table(name = "TRANSLATOR_TEST")
+@PrimaryKeyJoinColumn(name= "translator_id")
 public class Translator extends User{
 	
 	/**
@@ -33,17 +37,17 @@ public class Translator extends User{
 	@Column(nullable = false)
 	private double rating;
 	
-	@OneToMany(/*mappedBy = "translator",*/ fetch = FetchType.LAZY,orphanRemoval = true)
+	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true)
 	@Cascade(CascadeType.ALL)
-	private List<Comment> comments;
+	private List<Comment> comments = new ArrayList<>();
 	
 	@Column(nullable = false)
 	private short numberOfExecutedAds;
 	
-	@Column
-	@Enumerated
-	@ElementCollection(targetClass = Language.class)
-	private List<Language> languages;
+	@Column(nullable = false)
+	@Enumerated(EnumType.STRING)
+	@ElementCollection(targetClass = Language.class,fetch = FetchType.EAGER)
+	private List<Language> languages = new ArrayList<>();
 	
 	private String addedInfo;
 
@@ -82,6 +86,15 @@ public class Translator extends User{
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
+
+	public List<Language> getLanguages() {
+		return languages;
+	}
+
+	public void setLanguages(List<Language> languages) {
+		this.languages = languages;
+	}
+	
 	
 	
 }

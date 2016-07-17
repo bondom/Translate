@@ -3,8 +3,7 @@ package org.dream.university.controller;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,9 +11,10 @@ import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 import org.apache.commons.codec.binary.Base64;
-import org.dream.university.model.Client;
+import org.dream.university.model.Translator;
 import org.dream.university.model.User;
 import org.dream.university.model.UserRole;
+import org.dream.university.model.ad.Language;
 import org.dream.university.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,30 +35,40 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 @Controller
-@RequestMapping("/client")
-public class ClientController {
+@RequestMapping("/translator")
+public class TranslatorController {
 
 	@Autowired
-	@Qualifier("clientService")
-	private UserService<Client> clientService;
+	@Qualifier("translatorService")
+	private UserService<Translator> translatorService;
 	
 	@Autowired
 	private AuthenticationTrustResolver authenticationTrustResolver;
 	
+	@RequestMapping(value = "/index", method = RequestMethod.GET)
+	public ModelAndView init(){
+		return new ModelAndView("/translator/init");
+	}
+	
 	/**
-	 * Returns client's profile view
+	 * Returns translator's profile view
 	 * 
 	 * @param user
-	 * @return client's profile
+	 * @return translator's profile
 	 * @throws UnsupportedEncodingException
 	 */
 	@RequestMapping(value = "/profile", method = RequestMethod.GET)
 	public ModelAndView profile(Principal user) throws UnsupportedEncodingException{
-		Client clientFromDB = (Client)clientService.getUserByEmail(user.getName());
-		ModelAndView model = new ModelAndView("/client/profile");
-		model.addObject("client", clientFromDB);
-		if(clientFromDB.getAvatar() != null){
-			model.addObject("image", convertImageForRendering(clientFromDB.getAvatar()));
+		Translator translatorFromDB = (Translator) translatorService.getUserByEmail(user.getName());
+		ModelAndView model = new ModelAndView("/translator/profile");
+		model.addObject("translator", translatorFromDB);
+		if(translatorFromDB.getAvatar() == null){
+			System.out.println("OOPS");
+			/**
+			 * Поменять!!!
+			 */
+		}else{
+			model.addObject("image", convertImageForRendering(translatorFromDB.getAvatar()));
 		}
 		return model;
 	}
@@ -69,10 +79,10 @@ public class ClientController {
 				@RequestParam(value = "logout", required = false) String logout, 
 				HttpServletRequest request){
 		if(!isCurrentAuthenticationAnonymous()){
-			return new ModelAndView("redirect:/client/profile");
+			return new ModelAndView("redirect:/translator/profile");
 		}
 		if(error!=null){
-			ModelAndView model = new ModelAndView("/client/login");
+			ModelAndView model = new ModelAndView("/translator/login");
 			model.addObject("error","Invalid username or pass");
 		
 			//if login error, add targetUrl again
@@ -86,35 +96,43 @@ public class ClientController {
 		}
 		
 		if(logout!=null){
-			ModelAndView model = new ModelAndView("/client/login");
+			ModelAndView model = new ModelAndView("/translator/login");
 			model.addObject("logout", "You have been logged out successfully");
 			return model;
 		}
-		return new ModelAndView("/client/login");
+		return new ModelAndView("/translator/login");
 	}
 	
 	@RequestMapping(value = "/registration",method = RequestMethod.GET)
-	public ModelAndView registrationForm(){
-		ModelAndView model = new ModelAndView("/client/registration");
-		Client client = new Client();
-		model.addObject("client", client);
+	public ModelAndView getRegistrationForm(){
+		ModelAndView model = new ModelAndView("/translator/registration");
+		Translator translator = new Translator();
+		model.addObject("translator", translator);
+		model.addObject("languages",Language.values());
 		return model;
 	}
 	
 	@RequestMapping(value = "/registrationConfirm",method = RequestMethod.POST)
-	public ModelAndView registration(@Valid @ModelAttribute("client") Client client,
+	public ModelAndView registration(@Valid @ModelAttribute("translator") Translator translator,
+									@RequestParam(name = "selectedLanguages",required = true) List<String> stringLanguages,
 								BindingResult result){
 		if(result.hasErrors()){
-			return new ModelAndView("/client/registration");
+			return new ModelAndView("/translator/registration");
 		}
-		if(clientService.registerUser(client)){
-			ModelAndView loginView = new ModelAndView("/client/login");
+		//String[] stringLanguages = request.getParameterValues("selectedLanguages");
+		List<Language> enumLanguages= new ArrayList<>();
+		for(String language:stringLanguages){
+			enumLanguages.add(Language.valueOf(language));
+		}
+		translator.setLanguages(enumLanguages);
+		if(translatorService.registerUser(translator)){
+			ModelAndView loginView = new ModelAndView("/translator/login");
 			loginView.addObject("resultRegistration", 
 									"Success registration!");
 			return loginView;
 		}else{
 			//Registration failed
-			ModelAndView registrationView = new ModelAndView("/client/registration");
+			ModelAndView registrationView = new ModelAndView("/translator/registration");
 			registrationView.addObject("resultRegistration", 
 									"User with the same login or email "
 									+ "is registered in system already");
@@ -127,16 +145,16 @@ public class ClientController {
 	 */
 	@RequestMapping(value = "/edit",method = RequestMethod.GET)
 	public ModelAndView editPage(Principal user, HttpServletRequest request){
-		Client clientFromDB = (Client)clientService.getUserByEmail(user.getName());
+		Translator translatorFromDB = (Translator) translatorService.getUserByEmail(user.getName());
 		if(isRememberMeAuthenticated()){
-			//setRememberMeTargetUrlToSession(clientFromDB,request);
-			ModelAndView model = new ModelAndView("/client/login");
+			//setRememberMeTargetUrlToSession(translatorFromDB,request);
+			ModelAndView model = new ModelAndView("/translator/login");
 			model.addObject("loginUpdate",true);
-			model.addObject("client", clientFromDB);
+			model.addObject("translator", translatorFromDB);
 			return model;
 		}else{
-			ModelAndView model = new ModelAndView("/client/edit");
-			model.addObject("client", clientFromDB);
+			ModelAndView model = new ModelAndView("/translator/edit");
+			model.addObject("translator", translatorFromDB);
 			return model;
 		}
 	}
@@ -154,22 +172,22 @@ public class ClientController {
 	 */
 	@RequestMapping(value = "/saveEdits",method = RequestMethod.POST)
 	public ModelAndView saveEdits(
-			@Valid @ModelAttribute("client") Client editedClient,
+			@Valid @ModelAttribute("translator") Translator editedTranslator,
 			BindingResult result,
 			Principal user) throws UnsupportedEncodingException{
 		if(result.hasErrors()){
-			return new ModelAndView("/client/edit");
+			return new ModelAndView("/translator/edit");
 		}
-		Client client = clientService.editUserProfile(user.getName(), editedClient);
-		if(client == null){
-			ModelAndView model = new ModelAndView("/client/edit");
+		Translator translator = translatorService.editUserProfile(user.getName(), editedTranslator);
+		if(translator == null){
+			ModelAndView model = new ModelAndView("/translator/edit");
 			model.addObject("emailExists","Such email is registered in system already");
 			return model;
 		}else{
-			ModelAndView editedProfile = new ModelAndView("/client/profile");
-			editedProfile.addObject("client", client);
-			if(client.getAvatar()!=null){
-				editedProfile.addObject("image", convertImageForRendering(client.getAvatar()));
+			ModelAndView editedProfile = new ModelAndView("/translator/profile");
+			editedProfile.addObject("translator", translator);
+			if(translator.getAvatar()!=null){
+				editedProfile.addObject("image", convertImageForRendering(translator.getAvatar()));
 			}
 			return editedProfile;
 		}
@@ -178,7 +196,7 @@ public class ClientController {
 	/**
 	 * Saves new avatar in DB
 	 * 
-	 * @param user - {Principal.class} object with name equals to {User.class} object's email
+	 * @param user - {Principal.class} object with name equals to {User.class} object's login
 	 * @param file - file chosen to be a avatar
 	 * @return user's profile page or page for editing profile if no file is chosen
 	 * or file is not image
@@ -191,15 +209,15 @@ public class ClientController {
 				String contentType = file.getContentType();
 				if(contentType.startsWith("image/")){
 					byte[] avatar = file.getBytes();
-					Client updatedClient = (Client)clientService.updateAvatar(user.getName(), avatar);
-					ModelAndView model = new ModelAndView("/client/profile");
-					model.addObject("client", updatedClient);
-					model.addObject("image", convertImageForRendering(updatedClient.getAvatar()));
+					Translator updatedTranslator = (Translator) translatorService.updateAvatar(user.getName(), avatar);
+					ModelAndView model = new ModelAndView("/translator/profile");
+					model.addObject("translator", updatedTranslator);
+					model.addObject("image", convertImageForRendering(updatedTranslator.getAvatar()));
 					return model;
 				}else{
-					Client clientFromDB = (Client)clientService.getUserByEmail(user.getName());
-					ModelAndView model = new ModelAndView("/client/edit");
-					model.addObject("client", clientFromDB);
+					Translator translatorFromDB = (Translator) translatorService.getUserByEmail(user.getName());
+					ModelAndView model = new ModelAndView("/translator/edit");
+					model.addObject("translator", translatorFromDB);
 					model.addObject("wrongFile", "Please, choose image.");
 					return model;
 				}
@@ -209,12 +227,12 @@ public class ClientController {
 				/**
 				 * Заглушка, поменять!!
 				 */
-				return new ModelAndView("/client/exception");
+				return new ModelAndView("/translator/exception");
 			}
 		}else{
-			ModelAndView model = new ModelAndView("/client/edit");
-			Client clientFromDB = (Client)clientService.getUserByEmail(user.getName());
-			model.addObject("client", clientFromDB);
+			ModelAndView model = new ModelAndView("/translator/edit");
+			Translator translatorFromDB = (Translator) translatorService.getUserByEmail(user.getName());
+			model.addObject("translator", translatorFromDB);
 			return model;
 		}
 		
@@ -240,8 +258,8 @@ public class ClientController {
 		HttpSession session = request.getSession(false);
 		if(session!=null){
 			UserRole role= user.getRole();
-			if(role.equals(UserRole.ROLE_CLIENT)){
-				session.setAttribute("targetUrl", "/client/edit");
+			if(role.equals(UserRole.ROLE_TRANSLATOR)){
+				session.setAttribute("targetUrl", "/translator/edit");
 			}	
 		}
 	}

@@ -28,35 +28,16 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 @RequestMapping(value="/")
 public class InitController {
-	
-	@Autowired
-	private UserService userService;
-	
-	
-	@InitBinder
-	public void initBinder(WebDataBinder dataBinder){
-		//dataBinder.registerCustomEditor(String.class, "studentGroup", new StudentNameEditor());
-	}
-	
+
 	@RequestMapping(value = "/index", method = RequestMethod.GET)
 	public ModelAndView index(){
 		return new ModelAndView("index");
 	}
 	
-	
-	
 	@RequestMapping(value = "/bulbular", method = RequestMethod.GET)
 	public ModelAndView getAdminForm(){
 		return new ModelAndView("bulbular");
 	}
-	
-	@RequestMapping(value = "/accessdenied", method = RequestMethod.GET)
-	public ModelAndView accessDenied(){
-		return new ModelAndView("/exception/accessdenied");
-	}
-	
-	
-
 	
 	
 }

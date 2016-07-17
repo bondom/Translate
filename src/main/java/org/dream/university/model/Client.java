@@ -8,6 +8,7 @@ import javax.persistence.FetchType;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 
 import org.dream.university.model.ad.Ad;
@@ -20,6 +21,7 @@ import org.hibernate.annotations.CascadeType;
 				query = "from Client client where client.email = :email")
 })
 @Table(name = "CLIENT_TEST")
+@PrimaryKeyJoinColumn(name= "client_id")
 public class Client extends User{
 	
 	/**
@@ -27,7 +29,7 @@ public class Client extends User{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	@OneToMany(/*mappedBy = "client",*/fetch = FetchType.EAGER,orphanRemoval = true)
+	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true)
 	@Cascade(CascadeType.ALL)
 	public List<Ad> ads = new ArrayList<>();
 	
