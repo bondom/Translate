@@ -9,7 +9,7 @@
 </head>
 <body>
 	<div class="panel-heading">
-		<a href = "<@spring.url "/index"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
+		<a href = "<@spring.url "/"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
 		<kbd>
 			<@security.authentication property = "principal.username"/>
 		</kbd>

@@ -7,10 +7,10 @@
     version="3.0" >
 	  <display-name>University Site</display-name>
 	 
-	  <welcome-file-list>
-	  	<welcome-file>index</welcome-file>
-	  </welcome-file-list>
-	 
+	 <error-page>
+	 	<error-code>404</error-code>
+	 	<location>/404</location>
+	 </error-page>
 	  <context-param>
 	      <param-name>contextClass</param-name>
 	      <param-value>
@@ -35,6 +35,8 @@
 	  <filter-mapping>
 		  <filter-name>springSecurityFilterChain</filter-name>
 		  <url-pattern>/*</url-pattern>
+		  <dispatcher>REQUEST</dispatcher>
+    	  <dispatcher>ERROR</dispatcher>
 	  </filter-mapping>
 	
 	  <servlet>

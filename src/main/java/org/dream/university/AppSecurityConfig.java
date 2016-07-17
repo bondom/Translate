@@ -19,6 +19,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 
 @EnableWebSecurity
 @Configuration
@@ -74,4 +75,6 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 		auth.setTargetUrlParameter("targetUrl");
 		return auth;
 	}	
+	
+	
 }

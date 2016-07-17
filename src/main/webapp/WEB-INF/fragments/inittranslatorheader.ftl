@@ -9,10 +9,10 @@
 </head>
 <body>
 	<div class="panel-heading">
-		<a href = "<@spring.url "/index"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
-		<a href = "<@spring.url "/translators"/>" class="btn btn-info" role="button">Find translators</a>
-		<a href = "<@spring.url "/client/login"/>" class="btn btn-info" role="button">Log In</a>
-		<a href = "<@spring.url "/translator/index"/>" role="button">To Translator</a>
+		<a href = "<@spring.url "/translator/index"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
+		<a href = "<@spring.url "/orders"/>" class="btn btn-info" role="button">Find orders</a>
+		<a href = "<@spring.url "/translator/login"/>" class="btn btn-info" role="button">Log In</a>
+		<a href = "<@spring.url "/"/>"  role="button">To Client</a>
 	</div>
 
 </body>
