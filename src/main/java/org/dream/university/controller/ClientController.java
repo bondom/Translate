@@ -3,9 +3,9 @@ package org.dream.university.controller;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -15,6 +15,12 @@ import org.apache.commons.codec.binary.Base64;
 import org.dream.university.model.Client;
 import org.dream.university.model.User;
 import org.dream.university.model.UserRole;
+import org.dream.university.model.ad.Ad;
+import org.dream.university.model.ad.Currency;
+import org.dream.university.model.ad.Language;
+import org.dream.university.model.ad.TranslateType;
+import org.dream.university.service.AdServiceImpl;
+import org.dream.university.service.ClientServiceImpl;
 import org.dream.university.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -41,6 +47,10 @@ public class ClientController {
 	@Autowired
 	@Qualifier("clientService")
 	private UserService<Client> clientService;
+	
+	@Autowired
+	@Qualifier("adService")
+	private AdServiceImpl adService;
 	
 	@Autowired
 	private AuthenticationTrustResolver authenticationTrustResolver;
@@ -220,6 +230,57 @@ public class ClientController {
 		
 	}
 	
+	@RequestMapping(value = "/ads",method = RequestMethod.GET)
+	public ModelAndView ads(Principal user){
+	//	List<Ad> ads = adService.getAdsByEmail(user.getName());
+		Client client= (Client)(clientService.getUserByEmail(user.getName()));
+		List<Ad> ads = client.getAds();
+		ModelAndView model = new ModelAndView("/client/ads");
+		if(!ads.isEmpty()){
+			model.addObject("ads", ads);
+		}
+		return model;
+	}
+	
+	@RequestMapping(value = "/adbuilder",method = RequestMethod.GET)
+	public ModelAndView adbuilder(Principal user){
+		ModelAndView model = new ModelAndView("/client/adbuilder");
+		
+		Client client= (Client)(clientService.getUserByEmail(user.getName()));
+		model.addObject("country",client.getCountry());
+		model.addObject("city",client.getCity());
+		
+		Ad ad = new Ad();
+		model.addObject("ad",ad);
+		model.addObject("languages", getLanguagesForSelect());
+		model.addObject("translateTypes", getTranslateTypesForSelect());
+		model.addObject("currencies", getCurrenciesForSelect());
+		return model;
+	}
+	
+	@RequestMapping(value = "/saveAd", method = RequestMethod.POST)
+	public ModelAndView saveAd(@Valid @ModelAttribute("ad") Ad ad,
+								BindingResult result,
+								Principal user){
+		if(result.hasErrors()){
+			Client client= (Client)(clientService.getUserByEmail(user.getName()));
+			ModelAndView model = new ModelAndView("/client/adbuilder");
+			model.addObject("country",client.getCountry());
+			model.addObject("city",client.getCity());
+			model.addObject("languages", getLanguagesForSelect());
+			model.addObject("translateTypes", getTranslateTypesForSelect());
+			model.addObject("currencies", getCurrenciesForSelect());
+			return model;
+		}
+		//Client client= (Client)(clientService.getUserByEmail(user.getName()));
+		//Ad savedAd = ((ClientServiceImpl)clientService).saveAd(user.getName(), ad);
+		Long adId = adService.saveAd(ad, user.getName());
+		ModelAndView model = new ModelAndView("/client/createdAd");
+		model.addObject("adId", adId);
+		return model;
+	}
+	
+	
 	private String convertImageForRendering(byte[] image) throws UnsupportedEncodingException{
 		byte[] encodeBase64 = Base64.encodeBase64(image); 
 		String base64Encoded = new String(encodeBase64,"UTF-8");
@@ -265,5 +326,29 @@ public class ClientController {
         return authenticationTrustResolver.isAnonymous(authentication);
     }
 	
-	
-}
+    private Map<String,String> getLanguagesForSelect(){
+		Language[] languages = Language.values();
+		Map<String, String> languagesMap = new HashMap<String, String>();
+		for(Language language:languages){
+			languagesMap.put(language.name(), language.name() + " language");
+		}
+		return languagesMap;
+    }
+    private Map<String,String> getTranslateTypesForSelect(){
+		TranslateType[] types = TranslateType.values();
+		Map<String, String> typesMap = new HashMap<String, String>();
+		for(TranslateType type:types){
+			typesMap.put(type.name(), type.name() + " type");
+		}
+		return typesMap;
+	}
+    
+    private Map<String,String> getCurrenciesForSelect(){
+    	Currency[] currencies = Currency.values();
+		Map<String,String> currenciesMap = new HashMap<>();
+		for(Currency currency: currencies){
+			currenciesMap.put(currency.name(),"(" +currency.name()+")");
+		}
+		return currenciesMap;
+    }
+} 

@@ -40,7 +40,7 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 			user.setRegistrationTime(LocalDateTime.now());
 			user.setRating(0);
 			user.setNumberOfExecutedAds((short)0);
-			((AbstractDao<Integer, Translator>)translatorDao).persist(user);
+			((AbstractDao<Integer, Translator>)translatorDao).save(user);
 			return true;
 		}
 	}

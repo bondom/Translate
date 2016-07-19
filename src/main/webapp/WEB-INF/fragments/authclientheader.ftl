@@ -14,6 +14,7 @@
 			<@security.authentication property = "principal.username"/>
 		</kbd>
 		<a href = "<@spring.url "/client/profile"/>" class="btn btn-info" role="button">My Profile</a>
+		<a href = "<@spring.url "/client/ads"/>" class="btn btn-info" role="button">My Advertisements</a>
 		<a href = "javascript:formSubmit()" class="btn btn-info" role="button">Log out</a>
 	</div>
 	<form action = "<@spring.url "/client/logout"/>" method = "post" id = "logoutForm">

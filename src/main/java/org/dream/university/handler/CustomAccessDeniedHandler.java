@@ -33,6 +33,9 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 	protected String determineTargetUrl(){
 		Authentication authentication = 
                 SecurityContextHolder.getContext().getAuthentication();
+		if(authentication==null){
+			return "/";
+		}
 		Collection<? extends GrantedAuthority> authorities = 
 				authentication.getAuthorities();
 		

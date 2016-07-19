@@ -74,9 +74,6 @@
 										${translator.addedInfo}
 										</#if>
 										</textarea>
-										<#--<input type = "text" id = "addedInfo" name = "${(spring.status.expression)!"addedInfo"}" 
-										value = "${spring.status.value!""}" class="form-control" placeholder = "AddedInfo"/>
-										</br>-->
 										<#list spring.status.errorMessages as error>
 											<div class="alert alert-warning">${error}</div>
 										</#list>

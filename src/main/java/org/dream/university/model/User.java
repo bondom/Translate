@@ -78,6 +78,9 @@ public class User implements Serializable{
 	private String phoneNumber;
 	
 	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
+	/**
+	 * Добавить проверку валидности даты
+	 */
 	@NotNull
 	@Column(name = "BIRTHDAY",nullable = false)
 	private LocalDate birthday;

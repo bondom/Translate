@@ -9,6 +9,8 @@ import org.dream.university.model.Client;
 import org.dream.university.model.User;
 import org.dream.university.model.UserRole;
 import org.dream.university.model.UserStatus;
+import org.dream.university.model.ad.Ad;
+import org.dream.university.model.ad.AdStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service("clientService")
 @Transactional(propagation = Propagation.REQUIRED)
-public class ClientServiceImpl extends UserService<Client> {
+public class ClientServiceImpl extends UserService<Client>{
 
 	@Autowired
 	@Qualifier("clientDao")
@@ -38,7 +40,7 @@ public class ClientServiceImpl extends UserService<Client> {
 			user.setRole(UserRole.ROLE_CLIENT);
 			user.setStatus(UserStatus.ACTIVE);
 			user.setRegistrationTime(LocalDateTime.now());
-			((AbstractDao<Integer, Client>)clientDao).persist(user);
+			((AbstractDao<Integer, Client>)clientDao).save(user);
 			return true;
 		}
 	}
@@ -64,6 +66,13 @@ public class ClientServiceImpl extends UserService<Client> {
 		client.setEmail(newUser.getEmail());
 		return client;
 	}
-
+	
+	/*public Ad saveAd(String email, Ad ad){
+		Client client = (Client)getUserByEmail(email);
+		ad.setCreationDateTime(LocalDateTime.now());
+		ad.setStatus(AdStatus.CREATED);
+		client.addAd(ad);
+		return ad;
+	}*/
 
 }

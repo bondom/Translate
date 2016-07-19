@@ -8,12 +8,17 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 </head>
 <body>
-	<div class="panel-heading">
-		<a href = "<@spring.url "/translator/index"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
-		<a href = "<@spring.url "/ads"/>" class="btn btn-info" role="button">Find orders</a>
-		<a href = "<@spring.url "/translator/login"/>" class="btn btn-info" role="button">Log In</a>
-		<a href = "<@spring.url "/"/>"  role="button">To Client</a>
+	<div class="container">
+	<div class="panel panel-default">
+		<#include "/fragments/authclientheader.ftl">
+		<div class="panel-body" style = "margin: 0px">
+					<div>
+						Advertisement is created successfully.
+						It is placed on <a href = "<@spring.url "/ads/${adId}"/>"  role="button">languages.ru/ads/${adId}</a>
+					</div>
+			
+		</div>
 	</div>
-
+	</div>
 </body>
 </html>

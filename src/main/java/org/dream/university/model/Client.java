@@ -29,12 +29,16 @@ public class Client extends User{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true)
+	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "client")
 	@Cascade(CascadeType.ALL)
 	public List<Ad> ads = new ArrayList<>();
 	
+
 	public Client(){}
 
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
 	public List<Ad> getAds() {
 		return ads;
 	}
@@ -43,5 +47,14 @@ public class Client extends User{
 		this.ads = ads;
 	}
 	
+	public void addAd(Ad ad){
+		ads.add(ad);
+		ad.setClient(this);
+	}
+	
+	public void removeAd(Ad ad){
+		ads.remove(ad);
+		ad.setClient(null);
+	}
 	
 }
