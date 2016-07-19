@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.dream.university</groupId>
-  <artifactId>UniversitySiteFreemarker</artifactId>
+  <groupId>ua.translate</groupId>
+  <artifactId>Translate</artifactId>
   <version>1.0</version>
   <packaging>war</packaging>
 
-	<name>UniversitySiteWithoutXML</name>
+	<name>Translate</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
@@ -182,7 +182,7 @@
 	</repositories>
 
 	<build>
-		<finalName>University Site</finalName>
+		<finalName>Translate Service</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
