@@ -24,7 +24,7 @@ import ua.translate.handler.CustomSuccessHandler;
 
 @EnableWebSecurity
 @Configuration
-@ComponentScan(basePackages = {"org.dream.university"})
+@ComponentScan(basePackages = {"ua.translate"})
 public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	CustomSuccessHandler customSuccessHandler;

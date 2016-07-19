@@ -34,7 +34,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 
 @Configuration
 @EnableWebMvc
-@ComponentScan(basePackages = "org.dream.university")
+@ComponentScan(basePackages = "ua.translate")
 @EnableTransactionManagement
 @PropertySource("classpath:application.properties")
 public class AppConfig extends WebMvcConfigurerAdapter{
