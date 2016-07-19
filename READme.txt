@@ -1,4 +1,5 @@
-Stage of project: developing of main functionality.
+STAGE OF PROJECT: developing of main functionality.
+
 Frameworks, which are used:
 Spring MVC
 Spring Security
