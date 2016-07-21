@@ -5,7 +5,9 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
+import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Language;
+import ua.translate.model.ad.ResponsedAd;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +18,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -52,6 +55,11 @@ public class Translator extends User{
 	
 	private String addedInfo;
 
+	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "translator")
+	@Cascade(CascadeType.ALL)
+	private List<ResponsedAd> responsedAds = new ArrayList<>();
+	
+	
 	public double getRating() {
 		return rating;
 	}
@@ -95,7 +103,19 @@ public class Translator extends User{
 	public void setLanguages(List<Language> languages) {
 		this.languages = languages;
 	}
+
+	public List<ResponsedAd> getResponsedAds() {
+		return responsedAds;
+	}
+
+	public void addResponsedAd(ResponsedAd responsedAd){
+		responsedAds.add(responsedAd);
+		responsedAd.setTranslator(this);
+	}
 	
-	
+	public void removeResponsedAd(ResponsedAd responsedAd){
+		responsedAds.remove(responsedAd);
+		responsedAd.setTranslator(null);
+	}
 	
 }

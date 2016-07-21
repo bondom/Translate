@@ -22,5 +22,9 @@ public class ClientDaoImpl extends AbstractDao<Integer,Client> implements UserDa
 		Client client = (Client)query.uniqueResult();
 		return client;
 	}
+	
+	/*public Client getResponsedAds(){
+		
+	}*/
 
 }

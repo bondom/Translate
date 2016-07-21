@@ -22,6 +22,8 @@
 						<p>Result Language: ${ad.getResultLanguage()}
 						<p>Creating Date: ${ad.getCreationDateTime()}
 						<p>Status: ${ad.getStatus()}
+						<p><a href = "<@spring.url "/client/ads/delete?adId=${ad.getId()}"/>">DELETE</a>
+						<p><a href = "<@spring.url "/client/ads/edit?adId=${ad.getId()}"/>">EDIT</a>
 					</div>
 					</br>
 				</#list>

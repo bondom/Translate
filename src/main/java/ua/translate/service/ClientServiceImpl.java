@@ -1,6 +1,8 @@
 package ua.translate.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import ua.translate.model.UserRole;
 import ua.translate.model.UserStatus;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.AdStatus;
+import ua.translate.model.ad.ResponsedAd;
 
 @Service("clientService")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -66,6 +69,12 @@ public class ClientServiceImpl extends UserService<Client>{
 		client.setPhoneNumber(newUser.getPhoneNumber());
 		client.setEmail(newUser.getEmail());
 		return client;
+	}
+	
+	public List<ResponsedAd> getResponsedAds(String email){
+		Client client = (Client)getUserByEmail(email);
+		List<ResponsedAd> ads = client.getResponsedAds();
+		return ads;
 	}
 	
 	/*public Ad saveAd(String email, Ad ad){

@@ -37,6 +37,24 @@ public class AdServiceImpl {
 		return adId;
 	}
 	
+	public Ad updateAd(Ad ad){
+		Ad adFromDB = get(ad.getId());
+		adFromDB.setName(ad.getName());
+		adFromDB.setDescription(ad.getDescription());
+
+		adFromDB.setInitLanguage(ad.getInitLanguage());
+		adFromDB.setResultLanguage(ad.getResultLanguage());
+
+		adFromDB.setTranslateType(ad.getTranslateType());
+		adFromDB.setCity(ad.getCity());
+		adFromDB.setCountry(ad.getCountry());
+		adFromDB.setCost(ad.getCost());
+		adFromDB.setEndDate(ad.getEndDate());
+		adFromDB.setCurrency(ad.getCurrency());
+		adFromDB.setFile(ad.getFile());
+		adFromDB.setCreationDateTime(LocalDateTime.now());
+		return adFromDB;
+	}
 	public Ad get(long id){
 		return ((AbstractDao<Long, Ad>)adDao).get(id);
 	}
@@ -44,4 +62,9 @@ public class AdServiceImpl {
 	public List<Ad> getAllAds(){
 		return adDao.getAllAds();
 	}
+	
+	public void deleteById(long id){
+		adDao.deleteById(id);
+	}
+	
 }

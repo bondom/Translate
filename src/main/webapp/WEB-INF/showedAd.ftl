@@ -27,7 +27,9 @@
 						<p>Translate type: ${ad.getTranslateType()}
 						<p>Expiration date: ${ad.getEndDate()}
 						<p>Cost: ${ad.getCost()} ${ad.getCurrency()}
-
+						<@security.authorize access="hasRole('ROLE_TRANSLATOR')">
+							<a href = "<@spring.url "/translator/response?adId=${ad.getId()}"/>">Respond</a>
+						</@security.authorize>
 					</div>
 			
 		</div>

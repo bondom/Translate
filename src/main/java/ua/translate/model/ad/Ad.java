@@ -3,6 +3,9 @@ package ua.translate.model.ad;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,12 +13,15 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -23,17 +29,23 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 
 import ua.translate.model.Client;
 import ua.translate.model.Comment;
+import ua.translate.model.Translator;
 import ua.translate.model.customvalidators.FieldMatch;
 
 @Entity
 @NamedQueries({
 	@NamedQuery(name =  "allAds",
-			query = "from Ad")
+			query = "from Ad"),
+	@NamedQuery(name =  "deleteById",
+	query = "delete from Ad where id = :id")
 })
 @FieldMatch(first = "initLanguage",second = "resultLanguage", message = "Languages must be different")
 @Table(name = "AD_TEST")
@@ -46,7 +58,7 @@ public class Ad  implements Serializable{
 
 	@Id
 	@SequenceGenerator(name = "standart",initialValue = 1)
-	@GeneratedValue(generator = "standart")
+	@GeneratedValue(generator = "standart",strategy =GenerationType.SEQUENCE)
 	@Column(name = "AD_ID")
 	private long id;
 	
@@ -54,13 +66,12 @@ public class Ad  implements Serializable{
 	@JoinColumn(name = "CLIENT",nullable = false)
 	private Client client;
 	
-	@NotNull
+	@NotBlank
 	@Column(name = "AD_NAME", nullable = false)
 	private String name;
 	
-	@NotNull
+	@NotBlank
 	@Column(name = "AD_DESC",nullable = false,length = 1000)
-	
 	@Lob
 	@Size(min = 0, max = 1000)
 	private String description;
@@ -80,14 +91,17 @@ public class Ad  implements Serializable{
 	@Column(name = "AD_END_DATE",nullable = false)
 	private LocalDate endDate;
 	
+	@NotNull
 	@Column(name = "AD_INIT_LANGUAGE",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Language initLanguage;
 	
+	@NotNull
 	@Column(name = "AD_RESULT_LANGUAGE",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Language resultLanguage;
 	
+	@NotNull
 	@Column(name = "AD_TRANSLATE_TYPE",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private TranslateType translateType;
@@ -100,6 +114,7 @@ public class Ad  implements Serializable{
 	@Column(name = "AD_COST",nullable = false,precision = 2)
 	private double cost;
 	
+	@NotNull
 	@Column(name = "AD_CURRENCY",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Currency currency;
@@ -110,6 +125,10 @@ public class Ad  implements Serializable{
 	@Column(name = "AD_STATUS",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private AdStatus status;
+	
+	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "ad")
+	@Cascade(CascadeType.ALL)
+	private List<ResponsedAd> responsedAds = new ArrayList<>();
 	
 	public Ad(){}
 
@@ -238,13 +257,27 @@ public class Ad  implements Serializable{
 		return serialVersionUID;
 	}
 	
+	public List<ResponsedAd> getResponsedAds() {
+		return responsedAds;
+	}
+
+	public void addResponsedAd(ResponsedAd responsedAd){
+		responsedAds.add(responsedAd);
+		responsedAd.setAd(this);
+	}
+	
+	public void removeResponsedAd(ResponsedAd responsedAd){
+		responsedAds.remove(responsedAd);
+		responsedAd.setAd(null);
+	}
+	
 	@Override
 	public boolean equals(Object obj){
+		if ( obj == null || getClass() != obj.getClass() ) {
+            return false;
+        }
 		Ad ad = (Ad)obj;
-		if(ad == null){
-			return false;
-		}
-		return (this.getId() ==ad.getId());
+		return Objects.equals(this.getId(), ad.getId());
 	}
 	
 	@Override

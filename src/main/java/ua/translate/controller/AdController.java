@@ -8,14 +8,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
 import ua.translate.service.AdServiceImpl;
+import ua.translate.service.UserService;
 import ua.translate.support.AdComparatorByDate;
 
 @Controller
@@ -63,6 +67,8 @@ public class AdController {
 		model.addObject("adsTime", adsWithTimeInfo);
 		return model;
 	}
+	
+	
 	
 	/**
 	 * Gets user-friendly string representation of creation time of advertisement

@@ -12,7 +12,16 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-				<form method="post" action="<@spring.url "/client/saveAd"/>">
+				<#if createAd??>
+					<#assign formUrl = "/client/saveAd"/>
+				<#else>
+					<#assign formUrl = "/client/saveAdEdits?adId=${ad.getId()}"/>
+				</#if>
+				<#if Editmsg??>
+					<div class="alert alert-success">${Editmsg}</div>
+				</#if>
+				
+				<form method="post" action="<@spring.url formUrl/>">
 				<table>
 					<tr><td>Name: </td><td>
 										<@spring.bind "ad.name"/>
@@ -41,23 +50,23 @@
 										<@spring.formSingleSelect "ad.resultLanguage" languages/>
 										<@spring.showErrors "</br>" "alert alert-warning"/>
 					</td></tr>
-					<tr><td>Country: </td><td>
-										<@spring.bind "ad.country"/>
-										<input type = "text" id = "country" name = "${(spring.status.expression)!"country"}" 
-										value = "${country!""}" class="form-control" placeholder = "Country"/>
-										<div><@spring.showErrors " " "alert alert-warning"/></div>
-					</td></tr>
-					<tr><td>City: </td><td>
-										<@spring.bind "ad.city"/>
-										<input type = "text" id = "city" name = "${(spring.status.expression)!"city"}" 
-										value = "${city!""}" class="form-control" placeholder = "City"/>
+					<tr><td>Type of translation: </td><td>
+										<@spring.formSingleSelect "ad.translateType" translateTypes/>
 										</br>
 										<#list spring.status.errorMessages as error>
 											<div class="alert alert-warning">${error}</div>
 										</#list>
 					</td></tr>
-					<tr><td>Type of translation: </td><td>
-										<@spring.formSingleSelect "ad.translateType" translateTypes/>
+					<tr><td>Country: </td><td>
+										<@spring.bind "ad.country"/>
+										<input type = "text" id = "country" name = "${(spring.status.expression)!"country"}" 
+										value = "${spring.status.value!""}" class="form-control" placeholder = "Country"/>
+										<div><@spring.showErrors " " "alert alert-warning"/></div>
+					</td></tr>
+					<tr><td>City: </td><td>
+										<@spring.bind "ad.city"/>
+										<input type = "text" id = "city" name = "${(spring.status.expression)!"city"}" 
+										value = "${spring.status.value!""}" class="form-control" placeholder = "City"/>
 										</br>
 										<#list spring.status.errorMessages as error>
 											<div class="alert alert-warning">${error}</div>

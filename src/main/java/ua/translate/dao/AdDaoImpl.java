@@ -26,4 +26,13 @@ public class AdDaoImpl extends AbstractDao<Integer, Ad> implements AdDao {
 		return ads;
 	}
 
+
+	@Override
+	public void deleteById(long id) {
+		Session session = sessionFactory.getCurrentSession();
+		Query query = session.getNamedQuery("deleteById");
+		query.setParameter("id", id);
+		query.executeUpdate();
+	}
+
 }

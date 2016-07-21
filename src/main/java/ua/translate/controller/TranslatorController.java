@@ -3,8 +3,10 @@ package ua.translate.controller;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -32,13 +34,21 @@ import org.springframework.web.servlet.ModelAndView;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
+import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Language;
+import ua.translate.model.ad.ResponsedAd;
+import ua.translate.service.AdServiceImpl;
+import ua.translate.service.TranslatorServiceImpl;
 import ua.translate.service.UserService;
 
 @Controller
 @RequestMapping("/translator")
 public class TranslatorController {
 
+	@Autowired
+	@Qualifier("adService")
+	private AdServiceImpl adService;
+	
 	@Autowired
 	@Qualifier("translatorService")
 	private UserService<Translator> translatorService;
@@ -118,7 +128,9 @@ public class TranslatorController {
 									@RequestParam(name = "selectedLanguages",required = true) List<String> stringLanguages,
 								BindingResult result){
 		if(result.hasErrors()){
-			return new ModelAndView("/translator/registration");
+			ModelAndView model = new ModelAndView("/translator/registration");
+			model.addObject("languages",Language.values());
+			return model;
 		}
 		//String[] stringLanguages = request.getParameterValues("selectedLanguages");
 		List<Language> enumLanguages= new ArrayList<>();
@@ -238,6 +250,19 @@ public class TranslatorController {
 		}
 		
 	}
+	
+	@RequestMapping(value="/response")
+	public ModelAndView response(@RequestParam("adId") long adId, 
+								Principal user){
+		Ad ad = adService.get(adId);
+		if(ad == null){
+			return new ModelAndView();
+		}
+		//ResponsedAd responsedAd = new ResponsedAd(ad, LocalDateTime.now());
+		((TranslatorServiceImpl)translatorService).saveResponsedAd(ad, user.getName());
+		return new ModelAndView("/translator/sr");
+	}
+		
 	
 	private String convertImageForRendering(byte[] image) throws UnsupportedEncodingException{
 		byte[] encodeBase64 = Base64.encodeBase64(image); 

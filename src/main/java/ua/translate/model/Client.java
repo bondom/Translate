@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -15,6 +16,7 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ResponsedAd;
 
 @Entity
 @NamedQueries({
@@ -34,6 +36,9 @@ public class Client extends User{
 	@Cascade(CascadeType.ALL)
 	public List<Ad> ads = new ArrayList<>();
 	
+	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "client")
+	@Cascade(CascadeType.ALL)
+	private List<ResponsedAd> responsedAds = new ArrayList<>();
 
 	public Client(){}
 
@@ -57,5 +62,18 @@ public class Client extends User{
 		ads.remove(ad);
 		ad.setClient(null);
 	}
+
+	public List<ResponsedAd> getResponsedAds() {
+		return responsedAds;
+	}
 	
+	public void addResponsedAd(ResponsedAd responsedAd){
+		responsedAds.add(responsedAd);
+		responsedAd.setClient(this);
+	}
+	
+	public void removeResponsedAd(ResponsedAd responsedAd){
+		responsedAds.remove(responsedAd);
+		responsedAd.setClient(null);
+	}
 }

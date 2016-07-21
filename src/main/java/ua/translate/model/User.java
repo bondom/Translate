@@ -3,6 +3,7 @@ package ua.translate.model;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,6 +26,7 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
@@ -47,7 +49,7 @@ public class User implements Serializable{
 
 	@Id
 	@SequenceGenerator(name = "standart",initialValue = 1)
-	@GeneratedValue(generator = "standart")
+	@GeneratedValue(generator = "standart",strategy =GenerationType.SEQUENCE)
 	@Column(name = "ID")
 	private long id;
 	
@@ -85,11 +87,11 @@ public class User implements Serializable{
 	@Column(name = "BIRTHDAY",nullable = false)
 	private LocalDate birthday;
 
-	@NotNull
+	@NotBlank
 	@Column(name = "COUNTRY",nullable = false)
 	private String country;
 	
-	@NotNull
+	@NotBlank
 	@Column(name = "CITY",nullable = false)
 	private String city;
 	
@@ -212,16 +214,16 @@ public class User implements Serializable{
 
 	@Override
 	public boolean equals(Object obj){
+		if ( obj == null || getClass() != obj.getClass() ) {
+            return false;
+        }
 		User user = (User)obj;
-		if(user == null){
-			return false;
-		}
-		return (this.getId() ==user.getId());
+		return Objects.equals(email, user.getEmail());
 	}
 	
 	@Override
 	public int hashCode(){
-		return Long.hashCode(id);
+		return Objects.hash(email);
 	}
 		
 	

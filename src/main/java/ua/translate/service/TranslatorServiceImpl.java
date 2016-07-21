@@ -12,10 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.AbstractDao;
 import ua.translate.dao.UserDao;
+import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
 import ua.translate.model.UserStatus;
+import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ResponsedAd;
 
 @Service("translatorService")
 @Transactional(propagation = Propagation.REQUIRED)
@@ -67,6 +70,16 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 		translator.setEmail(newUser.getEmail());
 		translator.setAddedInfo(newUser.getAddedInfo());
 		return translator;
+	}
+	
+	public void saveResponsedAd(Ad ad, String email){
+		Translator translator = translatorDao.getUserByEmail(email);
+		ResponsedAd responsedAd = new ResponsedAd();
+		responsedAd.setDateTimeOfResponse(LocalDateTime.now());
+		Client client = ad.getClient();
+		ad.addResponsedAd(responsedAd);
+		client.addResponsedAd(responsedAd);
+		translator.addResponsedAd(responsedAd);
 	}
 
 }

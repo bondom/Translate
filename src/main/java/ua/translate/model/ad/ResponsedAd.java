@@ -1,0 +1,106 @@
+package ua.translate.model.ad;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import org.springframework.stereotype.Component;
+
+import ua.translate.model.Client;
+import ua.translate.model.Translator;
+
+@Entity
+@Table(name = "RESPONSED_AD_TEST")
+@Component
+public class ResponsedAd {
+	
+	@Id
+	@SequenceGenerator(name = "standart",initialValue = 1)
+	@GeneratedValue(generator = "standart",strategy =GenerationType.SEQUENCE)
+	private long id;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "AD",nullable = false)
+	private Ad ad;
+	
+	@Column(nullable = false)
+	private LocalDateTime dateTimeOfResponse;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "CLIENT",nullable = false)
+	private Client client;
+	
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "TRANSLATOR",nullable = false)
+	private Translator translator;
+	
+	public ResponsedAd(){}
+	
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public void setAd(Ad ad) {
+		this.ad = ad;
+	}
+
+	public Ad getAd() {
+		return ad;
+	}
+
+	public LocalDateTime getDateTimeOfResponse() {
+		return dateTimeOfResponse;
+	}
+
+	public void setDateTimeOfResponse(LocalDateTime dateTimeOfResponse) {
+		this.dateTimeOfResponse = dateTimeOfResponse;
+	}
+
+	public Client getClient() {
+		return client;
+	}
+
+	public void setClient(Client client) {
+		this.client = client;
+	}
+
+	public Translator getTranslator() {
+		return translator;
+	}
+
+	public void setTranslator(Translator translator) {
+		this.translator = translator;
+	}
+	
+	@Override
+	public boolean equals(Object obj){
+		if ( obj == null || getClass() != obj.getClass() ) {
+            return false;
+        }
+		ResponsedAd ad = (ResponsedAd)obj;
+		return Objects.equals(this.getId(), ad.getId());
+	}
+	
+	@Override
+	public int hashCode(){
+		return Long.hashCode(id);
+	}
+	
+
+}

@@ -47,6 +47,8 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	private final static String HIBERNATE_SHOW_SQL = "hibernate.show_sql";
 	private final static String HIBERNATE_DIALECT = "hibernate.dialect";
 	private final static String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
+	private final static String HIBERNATE_ID_NEW_GENERATOR_MAP = "hibernate.id.new_generator_mappings";
+
 	private final static String SCAN_PACKAGES = "scan_packages";
 	
 	@Autowired
@@ -95,6 +97,7 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	    properties.put("hibernate.show_sql", env.getProperty(HIBERNATE_SHOW_SQL));
 	    properties.put("hibernate.dialect", env.getProperty(HIBERNATE_DIALECT));
 	    properties.put("hibernate.hbm2ddl.auto", env.getProperty(HIBERNATE_HBM2DDL_AUTO));
+	    properties.put("hibernate.id.new_generator_mappings",env.getProperty(HIBERNATE_ID_NEW_GENERATOR_MAP));
 	    return properties;
 	}
 	

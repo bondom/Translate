@@ -36,6 +36,7 @@ import ua.translate.model.UserRole;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Currency;
 import ua.translate.model.ad.Language;
+import ua.translate.model.ad.ResponsedAd;
 import ua.translate.model.ad.TranslateType;
 import ua.translate.service.AdServiceImpl;
 import ua.translate.service.ClientServiceImpl;
@@ -164,7 +165,7 @@ public class ClientController {
 	 * @throws UnsupportedEncodingException 
 	 */
 	@RequestMapping(value = "/saveEdits",method = RequestMethod.POST)
-	public ModelAndView saveEdits(
+	public ModelAndView saveProfileEdits(
 			@Valid @ModelAttribute("client") Client editedClient,
 			BindingResult result,
 			Principal user) throws UnsupportedEncodingException{
@@ -233,7 +234,6 @@ public class ClientController {
 	
 	@RequestMapping(value = "/ads",method = RequestMethod.GET)
 	public ModelAndView ads(Principal user){
-	//	List<Ad> ads = adService.getAdsByEmail(user.getName());
 		Client client= (Client)(clientService.getUserByEmail(user.getName()));
 		List<Ad> ads = client.getAds();
 		ModelAndView model = new ModelAndView("/client/ads");
@@ -247,16 +247,11 @@ public class ClientController {
 	public ModelAndView adbuilder(Principal user){
 		ModelAndView model = new ModelAndView("/client/adbuilder");
 		
-		Client client= (Client)(clientService.getUserByEmail(user.getName()));
-		model.addObject("country",client.getCountry());
-		model.addObject("city",client.getCity());
-		
 		Ad ad = new Ad();
 		model.addObject("ad",ad);
-		model.addObject("languages", getLanguagesForSelect());
-		model.addObject("translateTypes", getTranslateTypesForSelect());
-		model.addObject("currencies", getCurrenciesForSelect());
-		return model;
+		model.addObject("createAd", true);
+		ModelAndView fullModel = addMapsToAdView(model);
+		return fullModel;
 	}
 	
 	@RequestMapping(value = "/saveAd", method = RequestMethod.POST)
@@ -264,13 +259,8 @@ public class ClientController {
 								BindingResult result,
 								Principal user){
 		if(result.hasErrors()){
-			Client client= (Client)(clientService.getUserByEmail(user.getName()));
 			ModelAndView model = new ModelAndView("/client/adbuilder");
-			model.addObject("country",client.getCountry());
-			model.addObject("city",client.getCity());
-			model.addObject("languages", getLanguagesForSelect());
-			model.addObject("translateTypes", getTranslateTypesForSelect());
-			model.addObject("currencies", getCurrenciesForSelect());
+			model = addMapsToAdView(model);
 			return model;
 		}
 		//Client client= (Client)(clientService.getUserByEmail(user.getName()));
@@ -281,6 +271,52 @@ public class ClientController {
 		return model;
 	}
 	
+	@RequestMapping(value = "/ads/delete", method = RequestMethod.GET)
+	public ModelAndView deleteAd(@RequestParam("adId") long adId){
+		adService.deleteById(adId);
+		return new ModelAndView("redirect:/client/ads");
+	}
+	
+	@RequestMapping(value = "/ads/edit", method = RequestMethod.GET)
+	public ModelAndView editAd(@RequestParam("adId") long adId){
+		Ad ad = adService.get(adId);
+		if(ad == null){
+			return new ModelAndView("redirect:/client/ads");
+		}
+		ModelAndView model = new ModelAndView("/client/adbuilder");
+		model.addObject("ad",ad);
+		model = addMapsToAdView(model);
+		return model;
+	}
+	
+	@RequestMapping(value = "/saveAdEdits",method = RequestMethod.POST)
+	public ModelAndView saveAdEdits(
+			@RequestParam("adId") long adId,
+			@Valid @ModelAttribute("ad") Ad editedAd,
+			BindingResult result,
+			Principal user) throws UnsupportedEncodingException{
+		if(result.hasErrors()){
+			ModelAndView model = new ModelAndView("/client/adbuilder");
+			model = addMapsToAdView(model);
+			editedAd.setId(adId);
+			return model;
+		}
+		editedAd.setId(adId);
+		Ad updatedAd = adService.updateAd(editedAd);
+		ModelAndView model = new ModelAndView("/client/adbuilder");
+		model.addObject("ad", updatedAd);
+		model.addObject("Editmsg", "Advertisement is edited successfully");
+		model = addMapsToAdView(model);
+		return model;
+	}
+	
+	@RequestMapping(value = "/responses",method = RequestMethod.GET)
+	public ModelAndView responsedAds(Principal user){
+		List<ResponsedAd> responsedAds = ((ClientServiceImpl)clientService).getResponsedAds(user.getName());
+		ModelAndView model = new ModelAndView("/client/responses");
+		model.addObject("responsedAds", responsedAds);
+		return model;
+	}
 	
 	private String convertImageForRendering(byte[] image) throws UnsupportedEncodingException{
 		byte[] encodeBase64 = Base64.encodeBase64(image); 
@@ -327,6 +363,12 @@ public class ClientController {
         return authenticationTrustResolver.isAnonymous(authentication);
     }
 	
+    private ModelAndView addMapsToAdView(ModelAndView model){
+    	model.addObject("languages", getLanguagesForSelect());
+		model.addObject("translateTypes", getTranslateTypesForSelect());
+		model.addObject("currencies", getCurrenciesForSelect());
+		return model;
+    }
     private Map<String,String> getLanguagesForSelect(){
 		Language[] languages = Language.values();
 		Map<String, String> languagesMap = new HashMap<String, String>();
