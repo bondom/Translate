@@ -19,6 +19,7 @@ import ua.translate.model.UserRole;
 import ua.translate.model.UserStatus;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.ResponsedAdStatus;
 
 @Service("translatorService")
 @Transactional(propagation = Propagation.REQUIRED)
@@ -30,11 +31,11 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean registerUser(Translator user) {
+	public long registerUser(Translator user) {
 		User userWithTheSameEmail = getUserByEmail(user.getEmail());
 		if(!Objects.isNull(userWithTheSameEmail)){
 			//if user with the same email registered already
-			return false;
+			return 0;
 		}else{
 			//if user's credentials are unique
 			String encodedPassword = encodePassword(user.getPassword());
@@ -45,12 +46,12 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 			user.setRating(0);
 			user.setNumberOfExecutedAds((short)0);
 			((AbstractDao<Integer, Translator>)translatorDao).save(user);
-			return true;
+			return user.getId();
 		}
 	}
 
 	@Override
-	public Translator editUserProfile(String email, Translator newUser) {
+	public Translator editUserProfile(String email, Translator newUser,boolean changeEmail) {
 		String oldEmail = email;
 		String newEmail = newUser.getEmail();
 		
@@ -76,10 +77,17 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 		Translator translator = translatorDao.getUserByEmail(email);
 		ResponsedAd responsedAd = new ResponsedAd();
 		responsedAd.setDateTimeOfResponse(LocalDateTime.now());
+		responsedAd.setStatus(ResponsedAdStatus.SENDED);
 		Client client = ad.getClient();
 		ad.addResponsedAd(responsedAd);
 		client.addResponsedAd(responsedAd);
 		translator.addResponsedAd(responsedAd);
+	}
+
+	@Override
+	public void confirmRegistration(String email) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

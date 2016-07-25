@@ -1,5 +1,5 @@
 package ua.translate.model;
 
 public enum UserStatus {
-	ACTIVE,NOACTIVE,BANNED;
+	ACTIVE,NOACTIVE,BANNED,NOTCONFIRMED;
 }

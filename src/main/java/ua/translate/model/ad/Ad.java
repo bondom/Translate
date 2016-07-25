@@ -31,6 +31,8 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
@@ -38,16 +40,16 @@ import org.springframework.format.annotation.DateTimeFormat.ISO;
 import ua.translate.model.Client;
 import ua.translate.model.Comment;
 import ua.translate.model.Translator;
-import ua.translate.model.customvalidators.FieldMatch;
+import ua.translate.model.customvalidators.FieldNotMatch;
 
 @Entity
 @NamedQueries({
-	@NamedQuery(name =  "allAds",
+	@NamedQuery(name =  "getAllAds",
 			query = "from Ad"),
 	@NamedQuery(name =  "deleteById",
 	query = "delete from Ad where id = :id")
 })
-@FieldMatch(first = "initLanguage",second = "resultLanguage", message = "Languages must be different")
+@FieldNotMatch(first = "initLanguage",second = "resultLanguage", message = "Languages must be different")
 @Table(name = "AD_TEST")
 public class Ad  implements Serializable{
 	
@@ -83,25 +85,21 @@ public class Ad  implements Serializable{
 	private String city;
 	
 
-	@NotNull
 	/**
 	 * Добавить проверку валидности даты
 	 */
 	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
 	@Column(name = "AD_END_DATE",nullable = false)
 	private LocalDate endDate;
-	
-	@NotNull
+
 	@Column(name = "AD_INIT_LANGUAGE",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Language initLanguage;
 	
-	@NotNull
 	@Column(name = "AD_RESULT_LANGUAGE",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Language resultLanguage;
 	
-	@NotNull
 	@Column(name = "AD_TRANSLATE_TYPE",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private TranslateType translateType;
@@ -110,11 +108,9 @@ public class Ad  implements Serializable{
 	@Column(name = "AD_FILE")
 	private byte[] file;
 	
-	@NotNull
 	@Column(name = "AD_COST",nullable = false,precision = 2)
 	private double cost;
 	
-	@NotNull
 	@Column(name = "AD_CURRENCY",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Currency currency;
@@ -126,6 +122,7 @@ public class Ad  implements Serializable{
 	@Enumerated(EnumType.STRING)
 	private AdStatus status;
 	
+	//@OnDelete(action = OnDeleteAction.CASCADE)
 	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "ad")
 	@Cascade(CascadeType.ALL)
 	private List<ResponsedAd> responsedAds = new ArrayList<>();
@@ -260,7 +257,7 @@ public class Ad  implements Serializable{
 	public List<ResponsedAd> getResponsedAds() {
 		return responsedAds;
 	}
-
+	
 	public void addResponsedAd(ResponsedAd responsedAd){
 		responsedAds.add(responsedAd);
 		responsedAd.setAd(this);

@@ -32,7 +32,7 @@ public class FieldMatchValidator implements ConstraintValidator<FieldMatch, Obje
 			final Object secondObj = BeanUtils.getProperty(value, secondFieldName );
 			
 			validationPassed = firstObj == null && secondObj == null ||
-							   firstObj != null && !firstObj.equals(secondObj);
+							   firstObj != null && firstObj.equals(secondObj);
 							   
 		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 			// TODO Auto-generated catch block

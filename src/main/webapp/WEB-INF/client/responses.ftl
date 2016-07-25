@@ -19,6 +19,12 @@
 					<p>${translator.getFirstName()} ${translator.getLastName()}	response on
 					<a href = "<@spring.url "/ads/${ad.getId()}"/>">${ad.getName()}</a>				
 					<p>at ${responsedAd.getDateTimeOfResponse()}
+					<#assign adstatus = responsedAd.status>
+					<p>Status:${adstatus}
+					<#if adstatus.name()="SENDED">
+						<a href="<@spring.url "/client/reject?radId=${responsedAd.getId()}"/>">Reject</a>						
+						<a href="<@spring.url "/client/accept?radId=${responsedAd.getId()}"/>">Accept</a>
+					</#if>
 				</#list>
 			</#if>
 		</div>

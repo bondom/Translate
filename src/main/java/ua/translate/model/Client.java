@@ -74,6 +74,7 @@ public class Client extends User{
 	
 	public void removeResponsedAd(ResponsedAd responsedAd){
 		responsedAds.remove(responsedAd);
+		responsedAds.remove(responsedAd);
 		responsedAd.setClient(null);
 	}
 }

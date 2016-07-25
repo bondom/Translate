@@ -8,13 +8,17 @@ import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.env.Environment;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
@@ -54,7 +58,14 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	@Autowired
 	private Environment env;
 	
-
+	@Value("${mailserver.host}") private String host;
+	@Value("${mailserver.port}") private Integer port;
+	@Value("${mailserver.protocol}") private String protocol;
+	@Value("${mailserver.username}") private String username;
+	@Value("${mailserver.password}") private String password;
+	@Value("${mail.smtp.starttls.enable}") private String smtpStarttlsEnable;
+	@Value("${mail.smtp.auth}") private String smtpAuth;
+	@Value("${mail.smtp.ssl.trust}") private String smtpSslTrust;
 	
 	@Bean(name = "viewResolver")
 	public FreeMarkerViewResolver getViewResolver() {
@@ -136,4 +147,24 @@ public class AppConfig extends WebMvcConfigurerAdapter{
         return new AuthenticationTrustResolverImpl();
     }
 	
+	@Bean
+	public JavaMailSender mailSender(){
+		JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+		mailSender.setHost(host);
+		mailSender.setPort(port);
+		mailSender.setUsername(username);
+		mailSender.setPassword(password);
+		mailSender.setProtocol(protocol);
+		Properties props = new Properties();
+		props.put("mail.smtp.starttls.enable",smtpStarttlsEnable);
+		props.put("mail.smtp.auth", smtpAuth);
+		props.put("mail.smtp.ssl.trust", smtpSslTrust);
+		mailSender.setJavaMailProperties(props);
+		return mailSender;
+	}
+	
+	@Bean 
+	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+		return new PropertySourcesPlaceholderConfigurer();
+	}
 }

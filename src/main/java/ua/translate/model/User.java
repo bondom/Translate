@@ -54,6 +54,7 @@ public class User implements Serializable{
 	private long id;
 	
 	@Email
+	/*!!!!Can be replaced with required=false and then need delete not needed hidden input!!!!*/
 	@NotEmpty
 	@Column(name = "EMAIL",nullable =false,unique = true)
 	private String email;

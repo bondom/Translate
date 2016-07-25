@@ -20,7 +20,34 @@
 					</#if>
 				</form>
 				
-				<form method="post" action="<@spring.url "/client/saveEdits"/>">
+				<form method="post" autocomplete="false" action="<@spring.url "/client/saveEdits"/>">
+				<input style="display:none" type="text" name="fakeusernameremembered"/>
+				<input style="display:none" type="password" name="fakepasswordremembered"/>
+				<h4>Authorization information</h4>
+					<label>E-mail:</label><span>${email}</span><br>
+					<@spring.bind "changeEmailBean.newEmail"/>
+					<label>New e-mail:</label><input type = "text" class="form-control" name = "${spring.status.expression}" value = "${spring.status.value!""}"/>
+					<#list spring.status.errorMessages as error>
+						<div class="alert alert-warning">${error}</div>
+					</#list><br>
+					<#if emailExists??>
+						<div class="alert alert-warning">${emailExists}</div>
+					</#if><br>
+					<@spring.bind "changeEmailBean.newEmailAgain"/>
+					<p><label>New e-mail again:</label><input type = "text" autocomplete="false" class="form-control" name = "${(spring.status.expression)}" value = "${spring.status.value!""}"/></p>
+					<#list spring.status.errorMessages as error>
+						<div class="alert alert-warning">${error}</div>
+					</#list><br>
+					<@spring.bind "changeEmailBean.currentPassword"/>
+					<p><label>Your current password:</label><input type = "password" autocomplete="new-password" class="form-control" name = "${(spring.status.expression)}" value=""/></p>
+					<#if wrongPassword??>
+						<div class="alert alert-warning">${wrongPassword}</div>
+					</#if><br>
+					<#list spring.status.errorMessages as error>
+						<div class="alert alert-warning">${error}</div>
+					</#list><br>
+					<label>Change e-mail:</label><input type="checkbox" name="changeEmail" value="true"/>
+										
 				<table>
 					<tr><td>First Name: </td><td>
 										<@spring.bind "client.firstName"/>
@@ -67,18 +94,6 @@
 											<div class="alert alert-warning">${error}</div>
 										</#list>
 					</td></tr>
-					<tr><td>Email: </td><td>
-										<@spring.bind "client.email"/>
-										<input type = "text" id = "email" name = "${(spring.status.expression)!"email"}" 
-										value = "${spring.status.value!""}" class="form-control" placeholder = "Email"/>
-										</br>
-										<#list spring.status.errorMessages as error>
-											<div class="alert alert-warning">${error}</div>
-										</#list>
-										<#if emailExists??>
-											<div class="alert alert-warning">${emailExists}</div>
-										</#if>
-					</td></tr>
 					<tr><td>Phone Number: </td><td>
 											<@spring.bind "client.phoneNumber"/>
 											<input type = "text" id = "phoneNumber" name = "${(spring.status.expression)!"phoneNumber"}" 
@@ -88,13 +103,16 @@
 												<div class="alert alert-warning">${error}</div>
 											</#list>
 					</td></tr>
-					<tr><td><input type="submit"/></td>
-						<td><input type="hidden"
-								name="${_csrf.parameterName}"
-								value="${_csrf.token}"/>
-						</td>
-					</tr>
 				</table>
+				<input type="submit"/>
+				<@spring.bind "client.email"/>
+					<input type="hidden"
+							name="${spring.status.expression}"
+							value="${spring.status.value!""}"/>
+					<input type="hidden"
+							name="${_csrf.parameterName}"
+							value="${_csrf.token}"/>
+						
 				</form>
 			</div>
 		</div>

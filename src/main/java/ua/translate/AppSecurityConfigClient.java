@@ -17,27 +17,27 @@ public class AppSecurityConfigClient extends AppSecurityConfig{
 	protected void configure(HttpSecurity http) throws Exception {
 		http    
 				.authorizeRequests()
-				.antMatchers("/client/registration*","/bulbular*").anonymous()
+				.antMatchers("/client/registration*","/bulbular*","/client/confirmation").anonymous()
+				.antMatchers("/index","/translators","/orders","/client/login*").permitAll()
 				.antMatchers("/client/**").hasRole("CLIENT")
 				.antMatchers("/admin/**").hasRole("ADMIN")
-				.antMatchers("/index","/translators","/orders","/client/login*").permitAll()
 			.and()
 				.formLogin()
 				.loginPage("/client/login")
 				.permitAll()
 				.successHandler(customSuccessHandler)
-				.failureUrl("/client/login?error")
+				.failureUrl("/client/login?error=1")
 				.usernameParameter("username")
 				.passwordParameter("password")
 				.loginProcessingUrl("/j_spring_security_check")
 			.and()
 					.logout().deleteCookies("JSESSIONID")
 							.logoutUrl("/client/logout")
-							.logoutSuccessUrl("/client/login?logout")
+							.logoutSuccessUrl("/client/login?logout=1")
 			.and()
-			/**
-			 * Доделать saved request url!!!
-			 */
+			
+			 /*!!!!Доделать saved request url!!!!*/
+			
 				.rememberMe().tokenRepository(tokenRepository)
 				.tokenValiditySeconds(86400)
 			.and()

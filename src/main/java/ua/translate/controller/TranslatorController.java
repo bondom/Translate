@@ -43,7 +43,7 @@ import ua.translate.service.UserService;
 
 @Controller
 @RequestMapping("/translator")
-public class TranslatorController {
+public class TranslatorController extends UserController{
 
 	@Autowired
 	@Qualifier("adService")
@@ -52,9 +52,6 @@ public class TranslatorController {
 	@Autowired
 	@Qualifier("translatorService")
 	private UserService<Translator> translatorService;
-	
-	@Autowired
-	private AuthenticationTrustResolver authenticationTrustResolver;
 	
 	@RequestMapping(value = "/index", method = RequestMethod.GET)
 	public ModelAndView init(){
@@ -79,7 +76,7 @@ public class TranslatorController {
 			 * Поменять!!!
 			 */
 		}else{
-			model.addObject("image", convertImageForRendering(translatorFromDB.getAvatar()));
+			model.addObject("image", convertAvaForRendering(translatorFromDB.getAvatar()));
 		}
 		return model;
 	}
@@ -138,7 +135,7 @@ public class TranslatorController {
 			enumLanguages.add(Language.valueOf(language));
 		}
 		translator.setLanguages(enumLanguages);
-		if(translatorService.registerUser(translator)){
+		if(translatorService.registerUser(translator)>0){
 			ModelAndView loginView = new ModelAndView("/translator/login");
 			loginView.addObject("resultRegistration", 
 									"Success registration!");
@@ -191,7 +188,7 @@ public class TranslatorController {
 		if(result.hasErrors()){
 			return new ModelAndView("/translator/edit");
 		}
-		Translator translator = translatorService.editUserProfile(user.getName(), editedTranslator);
+		Translator translator = translatorService.editUserProfile(user.getName(), editedTranslator,false);
 		if(translator == null){
 			ModelAndView model = new ModelAndView("/translator/edit");
 			model.addObject("emailExists","Such email is registered in system already");
@@ -200,7 +197,7 @@ public class TranslatorController {
 			ModelAndView editedProfile = new ModelAndView("/translator/profile");
 			editedProfile.addObject("translator", translator);
 			if(translator.getAvatar()!=null){
-				editedProfile.addObject("image", convertImageForRendering(translator.getAvatar()));
+				editedProfile.addObject("image", convertAvaForRendering(translator.getAvatar()));
 			}
 			return editedProfile;
 		}
@@ -225,7 +222,7 @@ public class TranslatorController {
 					Translator updatedTranslator = (Translator) translatorService.updateAvatar(user.getName(), avatar);
 					ModelAndView model = new ModelAndView("/translator/profile");
 					model.addObject("translator", updatedTranslator);
-					model.addObject("image", convertImageForRendering(updatedTranslator.getAvatar()));
+					model.addObject("image", convertAvaForRendering(updatedTranslator.getAvatar()));
 					return model;
 				}else{
 					Translator translatorFromDB = (Translator) translatorService.getUserByEmail(user.getName());
@@ -256,58 +253,13 @@ public class TranslatorController {
 								Principal user){
 		Ad ad = adService.get(adId);
 		if(ad == null){
-			return new ModelAndView();
+			return new ModelAndView("/adsForAll");
 		}
 		//ResponsedAd responsedAd = new ResponsedAd(ad, LocalDateTime.now());
 		((TranslatorServiceImpl)translatorService).saveResponsedAd(ad, user.getName());
 		return new ModelAndView("/translator/sr");
 	}
 		
-	
-	private String convertImageForRendering(byte[] image) throws UnsupportedEncodingException{
-		byte[] encodeBase64 = Base64.encodeBase64(image); 
-		String base64Encoded = new String(encodeBase64,"UTF-8");
-		return base64Encoded;
-	}
-	
-	
-	private boolean isRememberMeAuthenticated() {
-		Authentication authentication = 
-                    SecurityContextHolder.getContext().getAuthentication();
-		if (authentication == null) {
-			return false;
-		}
-		return RememberMeAuthenticationToken.class.isAssignableFrom(authentication.getClass());
-	}
-	
-	private void setRememberMeTargetUrlToSession(User user, HttpServletRequest request){
-		HttpSession session = request.getSession(false);
-		if(session!=null){
-			UserRole role= user.getRole();
-			if(role.equals(UserRole.ROLE_TRANSLATOR)){
-				session.setAttribute("targetUrl", "/translator/edit");
-			}	
-		}
-	}
-	
-	private String getRememberMeTargetUrlFromSession(HttpServletRequest request){
-		String targetUrl = "";
-		HttpSession session = request.getSession(false);
-		if(session!=null){
-			targetUrl = session.getAttribute("targetUrl")==null?""
-                             :session.getAttribute("targetUrl").toString();
-			System.out.println("targetUrl = " + targetUrl);
-		}
-		return targetUrl;
-	}
-	
-	/**
-     * This method returns true if users is already authenticated [logged-in], else false.
-     */
-    private boolean isCurrentAuthenticationAnonymous() {
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authenticationTrustResolver.isAnonymous(authentication);
-    }
 	
 	
 }

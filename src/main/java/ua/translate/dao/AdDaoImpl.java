@@ -12,7 +12,7 @@ import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
 
 @Repository("adDao")
-public class AdDaoImpl extends AbstractDao<Integer, Ad> implements AdDao {
+public class AdDaoImpl extends AbstractDao<Long, Ad> implements AdDao {
 	
 	@Autowired
 	SessionFactory sessionFactory;
@@ -21,18 +21,11 @@ public class AdDaoImpl extends AbstractDao<Integer, Ad> implements AdDao {
 	@Override
 	public List<Ad> getAllAds() {
 		Session session = sessionFactory.getCurrentSession();
-		Query query = session.getNamedQuery("allAds");
+		Query query = session.getNamedQuery("getAllAds");
 		List<Ad> ads = (List<Ad>)query.list();
 		return ads;
 	}
 
 
-	@Override
-	public void deleteById(long id) {
-		Session session = sessionFactory.getCurrentSession();
-		Query query = session.getNamedQuery("deleteById");
-		query.setParameter("id", id);
-		query.executeUpdate();
-	}
 
 }

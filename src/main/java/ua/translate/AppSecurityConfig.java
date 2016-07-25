@@ -1,5 +1,8 @@
 package ua.translate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +10,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -39,6 +46,10 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     PersistentTokenRepository tokenRepository;
     
+    @Autowired
+    @Qualifier("detailsService") 
+    UserDetailsService uds;
+    
 	@Override
 	public void configure(WebSecurity web){
 		web 
@@ -46,10 +57,29 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 			.antMatchers(new String[]{"/resources/**"});
 	}
 	
-	@Autowired
+	/*@Autowired
 	public void configureGlobal(AuthenticationManagerBuilder auth,@Qualifier("detailsService") UserDetailsService uds) throws Exception{
 		auth.userDetailsService(uds)
 			.passwordEncoder(bcryptEncoder());
+		
+	}*/
+	
+	@Bean
+	public AuthenticationProvider daoAuthenticationProvider() {
+	    DaoAuthenticationProvider impl = new DaoAuthenticationProvider();
+	    impl.setUserDetailsService(uds);
+	    impl.setPasswordEncoder(bcryptEncoder());
+	    impl.setHideUserNotFoundExceptions(false);
+	    return impl;
+	}
+	
+	@Bean(name = "authenticationManager")
+	@Autowired
+	public ProviderManager getProviderManager(DaoAuthenticationProvider daoAuthenticationProvider){
+		List<AuthenticationProvider> providers = new ArrayList<>();
+		providers.add(daoAuthenticationProvider);
+		ProviderManager providerManager = new ProviderManager(providers);
+		return providerManager;
 		
 	}
 	
@@ -60,7 +90,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 	
 	@Autowired
 	@Bean
-    public PersistentTokenBasedRememberMeServices getPersistentTokenBasedRememberMeServices(@Qualifier("detailsService") UserDetailsService uds) {
+    public PersistentTokenBasedRememberMeServices getPersistentTokenBasedRememberMeServices() {
         PersistentTokenBasedRememberMeServices tokenBasedservice = new PersistentTokenBasedRememberMeServices(
                 "remember-me", uds, tokenRepository);
         return tokenBasedservice;

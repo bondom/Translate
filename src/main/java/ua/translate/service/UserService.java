@@ -8,10 +8,12 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.ModelAndView;
 
+import ua.translate.dao.AbstractDao;
 import ua.translate.dao.UserDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
+import ua.translate.model.UserStatus;
 
 @Service("userService")
 @Transactional(propagation = Propagation.REQUIRED)
@@ -29,7 +31,10 @@ public abstract class UserService<T extends User> {
 	 * false if registration fails because some data are not unique
 	 */
 	@Transactional(propagation  = Propagation.REQUIRES_NEW)
-	public abstract boolean registerUser(T user);
+	public abstract long registerUser(T user);
+	
+	
+	public abstract void confirmRegistration(String email);
 	
 	/**
 	 * Edits user's profile
@@ -39,7 +44,7 @@ public abstract class UserService<T extends User> {
 	 * which must update old one
 	 * @return updated user, or {code null} if new email is registered in system already
 	 */
-	public abstract  T editUserProfile(String email,T newUser);
+	public abstract  T editUserProfile(String email,T newUser,boolean changeEmail);
 	
 	/**
 	 * Gets user from db by email
@@ -47,12 +52,29 @@ public abstract class UserService<T extends User> {
 	 * user can be casted to concrete subclass without checking.
 	 * 
 	 * @param email - email of user
-	 * @return registered user, or {code null} if user with that email
+	 * @return registered user, or {@code null} if user with that email
 	 * is not registered
 	 */
 	public User getUserByEmail(String email){
 		User userFromDB = userDao.getUserByEmail(email);
 		return userFromDB;
+	}
+	
+	
+	/**
+	 * 
+	 * @param id
+	 * @return
+	 */
+	public User getUserById(long id){
+		User userFromDB = ((AbstractDao<Long, User>)userDao).get(id);
+		return userFromDB;
+	}
+	
+	
+	public void confirmEmail(long id){
+		User userFromDB = ((AbstractDao<Long, User>)userDao).get(id);
+		userFromDB.setStatus(UserStatus.ACTIVE);
 	}
 	
 	/**
@@ -85,7 +107,7 @@ public abstract class UserService<T extends User> {
 	 * @param newEmail - new email, different from the old one
 	 * @return true, if user with the same email doesn't exist, otherwise false
 	 */
-	protected boolean isEmailUnique(String newEmail){
+	public boolean isEmailUnique(String newEmail){
 		User userFromDB = getUserByEmail(newEmail);
 		if(userFromDB==null){
 			//such email doesn't exist
@@ -101,8 +123,13 @@ public abstract class UserService<T extends User> {
 	 * @param newEmail
 	 * @return true if they differ, else false
 	 */
-	protected boolean isEmailChanged(String oldEmail,String newEmail){
+	public boolean isEmailChanged(String oldEmail,String newEmail){
 		return !(oldEmail.equals(newEmail));
+	}
+	
+	public boolean isPasswordRight(String passwordFromPage,String passwordFromDB){
+		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+		return passwordEncoder.matches(passwordFromPage, passwordFromDB);
 	}
 
 }

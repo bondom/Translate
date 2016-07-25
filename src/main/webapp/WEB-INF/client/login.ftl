@@ -12,23 +12,28 @@
 	  	<div class="panel panel-default">
 			<#include "/fragments/initclientheader.ftl">
 			<div class="panel-body" style = "margin: 0px">
-				<#if resultRegistration??>
-					<div class="alert alert-success">${resultRegistration}</div>
+				<#if msg??>
+					<div class="alert alert-success">${msg}</div>
+				</#if>
+				<#if RequestParameters.error?? && Session.SPRING_SECURITY_LAST_EXCEPTION??>
+				     <div class="alert alert-danger">
+						${Session.SPRING_SECURITY_LAST_EXCEPTION.message} 
+					 </div>
 				</#if>
 				<h3>Login</h3>
 					
 					<form action = "<@spring.url "/j_spring_security_check"/>" method = "Post" role = "form">
 						<div class="form-group col-xs-5" >
-								<#if error??>
-									<div class="alert alert-danger">
-										${error}
+								<#if RequestParameters.logout??>
+									<div class="alert alert-success">
+										You have benn logged out successfully
 									</div>
 								</#if>
-								<#if logout??>
-									<div class="alert alert-danger">
+								<#--<#if logout??>
+									<div class="alert alert-success">
 										${logout}
 									</div>
-								</#if>
+								</#if>-->
 								<input type = "text" id= "userLogin" name = "username"
 								class="form-control" placeholder = "Login" />
 								<br/>
