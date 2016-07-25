@@ -43,20 +43,17 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 @PropertySource("classpath:application.properties")
 public class AppConfig extends WebMvcConfigurerAdapter{
 	
-	private final static String DB_DRIVER_CLASS_NAME = "db.driver";
-	private final static String DB_URL = "db.url";
-	private final static String DB_USER_NAME = "db.username";
-	private final static String DB_PASSWORD = "db.password";
+	@Value("${db.driver}") private String dbDriver;
+	@Value("${db.url}") private String dbUrl;
+	@Value("${db.username}") private String dbUsername;
+	@Value("${db.password}") private String dbPassword;
 	
-	private final static String HIBERNATE_SHOW_SQL = "hibernate.show_sql";
-	private final static String HIBERNATE_DIALECT = "hibernate.dialect";
-	private final static String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
-	private final static String HIBERNATE_ID_NEW_GENERATOR_MAP = "hibernate.id.new_generator_mappings";
-
-	private final static String SCAN_PACKAGES = "scan_packages";
+	@Value("${hibernate.show_sql}") private String hibernateShowSql;
+	@Value("${hibernate.dialect}") private String hibernateDialect;
+	@Value("${hibernate.hbm2ddl.auto}") private String hibernateHbm2ddlAuto;
+	@Value("${hibernate.id.new_generator_mappings}") private String hibernateIdGeneratorMap;
 	
-	@Autowired
-	private Environment env;
+	@Value("${scan_packages}") private String scanPackages;
 	
 	@Value("${mailserver.host}") private String host;
 	@Value("${mailserver.port}") private Integer port;
@@ -86,10 +83,10 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	@Bean(name = "dataSource")
 	public DataSource getDataSource() {
 	    BasicDataSource dataSource = new BasicDataSource();
-	    dataSource.setDriverClassName(env.getProperty(DB_DRIVER_CLASS_NAME));
-	    dataSource.setUrl(env.getProperty(DB_URL));
-	    dataSource.setUsername(env.getProperty(DB_USER_NAME));
-	    dataSource.setPassword(env.getProperty(DB_PASSWORD));
+	    dataSource.setDriverClassName(dbDriver);
+	    dataSource.setUrl(dbUrl);
+	    dataSource.setUsername(dbUsername);
+	    dataSource.setPassword(dbPassword);
 	    return dataSource;
 	}
 	
@@ -98,17 +95,17 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	public SessionFactory getSessionFactory(DataSource dataSource) {
 	 
 	    LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(dataSource);
-	    sessionBuilder.scanPackages(env.getProperty(SCAN_PACKAGES));
+	    sessionBuilder.scanPackages(scanPackages);
 	    sessionBuilder.addProperties(getHibernateProperties());
 	    return sessionBuilder.buildSessionFactory();
 	}
 	
 	private Properties getHibernateProperties() {
 	    Properties properties = new Properties();
-	    properties.put("hibernate.show_sql", env.getProperty(HIBERNATE_SHOW_SQL));
-	    properties.put("hibernate.dialect", env.getProperty(HIBERNATE_DIALECT));
-	    properties.put("hibernate.hbm2ddl.auto", env.getProperty(HIBERNATE_HBM2DDL_AUTO));
-	    properties.put("hibernate.id.new_generator_mappings",env.getProperty(HIBERNATE_ID_NEW_GENERATOR_MAP));
+	    properties.put("hibernate.show_sql", hibernateShowSql);
+	    properties.put("hibernate.dialect", hibernateDialect);
+	    properties.put("hibernate.hbm2ddl.auto", hibernateHbm2ddlAuto);
+	    properties.put("hibernate.id.new_generator_mappings",hibernateIdGeneratorMap);
 	    return properties;
 	}
 	

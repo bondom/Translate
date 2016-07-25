@@ -34,7 +34,6 @@ public abstract class UserService<T extends User> {
 	public abstract long registerUser(T user);
 	
 	
-	public abstract void confirmRegistration(String email);
 	
 	/**
 	 * Edits user's profile
@@ -71,7 +70,10 @@ public abstract class UserService<T extends User> {
 		return userFromDB;
 	}
 	
-	
+	/**
+	 * Confirms user's e-mail and changes status to {@link UserStatus#ACTIVE}
+	 * @param id - id of existed {@code user} with {@code (user.getStatus()=UserStatus.NOTCONFIRMED).equals(true)}
+	 */
 	public void confirmEmail(long id){
 		User userFromDB = ((AbstractDao<Long, User>)userDao).get(id);
 		userFromDB.setStatus(UserStatus.ACTIVE);

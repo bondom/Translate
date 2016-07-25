@@ -26,14 +26,14 @@ public class AppSecurityConfigClient extends AppSecurityConfig{
 				.loginPage("/client/login")
 				.permitAll()
 				.successHandler(customSuccessHandler)
-				.failureUrl("/client/login?error=1")
+				.failureUrl("/client/login?error")
 				.usernameParameter("username")
 				.passwordParameter("password")
 				.loginProcessingUrl("/j_spring_security_check")
 			.and()
 					.logout().deleteCookies("JSESSIONID")
 							.logoutUrl("/client/logout")
-							.logoutSuccessUrl("/client/login?logout=1")
+							.logoutSuccessUrl("/client/login?logout")
 			.and()
 			
 			 /*!!!!Доделать saved request url!!!!*/

@@ -84,10 +84,5 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 		translator.addResponsedAd(responsedAd);
 	}
 
-	@Override
-	public void confirmRegistration(String email) {
-		// TODO Auto-generated method stub
-		
-	}
 
 }

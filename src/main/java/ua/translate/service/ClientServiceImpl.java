@@ -51,7 +51,8 @@ public class ClientServiceImpl extends UserService<Client>{
 		((AbstractDao<Integer, Client>)clientDao).save(user);
 		return user.getId();
 	}
-
+	
+	/*!!!!Changing of email and changing status!!!!*/
 	@Override
 	public Client editUserProfile(String email, Client newUser,boolean changeEmail) {
 		Client client = (Client)getUserByEmail(email);
@@ -83,10 +84,5 @@ public class ClientServiceImpl extends UserService<Client>{
 		return ads;
 	}
 
-	@Override
-	public void confirmRegistration(String email) {
-		Client client = clientDao.getUserByEmail(email);
-		client.setStatus(UserStatus.ACTIVE);
-	}
 	
 }

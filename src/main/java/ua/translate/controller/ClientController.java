@@ -106,42 +106,28 @@ public class ClientController extends UserController{
 	 * 
 	 * <p>If client is authenticated, he is redirected to {@link #profile(Principal)}.
 	 * 
-	 * <p>If <tt>error</tt> exist, adds message about invalidation of user's email
-	 * and password, adds(refreshes) targetUrl, if such existed in session
-	 * 
-	 * <p>If <tt>logout</tt> exists, return client's login form with message about
-	 * successful logging out 
-	 * @param request - is used for adding targetUrl
+	 * <p>If <tt>error</tt> exists and session has targetUrl parameter, refreshes value of targetUrl
 	 * @see #isCurrentAuthenticationAnonymous()
 	 * @see #getRememberMeTargetUrlFromSession(HttpServletRequest)
 	 */
 	@RequestMapping(value = "/login", method = RequestMethod.GET)
 	public ModelAndView loginForm(
 				@RequestParam(value = "error", required = false) String error,
-				@RequestParam(value = "logout", required = false) String logout, 
 				HttpServletRequest request){
-		logger.info("error=" + error + " logout="+logout);
+		logger.info("error=" + error);
 		if(!isCurrentAuthenticationAnonymous()){
 			return new ModelAndView("redirect:/client/profile");
 		}
+		ModelAndView model = new ModelAndView("/client/login");
 		if(error!=null){
-			ModelAndView model = new ModelAndView("/client/login");
-			//if login error, add targetUrl again
 			String targetUrl = getRememberMeTargetUrlFromSession(request);
 			logger.info("target url from session = " + targetUrl);
 			if(StringUtils.hasText(targetUrl)){	
 				model.addObject("targetUrl", targetUrl);
 				model.addObject("loginUpdate",true);
 			}
-			return model;
 		}
-		
-		if(logout!=null){
-			ModelAndView model = new ModelAndView("/client/login");
-			//model.addObject("logout", "You have been logged out successfully");
-			return model;
-		}
-		return new ModelAndView("/client/login");
+		return model;
 	}
 	
 	/**

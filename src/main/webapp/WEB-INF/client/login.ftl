@@ -20,20 +20,15 @@
 						${Session.SPRING_SECURITY_LAST_EXCEPTION.message} 
 					 </div>
 				</#if>
+				<#if RequestParameters.logout??>
+					<div class="alert alert-success">
+						You have been logged out successfully
+					</div>
+				</#if>
 				<h3>Login</h3>
 					
 					<form action = "<@spring.url "/j_spring_security_check"/>" method = "Post" role = "form">
 						<div class="form-group col-xs-5" >
-								<#if RequestParameters.logout??>
-									<div class="alert alert-success">
-										You have benn logged out successfully
-									</div>
-								</#if>
-								<#--<#if logout??>
-									<div class="alert alert-success">
-										${logout}
-									</div>
-								</#if>-->
 								<input type = "text" id= "userLogin" name = "username"
 								class="form-control" placeholder = "Login" />
 								<br/>
