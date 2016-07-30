@@ -1,25 +1,37 @@
 package ua.translate.controller;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
+import ua.translate.model.security.UserImpl;
 
 public class UserController {
 	
 	@Autowired
 	private AuthenticationTrustResolver authenticationTrustResolver;
+	
+	@Autowired
+	@Qualifier("authenticationManager")
+	private ProviderManager authenticationManager;
 	
 	/**
 	 * Converts user's avatar from byte[] representation to String representation
@@ -50,7 +62,7 @@ public class UserController {
 	 * Sets {@code targetUrl} attribute to session depending of {@link UserRole}
 	 */
 	@SuppressWarnings("unused")
-	private void setRememberMeTargetUrlToSession(User user, HttpServletRequest request){
+	protected void setRememberMeTargetUrlToSession(User user, HttpServletRequest request){
 		HttpSession session = request.getSession(false);
 		if(session!=null){
 			UserRole role= user.getRole();
@@ -70,16 +82,24 @@ public class UserController {
 		if(session!=null){
 			targetUrl = session.getAttribute("targetUrl")==null?""
                              :session.getAttribute("targetUrl").toString();
-			System.out.println("targetUrl = " + targetUrl);
 		}
 		return targetUrl;
 	}
 	
 	/**
-     * This method returns true if user is already authenticated [logged-in], else false.
+     * This method returns true if user is anonymous , else false.
      */
     protected boolean isCurrentAuthenticationAnonymous() {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authenticationTrustResolver.isAnonymous(authentication);
+    }
+    
+    /**
+     * Replaces {@link org.springframework.security.core.userdetails.User} old username with new one 
+     */
+    protected void refreshUsername(String newUsername){
+    	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserImpl userDetails = (UserImpl) authentication.getPrincipal();
+        userDetails.setUsername(newUsername);
     }
 }

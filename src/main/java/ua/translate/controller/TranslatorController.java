@@ -180,7 +180,7 @@ public class TranslatorController extends UserController{
 	 * @return
 	 * @throws UnsupportedEncodingException 
 	 */
-	@RequestMapping(value = "/saveEdits",method = RequestMethod.POST)
+	/*@RequestMapping(value = "/saveEdits",method = RequestMethod.POST)
 	public ModelAndView saveEdits(
 			@Valid @ModelAttribute("translator") Translator editedTranslator,
 			BindingResult result,
@@ -188,7 +188,7 @@ public class TranslatorController extends UserController{
 		if(result.hasErrors()){
 			return new ModelAndView("/translator/edit");
 		}
-		Translator translator = translatorService.editUserProfile(user.getName(), editedTranslator,false);
+		Translator translator = translatorService.editUserProfile(user.getName(), editedTranslator);
 		if(translator == null){
 			ModelAndView model = new ModelAndView("/translator/edit");
 			model.addObject("emailExists","Such email is registered in system already");
@@ -201,7 +201,7 @@ public class TranslatorController extends UserController{
 			}
 			return editedProfile;
 		}
-	}
+	}*/
 	
 	/**
 	 * Saves new avatar in DB

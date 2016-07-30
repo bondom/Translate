@@ -29,5 +29,11 @@ public class UserDaoImpl extends AbstractDao<Integer, User> implements UserDao<U
 		return user;
 	}
 
+	@Override
+	public User getUserByConfirmedUrl(String email) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	
 }

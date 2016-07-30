@@ -13,6 +13,15 @@
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
 			<#if client??>
+				Email: ${client.getEmail()} <a href="<@spring.url "/client/email"/>">Edit</a></br>
+				<#if client.getEmailStatus().name()=="NOTCONFIRMED">
+					<div class="alert alert-warning">
+							You have not confirmed your email.
+					</div>
+					<a href="<@spring.url "/client/email-confirm"/>">Confirm</a></br>
+				</#if>
+				Password:***** <a href="<@spring.url "/client/password"/>">Edit</a></br>
+			
 				<img  src="data:image/jpeg;base64,${image!""}" />
 				<table>
 				<tr><td>First Name: </td><td>${client.getFirstName()}</td></tr>
@@ -20,8 +29,6 @@
 				<tr><td>Country: </td><td>${client.getCountry()}</td></tr>
 				<tr><td>City: </td><td>${client.getCity()}</td></tr>
 				<tr><td>Phone Number: </td><td>${client.getPhoneNumber()}</td></tr>
-				<tr><td>Email: </td><td>${client.getEmail()}</td></tr>
-				<tr><td>Registration Time: </td><td>${client.getRegistrationTime()}</td></tr>
 				</table>
 				<a href = "<@spring.url "/client/edit"/>">Edit profile</a>
 			</#if>

@@ -17,8 +17,8 @@ public class AppSecurityConfigClient extends AppSecurityConfig{
 	protected void configure(HttpSecurity http) throws Exception {
 		http    
 				.authorizeRequests()
-				.antMatchers("/client/registration*","/bulbular*","/client/confirmation").anonymous()
-				.antMatchers("/index","/translators","/orders","/client/login*").permitAll()
+				.antMatchers("/client/registration*","/bulbular*").anonymous()
+				.antMatchers("/index","/translators","/orders","/client/login*","/client/confirmation").permitAll()
 				.antMatchers("/client/**").hasRole("CLIENT")
 				.antMatchers("/admin/**").hasRole("ADMIN")
 			.and()

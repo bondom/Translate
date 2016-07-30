@@ -20,8 +20,6 @@ public class FieldNotMatchValidator implements ConstraintValidator<FieldNotMatch
 		firstFieldName = constraintAnnotation.first();
 	    secondFieldName = constraintAnnotation.second();
 	    message = constraintAnnotation.message(); 
-	    System.out.println(firstFieldName + " " +secondFieldName);
-		
 	}
 
 	@Override

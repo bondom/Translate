@@ -15,8 +15,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.UserDao;
+import ua.translate.model.EmailStatus;
 import ua.translate.model.User;
 import ua.translate.model.UserStatus;
+import ua.translate.model.security.UserImpl;
 import ua.translate.service.exception.NotConfirmedEmailException;
 
 @Service("detailsService")
@@ -32,8 +34,8 @@ public class UserDetailsServiceImpl implements UserDetailsService{
 		// TODO Auto-generated method stub
 				User user = userDao.getUserByEmail(username); 
 				if(user!=null){
-					if(user.getStatus().equals(UserStatus.NOTCONFIRMED)){
-						throw new NotConfirmedEmailException("First you need to confirm your email " + user.getEmail());
+					if(user.getEmailStatus().equals(EmailStatus.NOTCONFIRMED)){
+						/*!!!! Show message that email is not confirmed!!!!*/
 					}
 					boolean enabled = user.getStatus().equals(UserStatus.ACTIVE);
 					boolean accountNonExpired = user.getStatus().equals(UserStatus.ACTIVE);
@@ -43,8 +45,8 @@ public class UserDetailsServiceImpl implements UserDetailsService{
 					Collection<GrantedAuthority> authorities = new ArrayList<>();
 					authorities.add(new SimpleGrantedAuthority(user.getRole().toString()));
 			
-					org.springframework.security.core.userdetails.User securityUser = 
-							new org.springframework.security.core.userdetails.User(
+					UserImpl securityUser = 
+							new UserImpl(
 									user.getEmail(), user.getPassword(), enabled, 
 									accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
 					return securityUser;

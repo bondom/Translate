@@ -34,7 +34,7 @@ public class EmailService {
 		MimeMessageHelper helper;
 		try {
 			helper = new MimeMessageHelper(mimeMessage,false,"UTF-8");
-			String htmlMsg = "<html><body><p>Please, go to <a href='localhost:8080/university/client/confirmation?uid="+clientId+"'>languages.ru/confirmation?uid="+clientId+"</a> for confirmation "
+			String htmlMsg = "<html><body><p>Please, go to <a href='localhost:8080/university/client/confirmation?ecu="+clientId+"'>languages.ru/confirmation?uid="+clientId+"</a> for confirmation "
 					+ "your registration</body></html> ";
 			helper.setTo(email);
 			helper.setSubject("Email confirmation");

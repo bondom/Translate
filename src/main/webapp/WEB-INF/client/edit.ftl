@@ -20,33 +20,8 @@
 					</#if>
 				</form>
 				
-				<form method="post" autocomplete="false" action="<@spring.url "/client/saveEdits"/>">
-				<input style="display:none" type="text" name="fakeusernameremembered"/>
-				<input style="display:none" type="password" name="fakepasswordremembered"/>
-				<h4>Authorization information</h4>
-					<label>E-mail:</label><span>${email}</span><br>
-					<@spring.bind "changeEmailBean.newEmail"/>
-					<label>New e-mail:</label><input type = "text" class="form-control" name = "${spring.status.expression}" value = "${spring.status.value!""}"/>
-					<#list spring.status.errorMessages as error>
-						<div class="alert alert-warning">${error}</div>
-					</#list><br>
-					<#if emailExists??>
-						<div class="alert alert-warning">${emailExists}</div>
-					</#if><br>
-					<@spring.bind "changeEmailBean.newEmailAgain"/>
-					<p><label>New e-mail again:</label><input type = "text" autocomplete="false" class="form-control" name = "${(spring.status.expression)}" value = "${spring.status.value!""}"/></p>
-					<#list spring.status.errorMessages as error>
-						<div class="alert alert-warning">${error}</div>
-					</#list><br>
-					<@spring.bind "changeEmailBean.currentPassword"/>
-					<p><label>Your current password:</label><input type = "password" autocomplete="new-password" class="form-control" name = "${(spring.status.expression)}" value=""/></p>
-					<#if wrongPassword??>
-						<div class="alert alert-warning">${wrongPassword}</div>
-					</#if><br>
-					<#list spring.status.errorMessages as error>
-						<div class="alert alert-warning">${error}</div>
-					</#list><br>
-					<label>Change e-mail:</label><input type="checkbox" name="changeEmail" value="true"/>
+				<form method="post" action="<@spring.url "/client/saveEdits"/>">
+				
 										
 				<table>
 					<tr><td>First Name: </td><td>
@@ -104,14 +79,18 @@
 											</#list>
 					</td></tr>
 				</table>
-				<input type="submit"/>
+				
+				<button type = "submit" class="btn btn-info">
+					Save
+				</button>
+				<a href = "<@spring.url "/client/profile"/>" role="button">Cancel</a>
 				<@spring.bind "client.email"/>
-					<input type="hidden"
+				<input type="hidden"
 							name="${spring.status.expression}"
-							value="${spring.status.value!""}"/>
-					<input type="hidden"
-							name="${_csrf.parameterName}"
-							value="${_csrf.token}"/>
+							value="${spring.status.value}"/>
+				<input type="hidden"
+						name="${_csrf.parameterName}"
+						value="${_csrf.token}"/>
 						
 				</form>
 			</div>

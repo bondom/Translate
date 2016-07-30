@@ -22,6 +22,15 @@ public class ClientDaoImpl extends AbstractDao<Integer,Client> implements UserDa
 		Client client = (Client)query.uniqueResult();
 		return client;
 	}
+
+	@Override
+	public Client getUserByConfirmedUrl(String confirmedUrl) {
+		Session session = sessionFactory.getCurrentSession();
+		Query query = session.getNamedQuery("clientByConfirmedUrl");
+		query.setParameter("confirmedUrl", confirmedUrl);
+		Client client = (Client)query.uniqueResult();
+		return client;
+	}
 	
 	/*public Client getResponsedAds(){
 		

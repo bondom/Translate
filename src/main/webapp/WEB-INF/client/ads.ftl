@@ -12,7 +12,7 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-			<#if ads??>
+			<#if ads?? && ads?size gt 0>
 				<#list ads as ad>
 					<div>
 						<p>Name: ${ad.getName()}
@@ -27,6 +27,8 @@
 					</div>
 					</br>
 				</#list>
+			<#else>
+				You haven't advertisements yet.</br>
 			</#if>
 			<a href = "<@spring.url "/client/adbuilder"/>" class="btn btn-info" role="button">Create Ad</a>
 		</div>

@@ -81,9 +81,7 @@ public class User implements Serializable{
 	private String phoneNumber;
 	
 	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
-	/**
-	 * Добавить проверку валидности даты
-	 */
+	 /*!!!!Добавить проверку валидности даты!!!!*/
 	@NotNull
 	@Column(name = "BIRTHDAY",nullable = false)
 	private LocalDate birthday;
@@ -103,6 +101,13 @@ public class User implements Serializable{
 	@Column(name = "STATUS",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private UserStatus status;
+	
+	@Column(name = "EMAIL_STATUS",nullable = false)
+	@Enumerated(EnumType.STRING)
+	private EmailStatus emailStatus;
+	
+	@Column(name = "CONFIRM_URL")
+	private String confirmedUrl;
 	
 	@Column(name = "REGISTRATION_DATE",nullable = false)
 	private LocalDateTime registrationTime;
@@ -207,11 +212,29 @@ public class User implements Serializable{
 	public void setRegistrationTime(LocalDateTime registrationTime) {
 		this.registrationTime = registrationTime;
 	}
+	
+	public EmailStatus getEmailStatus() {
+		return emailStatus;
+	}
+
+	public void setEmailStatus(EmailStatus emailStatus) {
+		this.emailStatus = emailStatus;
+	}
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
+	
+	
 
+
+	public String getConfirmedUrl() {
+		return confirmedUrl;
+	}
+
+	public void setConfirmedUrl(String confirmedUrl) {
+		this.confirmedUrl = confirmedUrl;
+	}
 
 	@Override
 	public boolean equals(Object obj){

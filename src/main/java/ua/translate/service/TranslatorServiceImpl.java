@@ -50,8 +50,8 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 		}
 	}
 
-	@Override
-	public Translator editUserProfile(String email, Translator newUser,boolean changeEmail) {
+	/*@Override
+	public void editUserProfile(String email, Translator newUser) {
 		String oldEmail = email;
 		String newEmail = newUser.getEmail();
 		
@@ -71,7 +71,7 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 		translator.setEmail(newUser.getEmail());
 		translator.setAddedInfo(newUser.getAddedInfo());
 		return translator;
-	}
+	}*/
 	
 	public void saveResponsedAd(Ad ad, String email){
 		Translator translator = translatorDao.getUserByEmail(email);
@@ -82,6 +82,30 @@ public class TranslatorServiceImpl extends UserService<Translator>{
 		ad.addResponsedAd(responsedAd);
 		client.addResponsedAd(responsedAd);
 		translator.addResponsedAd(responsedAd);
+	}
+
+	@Override
+	public void editUserEmail(String oldEmail, String newEmail) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void editUserPassword(String email, String newPassword) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void editUserProfile(String email, Translator newUser) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public User getUserByConfirmedUrl(String confirmUrl) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 

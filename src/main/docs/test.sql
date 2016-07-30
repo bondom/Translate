@@ -10,9 +10,10 @@ BIRTHDAY DATE,COUNTRY VARCHAR2(225CHAR),CITY VARCHAR2(225CHAR),REGISTRATION_DATE
  Select * from TRANSLATOR_TEST;
  Select * from RESPONSED_AD_TEST;
  Select * from TRANSLATOR_LANGUAGES;
- Delete  from USER_TEST where ID = 152  ;
+ Delete  from USER_TEST where ID = 50;
  Delete from RESPONSED_AD_TEST;
  Delete from AD_TEST;
+ UPDATE USER_TEST SET STATUS='ACTIVE' WHERE ID=1;
  
  CREATE TABLE persistent_logins (
     username varchar(64) not null,

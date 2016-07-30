@@ -74,10 +74,9 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 	
 	@Bean(name = "authenticationManager")
-	@Autowired
-	public ProviderManager getProviderManager(DaoAuthenticationProvider daoAuthenticationProvider){
+	public ProviderManager getProviderManager(){
 		List<AuthenticationProvider> providers = new ArrayList<>();
-		providers.add(daoAuthenticationProvider);
+		providers.add(daoAuthenticationProvider());
 		ProviderManager providerManager = new ProviderManager(providers);
 		return providerManager;
 		

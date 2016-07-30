@@ -3,25 +3,27 @@ package ua.translate.controller;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
-import org.hibernate.validator.constraints.Email;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
@@ -32,15 +34,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import freemarker.ext.servlet.FreemarkerServlet;
 import ua.translate.model.ChangeEmailBean;
+import ua.translate.model.ChangePasswordBean;
 import ua.translate.model.Client;
+import ua.translate.model.EmailStatus;
 import ua.translate.model.UserStatus;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Currency;
 import ua.translate.model.ad.Language;
 import ua.translate.model.ad.ResponsedAd;
 import ua.translate.model.ad.TranslateType;
+import ua.translate.model.security.UserImpl;
 import ua.translate.service.AdServiceImpl;
 import ua.translate.service.ClientServiceImpl;
 import ua.translate.service.EmailService;
@@ -60,7 +64,7 @@ import ua.translate.service.UserService;
 public class ClientController extends UserController{
 
 	
-	Logger logger = Logger.getLogger(ClientController.class.getName());
+	Logger logger = LoggerFactory.getLogger(ClientController.class);
 	
 	/*@Autowired
 	AuthenticationManager authenticationManager;*/
@@ -106,7 +110,8 @@ public class ClientController extends UserController{
 	 * 
 	 * <p>If client is authenticated, he is redirected to {@link #profile(Principal)}.
 	 * 
-	 * <p>If <tt>error</tt> exists and session has targetUrl parameter, refreshes value of targetUrl
+	 * <p>If <tt>error</tt> exists and session has targetUrl parameter, 
+	 * refreshes value of targetUrl in returned {@code ModelAndView} object
 	 * @see #isCurrentAuthenticationAnonymous()
 	 * @see #getRememberMeTargetUrlFromSession(HttpServletRequest)
 	 */
@@ -114,14 +119,12 @@ public class ClientController extends UserController{
 	public ModelAndView loginForm(
 				@RequestParam(value = "error", required = false) String error,
 				HttpServletRequest request){
-		logger.info("error=" + error);
 		if(!isCurrentAuthenticationAnonymous()){
 			return new ModelAndView("redirect:/client/profile");
 		}
 		ModelAndView model = new ModelAndView("/client/login");
 		if(error!=null){
 			String targetUrl = getRememberMeTargetUrlFromSession(request);
-			logger.info("target url from session = " + targetUrl);
 			if(StringUtils.hasText(targetUrl)){	
 				model.addObject("targetUrl", targetUrl);
 				model.addObject("loginUpdate",true);
@@ -161,9 +164,7 @@ public class ClientController extends UserController{
 			Long clientId = clientService.registerUser(client);
 			ModelAndView loginView = new ModelAndView("/client/login");
 			loginView.addObject("msg", 
-									"Please, watch in your email box "+ client.getEmail() +" and go to link "
-									+ "for confirmation your email");
-			emailService.sendConfirmationEmailMessage(client.getEmail(),clientId);
+									"You successfully registered!");
 			return loginView;
 		}else{
 			ModelAndView registrationView = new ModelAndView("/client/registration");
@@ -175,31 +176,97 @@ public class ClientController extends UserController{
 	}
 	
 	/**
-	 * <p>If client doesn't confirmed email yet, 
-	 * confirms his and return login page with message
-	 * <p>If client have already confirmed email, returns login form
+	 * If user didn't confirm email yet,
+	 * sends letter to user's email with link for confirmation,
+	 * in any case returns {@code ModelAndView} page and adds object
+	 * with {@code attributeName=status} and {@code attributeValue=client.getEmailStatus()}
 	 */
-	@RequestMapping(value = "/confirmation",method = RequestMethod.GET)
-	public ModelAndView registrationConfirmation(@RequestParam("uid") long clientId){
-		logger.info("Request Param clientId= " + clientId);
-		Client client = (Client)clientService.getUserById(clientId);
-		logger.info("Get from DB: " + client.getEmail() + ", status: "+client.getStatus());
-		if(client.getStatus().equals(UserStatus.NOTCONFIRMED)){
-			clientService.confirmEmail(clientId);
-			ModelAndView model = new ModelAndView("/client/login");
-			model.addObject("msg", "You succesfully confirm your email!");
+	@RequestMapping(value = "/email-confirm",method = RequestMethod.GET)
+	public ModelAndView sendConfirmEmail(Principal user){
+		Client client = (Client)clientService.getUserByEmail(user.getName());
+		if(client.getEmailStatus().equals(EmailStatus.NOTCONFIRMED)){
+			clientService.sendConfirmLetter(client.getEmail());
+			ModelAndView model = new ModelAndView("/client/sendedLetter");
+			model.addObject("status", client.getEmailStatus());
 			return model;
 		}else{
-			ModelAndView model = new ModelAndView("/client/login");
+			ModelAndView model = new ModelAndView("/client/sendedLetter");
+			model.addObject("status", client.getEmailStatus());
 			return model;
 		}
 		
 	}
+	
+	/**
+	 * First compares {@code confirmUrl} with saved in db,
+	 * if they equal, returns {@code ModelAndView} page and adds object
+	 * with {@code attributeName=success} - which indicates that confirmation is successful, 
+	 * else returns the same page without object-indicator.
+	 */
+	@RequestMapping(value = "/confirmation",method = RequestMethod.GET)
+	public ModelAndView emailConfirmation(@RequestParam("ecu") String confirmedUrl){
+		Client client = (Client)clientService.getUserByConfirmedUrl(confirmedUrl);
+		if(client==null){
+			ModelAndView model = new ModelAndView("/client/emailConfirmed");
+			return model;
+		}
+		if(client.getConfirmedUrl().equals(confirmedUrl)){
+			if(client.getEmailStatus().equals(EmailStatus.NOTCONFIRMED)){
+				clientService.confirmEmail(client.getEmail());
+			}
+			ModelAndView model = new ModelAndView("/client/emailConfirmed");
+			model.addObject("email",client.getEmail());
+			model.addObject("success", true);
+			return model;
+		}else{
+			ModelAndView model = new ModelAndView("/client/emailConfirmed");
+			return model;
+		}
+		
+	}
+	
+	/**
+	 * Returns {@code ModelAndView} page for editing email, if
+	 * client is not authenticated via remember-me authentication
+	 * <p>if is, return login form page for re-entering credentials
+	 */
+	@RequestMapping(value = "/email",method = RequestMethod.GET)
+	public ModelAndView editEmail(Principal user){
+		if(isRememberMeAuthenticated()){
+			ModelAndView model = new ModelAndView("/client/login");
+			model.addObject("loginUpdate",true);
+			return model;
+		}else{
+			ModelAndView model = new ModelAndView("/client/editEmail");
+			ChangeEmailBean changeEmailBean = new ChangeEmailBean();
+			model.addObject("changeEmailBean",changeEmailBean);
+			return model;
+		}
+	}
+	
+	/**
+	 * Returns {@code ModelAndView} page for editing password, if
+	 * client is not authenticated via remember-me authentication
+	 * <p>if is, return login form page for re-entering credentials
+	 */
+	@RequestMapping(value = "/password",method = RequestMethod.GET)
+	public ModelAndView editPassword(Principal user){
+		if(isRememberMeAuthenticated()){
+			ModelAndView model = new ModelAndView("/client/login");
+			model.addObject("loginUpdate",true);
+			return model;
+		}else{
+			ModelAndView model = new ModelAndView("/client/editPassword");
+			ChangePasswordBean changePasswordBean = new ChangePasswordBean();
+			model.addObject("changePasswordBean",changePasswordBean);
+			return model;
+		}
+	}
+	
 	/**
 	 * Returns {@link ModelAndView} client's page for editing of profile if
 	 * client is not authenticated via remember-me authentication
 	 * <p> if is, returns login form page for re-entering email and password, 
-	 * @return page for editing a user's profile
 	 */
 	@RequestMapping(value = "/edit",method = RequestMethod.GET)
 	public ModelAndView editProfile(Principal user, HttpServletRequest request){
@@ -213,108 +280,105 @@ public class ClientController extends UserController{
 		}else{
 			ModelAndView model = new ModelAndView("/client/edit");
 			ChangeEmailBean changeEmailBean = new ChangeEmailBean();
+			ChangePasswordBean changePasswordBean = new ChangePasswordBean();
 			model.addObject("client", clientFromDB);
 			model.addObject("email", clientFromDB.getEmail());
 			model.addObject("changeEmailBean",changeEmailBean);
+			model.addObject("changePasswordBean",changePasswordBean);
 			return model;
 		}
 	}
 	
-	/*!!!!Reduce number of strings of this method!!!!*/
 	/**
-	 * <p>If new email exists or some errors exist,  
-	 * returns initial page(for editing user's profile)
-	 * 
-	 * <p>If no errors exist updates the user and returns user's profile page
-	 * @param editedClient - {@code Client} object with changes made by client
-	 * @param result - {@code BindingResult} object for checking errors
-	 * @param user - {@code Principal} object for retrieving {@code Client} from db
-	 * @throws UnsupportedEncodingException 
+	 * <p>If no errors exist, current password is right and new email is unique,
+	 * updates user's email and redirects to {@link #profile(Principal)}
 	 */
-	@RequestMapping(value = "/saveEdits",method = RequestMethod.POST)
-	public ModelAndView saveProfileEdits(
-			@Valid @ModelAttribute("client") Client editedClient,
-			BindingResult clientResult,
+	@RequestMapping(value = "/saveEmail",method = RequestMethod.POST)
+	public ModelAndView saveEmail(
 			@Valid @ModelAttribute("changeEmailBean") ChangeEmailBean changeEmailBean,
 			BindingResult changeEmailResult,
 			Principal user,
-			@RequestParam(value = "changeEmail",defaultValue = "false") String changeEmail,
-			HttpServletRequest request) throws UnsupportedEncodingException{
+			HttpServletRequest request){
 		
+		if(changeEmailResult.hasErrors()){
+			ModelAndView model = new ModelAndView("/client/editEmail");
+			return model;
+		}
+		final String oldEmail = user.getName();
+		Client client = (Client) clientService.getUserByEmail(oldEmail);
+		if(!clientService.isPasswordRight(changeEmailBean.getCurrentPassword(), 
+										  client.getPassword())){
+			ModelAndView model = new ModelAndView("/client/editEmail");
+			model.addObject("wrongPassword","Password doesn't match to real");
+			return model;
+		}
+		final String newEmail = changeEmailBean.getNewEmail();
+		if(clientService.isEmailChanged(oldEmail, newEmail)){
+			if(clientService.isEmailUnique(newEmail)){
+				clientService.editUserEmail(oldEmail, newEmail);
+				refreshUsername(newEmail);
+		        ModelAndView profile = new ModelAndView("redirect:/client/profile");
+				return profile;
+			}else{
+				ModelAndView model = new ModelAndView("/client/editEmail");
+				model.addObject("email", oldEmail);
+				model.addObject("emailExists","Such email is registered in system already");
+				return model;
+			}
+		}
+		ModelAndView profile = new ModelAndView("redirect:/client/profile");
+		return profile;
+	}
+	/**
+	 * If no errors exist, and user entered right current password, updates user's password 
+	 * and redirects to {@link #profile(Principal)}
+	 */
+	@RequestMapping(value = "/savePassword",method = RequestMethod.POST)
+	public ModelAndView savePassword(
+			@Valid @ModelAttribute("changePasswordBean") ChangePasswordBean changePasswordBean,
+			BindingResult changePasswordResult,
+			Principal user,
+			HttpServletRequest request){
+		
+		
+		if(changePasswordResult.hasErrors()){
+			ModelAndView model = new ModelAndView("/client/editPassword");
+			return model;
+		}
+		final String email = user.getName();
+		Client client = (Client) clientService.getUserByEmail(email);
+		if(!clientService.isPasswordRight(changePasswordBean.getOldPassword(), client.getPassword())){
+			ModelAndView model = new ModelAndView("/client/editPassword");
+			model.addObject("wrongOldPassword","Password doesn't match to real");
+			return model;
+		}else{
+			clientService.editUserPassword(email,changePasswordBean.getNewPassword());
+			ModelAndView profile = new ModelAndView("redirect:/client/profile");
+			return profile;
+		}
+	}
+	
+	/**
+	 * <p>If no errors exist updates the user's profile and redirects to {@link #profile(Principal)}
+	 * @param editedClient - {@code Client} object with changes made by client
+	 * @param result - {@code BindingResult} object for checking errors
+	 * @param user - {@code Principal} object for retrieving {@code Client} from db
+	 */
+	@RequestMapping(value = "/saveEdits",method = RequestMethod.POST)
+	public ModelAndView saveProfileEdits(
+							@Valid @ModelAttribute("client") Client editedClient,
+							BindingResult result,
+							Principal user){
 		
 		final String oldEmail = user.getName();
-		if(clientResult.hasErrors()||
-				changeEmailResult.hasErrors()){
-			clientResult.getAllErrors().forEach(error->{
-				logger.info("Client error: "+error.getDefaultMessage());
-			});
-			changeEmailResult.getAllErrors().forEach(error->{
-				logger.info("Change email error: "+error.getDefaultMessage());
-			});
+		if(result.hasErrors()){
 			ModelAndView model = new ModelAndView("/client/edit");
 			model.addObject("email",oldEmail);
 			return model;
 		}
-		logger.info("Input parameters: \n"+
-				"changeEmail:"+changeEmail+
-				"\nClient: fN:"+editedClient.getFirstName()+" lN:"+editedClient.getLastName()+
-				" bday:"+editedClient.getBirthday()+" \n"+
-				" ChangeEmailBean: nE:"+changeEmailBean.getNewEmail()+
-				" nEA:"+changeEmailBean.getNewEmailAgain()+
-				" pass:"+changeEmailBean.getCurrentPassword());
-		if(changeEmail.equals("true")){
-			final String newEmail = changeEmailBean.getNewEmail();
-			editedClient.setEmail(newEmail);
-			Client client = (Client) clientService.getUserByEmail(oldEmail);
-			if(!clientService.isPasswordRight(changeEmailBean.getCurrentPassword(), 
-											  client.getPassword())){
-				ModelAndView model = new ModelAndView("/client/edit");
-				model.addObject("email",oldEmail);
-				model.addObject("wrongPassword","Password doesn't match to real");
-				return model;
-			}
-			if(clientService.isEmailChanged(oldEmail, newEmail)){
-				if(clientService.isEmailUnique(newEmail)){
-					Client updatedClient = (Client)clientService.editUserProfile(oldEmail, editedClient, true);
-					/*UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(newEmail, updatedClient.getPassword());
-					
-				    // Authenticate the user
-				    Authentication authentication = authenticationManager.authenticate(authRequest);
-				    SecurityContext securityContext = SecurityContextHolder.getContext();
-				    securityContext.setAuthentication(authentication);
 
-				    // Create a new session and add the security context.
-				    HttpSession session = request.getSession(true);
-				    session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);*/
-					ModelAndView editedProfile = new ModelAndView("/client/profile");
-					editedProfile.addObject("client", updatedClient);
-					if(updatedClient.getAvatar()!=null){
-						editedProfile.addObject("image", convertAvaForRendering(updatedClient.getAvatar()));
-					}
-					return editedProfile;
-				}else{
-					ModelAndView model = new ModelAndView("/client/edit");
-					model.addObject("email", oldEmail);
-					model.addObject("emailExists","Such email is registered in system already");
-					return model;
-				}
-			}else{
-				Client updatedClient = (Client)clientService.editUserProfile(oldEmail, editedClient, false);
-				ModelAndView editedProfile = new ModelAndView("/client/profile");
-				editedProfile.addObject("client", updatedClient);
-				if(updatedClient.getAvatar()!=null){
-					editedProfile.addObject("image", convertAvaForRendering(updatedClient.getAvatar()));
-				}
-				return editedProfile;
-			}
-		}
-		
-		Client updatedClient = (Client)clientService.editUserProfile(oldEmail, editedClient, false);
-		ModelAndView editedProfile = new ModelAndView("/client/profile");
-		editedProfile.addObject("client", updatedClient);
-		if(updatedClient.getAvatar()!=null){
-			editedProfile.addObject("image", convertAvaForRendering(updatedClient.getAvatar()));
-		}
+		clientService.editUserProfile(oldEmail, editedClient);
+		ModelAndView editedProfile = new ModelAndView("redirect:/client/profile");
 		return editedProfile;
 	}
 	

@@ -9,9 +9,11 @@ import ua.translate.model.customvalidators.FieldMatch;
 public class ChangeEmailBean {
 	
 	@Email
+	@NotEmpty
 	private String newEmail;
 
 	@Email
+	@NotEmpty
 	private String newEmailAgain;
 	
 	@NotEmpty

@@ -21,7 +21,9 @@ import ua.translate.model.ad.ResponsedAd;
 @Entity
 @NamedQueries({
 	@NamedQuery(name =  "clientByEmail",
-				query = "from Client client where client.email = :email")
+				query = "from Client client where client.email = :email"),
+	@NamedQuery(name =  "clientByConfirmedUrl",
+				query = "from Client client where client.confirmedUrl= :confirmedUrl")
 })
 @Table(name = "CLIENT_TEST")
 @PrimaryKeyJoinColumn(name= "client_id")

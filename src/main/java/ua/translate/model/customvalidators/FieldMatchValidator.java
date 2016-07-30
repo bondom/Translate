@@ -20,8 +20,6 @@ public class FieldMatchValidator implements ConstraintValidator<FieldMatch, Obje
 		firstFieldName = constraintAnnotation.first();
 	    secondFieldName = constraintAnnotation.second();
 	    message = constraintAnnotation.message(); 
-	    System.out.println(firstFieldName + " " +secondFieldName);
-		
 	}
 
 	@Override

@@ -24,4 +24,10 @@ public class TranslatorDaoImpl extends AbstractDao<Integer,Translator> implement
 		return translator;
 	}
 
+	@Override
+	public Translator getUserByConfirmedUrl(String email) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

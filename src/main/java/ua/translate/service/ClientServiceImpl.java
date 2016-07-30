@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ua.translate.dao.AbstractDao;
 import ua.translate.dao.UserDao;
 import ua.translate.model.Client;
+import ua.translate.model.EmailStatus;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
 import ua.translate.model.UserStatus;
@@ -42,19 +43,19 @@ public class ClientServiceImpl extends UserService<Client>{
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public long registerUser(Client user) {
-		String encodedPassword = encodePassword(user.getPassword());
-		user.setPassword(encodedPassword);
-		user.setRole(UserRole.ROLE_CLIENT);
-		user.setStatus(UserStatus.NOTCONFIRMED);
-		user.setRegistrationTime(LocalDateTime.now());
-		((AbstractDao<Integer, Client>)clientDao).save(user);
-		return user.getId();
+	public long registerUser(Client client) {
+		String encodedPassword = encodePassword(client.getPassword());
+		client.setPassword(encodedPassword);
+		client.setRole(UserRole.ROLE_CLIENT);
+		client.setStatus(UserStatus.ACTIVE);
+		client.setEmailStatus(EmailStatus.NOTCONFIRMED);
+		client.setRegistrationTime(LocalDateTime.now());
+		((AbstractDao<Integer, Client>)clientDao).save(client);
+		return client.getId();
 	}
 	
-	/*!!!!Changing of email and changing status!!!!*/
 	@Override
-	public Client editUserProfile(String email, Client newUser,boolean changeEmail) {
+	public void editUserProfile(String email, Client newUser) {
 		Client client = (Client)getUserByEmail(email);
 		client.setFirstName(newUser.getFirstName());
 		client.setLastName(newUser.getLastName());
@@ -62,20 +63,12 @@ public class ClientServiceImpl extends UserService<Client>{
 		client.setCity(newUser.getCity());
 		client.setCountry(newUser.getCountry());
 		client.setPhoneNumber(newUser.getPhoneNumber());
-		if(changeEmail){
-			client.setEmail(newUser.getEmail());
-			/*UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(userName, password);
-	
-		    // Authenticate the user
-		    Authentication authentication = authenticationManager.authenticate(authRequest);
-		    SecurityContext securityContext = SecurityContextHolder.getContext();
-		    securityContext.setAuthentication(authentication);
-
-		    // Create a new session and add the security context.
-		    HttpSession session = request.getSession(true);
-		    session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);*/
-		}
-		return client;
+	}
+	@Override
+	public void editUserEmail(String oldEmail, String newEmail) {
+		Client client = (Client)getUserByEmail(oldEmail);
+		client.setEmail(newEmail);
+		client.setEmailStatus(EmailStatus.NOTCONFIRMED);
 	}
 	
 	public List<ResponsedAd> getResponsedAds(String email){
@@ -83,6 +76,19 @@ public class ClientServiceImpl extends UserService<Client>{
 		List<ResponsedAd> ads = client.getResponsedAds();
 		return ads;
 	}
+
+	@Override
+	public void editUserPassword(String email, String newPassword) {
+		Client client = (Client)getUserByEmail(email);
+		String encodedPassword = encodePassword(newPassword);
+		client.setPassword(encodedPassword);
+	}
+
+	@Override
+	public User getUserByConfirmedUrl(String confirmedUrl) {
+		return clientDao.getUserByConfirmedUrl(confirmedUrl);
+	}
+
 
 	
 }

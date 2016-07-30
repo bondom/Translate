@@ -1,7 +1,14 @@
 package ua.translate.service;
 
+import java.util.UUID;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -11,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ua.translate.dao.AbstractDao;
 import ua.translate.dao.UserDao;
 import ua.translate.model.Client;
+import ua.translate.model.EmailStatus;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
 import ua.translate.model.UserStatus;
@@ -22,6 +30,9 @@ public abstract class UserService<T extends User> {
 	@Autowired
 	@Qualifier("userDao")
 	private UserDao<User> userDao;
+	
+	@Autowired
+	private JavaMailSender mailSender;
 	
 	/**
 	 * Registers user in system, adds his to db
@@ -41,9 +52,25 @@ public abstract class UserService<T extends User> {
 	 * @param email - email of authenticated user, get from {Principal.class} object
 	 * @param newUser - user with some new values of fields,
 	 * which must update old one
-	 * @return updated user, or {code null} if new email is registered in system already
 	 */
-	public abstract  T editUserProfile(String email,T newUser,boolean changeEmail);
+	public abstract  void editUserProfile(String email,T newUser);
+	
+	/**
+	 * Replaces user's {@code email} with new one and changes emailStatus to {@code NOTCONFIRMED}
+	 * <p>{@code newEmail} must be unique email
+	 */
+	public abstract void editUserEmail(String oldEmail,String newEmail);
+	
+	/**
+	 * Replaces user's password
+	 *@param email - email of authenticated user, get from {Principal.class} object
+	 */
+	public abstract void editUserPassword(String email,String newPassword);
+	
+	/**
+	 * Gets user from DB by confirmUrl
+	 */
+	public abstract User getUserByConfirmedUrl(String confirmUrl);
 	
 	/**
 	 * Gets user from db by email
@@ -61,9 +88,7 @@ public abstract class UserService<T extends User> {
 	
 	
 	/**
-	 * 
-	 * @param id
-	 * @return
+	 * Gets user from DB by id
 	 */
 	public User getUserById(long id){
 		User userFromDB = ((AbstractDao<Long, User>)userDao).get(id);
@@ -71,12 +96,40 @@ public abstract class UserService<T extends User> {
 	}
 	
 	/**
-	 * Confirms user's e-mail and changes status to {@link UserStatus#ACTIVE}
-	 * @param id - id of existed {@code user} with {@code (user.getStatus()=UserStatus.NOTCONFIRMED).equals(true)}
+	 * Generates random confirmation url, sends letter to user and save confirmation url
+	 * in db
 	 */
-	public void confirmEmail(long id){
-		User userFromDB = ((AbstractDao<Long, User>)userDao).get(id);
-		userFromDB.setStatus(UserStatus.ACTIVE);
+	public void sendConfirmLetter(String email){
+		User userFromDB = getUserByEmail(email);
+		String ecu=generateConfirmUrl(userFromDB.getId());
+		userFromDB.setConfirmedUrl(ecu);
+
+		MimeMessage mimeMessage = mailSender.createMimeMessage();
+		MimeMessageHelper helper;
+		try {
+			helper = new MimeMessageHelper(mimeMessage,false,"UTF-8");
+			String htmlMsg = "<html><body><p>Please, go to "
+					+ "<a href='localhost:8080/university/client/confirmation?ecu="+ecu+"'>"
+							+ "languages.ru/confirmation?ecu="+ecu+"</a> for confirmation "
+					+ "your registration</body></html> ";
+			helper.setTo(email);
+			helper.setSubject("Email confirmation");
+			helper.setFrom("admin@languages.ru");
+			helper.setText(htmlMsg, true);
+			mailSender.send(mimeMessage);
+		} catch (MessagingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
+	 * Confirms user's e-mail - changes email status to {@link EmailStatus#CONFIRMED}
+	 */
+	public void confirmEmail(String email){
+		User userFromDB = getUserByEmail(email);
+		userFromDB.setEmailStatus(EmailStatus.CONFIRMED);
 	}
 	
 	/**
@@ -88,7 +141,7 @@ public abstract class UserService<T extends User> {
 	 * @return updated user, never {@code null}
 	 */
 	public User updateAvatar(String email,byte[] avatar){
-		User userFromDB = userDao.getUserByEmail(email);
+		User userFromDB = getUserByEmail(email);
 		userFromDB.setAvatar(avatar);
 		return userFromDB;
 	}
@@ -129,9 +182,18 @@ public abstract class UserService<T extends User> {
 		return !(oldEmail.equals(newEmail));
 	}
 	
+	/**
+	 * Checks if password inputted by user matches to real user's password 
+	 * @return true if passwords match, otherwise false
+	 */
 	public boolean isPasswordRight(String passwordFromPage,String passwordFromDB){
 		BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 		return passwordEncoder.matches(passwordFromPage, passwordFromDB);
+	}
+
+	public String generateConfirmUrl(long id){
+		String url = id + UUID.randomUUID().toString();
+		return url;
 	}
 
 }
