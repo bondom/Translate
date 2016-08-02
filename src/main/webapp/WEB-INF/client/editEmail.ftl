@@ -20,8 +20,8 @@
 					<#list spring.status.errorMessages as error>
 						<div class="alert alert-warning">${error}</div>
 					</#list><br>
-					<#if emailExists??>
-						<div class="alert alert-warning">${emailExists}</div>
+					<#if duplicateEmail??>
+						<div class="alert alert-warning">${duplicateEmail}</div>
 					</#if><br>
 					<@spring.bind "changeEmailBean.newEmailAgain"/>
 					<p><label>New e-mail again:</label><input type = "text" autocomplete="false" class="form-control" name = "${(spring.status.expression)}" value = "${spring.status.value!""}"/></p>
@@ -30,8 +30,8 @@
 					</#list><br>
 					<@spring.bind "changeEmailBean.currentPassword"/>
 					<p><label>Your current password:</label><input type = "password" autocomplete="new-password" class="form-control" name = "${(spring.status.expression)}" value=""/></p>
-					<#if wrongPassword??>
-						<div class="alert alert-warning">${wrongPassword}</div>
+					<#if invalidPassword??>
+						<div class="alert alert-warning">${invalidPassword}</div>
 					</#if><br>
 					<#list spring.status.errorMessages as error>
 						<div class="alert alert-warning">${error}</div>

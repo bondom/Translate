@@ -32,10 +32,15 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.stereotype.Component;
 
+import ua.translate.model.status.EmailStatus;
+import ua.translate.model.status.UserStatus;
+
 @Entity
 @NamedQueries({
 		@NamedQuery(name =  "userByEmail",
-					query = "from User user where user.email = :email")
+					query = "from User user where user.email = :email"),
+		@NamedQuery(name =  "userByConfirmationUrl",
+					query = "from User user where user.confirmedUrl = :confirmationUrl")
 })
 @Table(name = "USER_TEST")
 @Inheritance(strategy=InheritanceType.JOINED)

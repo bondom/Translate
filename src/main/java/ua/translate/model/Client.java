@@ -16,7 +16,6 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
 
 @Entity
 @NamedQueries({

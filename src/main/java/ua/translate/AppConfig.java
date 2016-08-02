@@ -38,7 +38,7 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 
 @Configuration
 @EnableWebMvc
-@EnableAspectJAutoProxy
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 @ComponentScan(basePackages = "ua.translate")
 @EnableTransactionManagement
 @PropertySource("classpath:application.properties")

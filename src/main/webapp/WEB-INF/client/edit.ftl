@@ -15,8 +15,8 @@
 				<form method="post" action="<@spring.url "/client/saveAvatar?${_csrf.parameterName}=${_csrf.token}"/>" enctype="multipart/form-data">
 					<input type="file" name="file"/>
 					<input type="submit"/>
-					<#if wrongFile??>
-						<div class="alert alert-warning">${wrongFile}</div>
+					<#if error??>
+						<div class="alert alert-warning">${error}</div>
 					</#if>
 				</form>
 				

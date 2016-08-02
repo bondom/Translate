@@ -8,18 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
-import ua.translate.service.AdServiceImpl;
-import ua.translate.service.UserService;
+import ua.translate.service.AdService;
+import ua.translate.service.exception.NonExistedAdException;
 import ua.translate.support.AdComparatorByDate;
 
 @Controller
@@ -27,14 +24,12 @@ import ua.translate.support.AdComparatorByDate;
 public class AdController {
 	
 	@Autowired
-	AdServiceImpl adService;
+	AdService adService;
 	
 	@RequestMapping(value = "/{adId}", method = RequestMethod.GET)
 	public ModelAndView ad(@PathVariable("adId") long adId){
-		Ad ad = adService.get(adId);
-		if(ad == null){
-			return new ModelAndView("/exception/404");
-		}else{
+		try {
+			Ad ad = adService.get(adId);
 			ModelAndView model = new ModelAndView("/showedAd");
 			LocalDate creationDate = ad.getCreationDateTime().toLocalDate();
 			
@@ -45,6 +40,8 @@ public class AdController {
 			 */
 			model.addObject("creationDate",creationDate);
 			return model;
+		}catch (NonExistedAdException e) {
+			return new ModelAndView("/exception/404");
 		}
 	}
 	

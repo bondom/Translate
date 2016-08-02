@@ -14,15 +14,7 @@
 				
 				<form method="post" autocomplete="false" action="<@spring.url "/client/savePassword"/>">
 					<h4>Password</h4>
-						
-					<@spring.bind "changePasswordBean.oldPassword"/>
-					<label>Current password:</label><input type = "password" autocomplete="new-password" class="form-control" name = "${spring.status.expression}" value = ""/>
-					<#list spring.status.errorMessages as error>
-						<div class="alert alert-warning">${error}</div>
-					</#list><br>
-					<#if wrongOldPassword??>
-						<div class="alert alert-warning">${wrongOldPassword}</div>
-					</#if><br>
+					
 					<@spring.bind "changePasswordBean.newPassword"/>
 					<p><label>New password:</label><input type = "password" autocomplete="new-password" class="form-control" name = "${(spring.status.expression)}" value = ""/></p>
 					<#list spring.status.errorMessages as error>
@@ -33,6 +25,15 @@
 					<#list spring.status.errorMessages as error>
 						<div class="alert alert-warning">${error}</div>
 					</#list><br>
+					<@spring.bind "changePasswordBean.oldPassword"/>
+					<label>Current password:</label><input type = "password" autocomplete="new-password" class="form-control" name = "${spring.status.expression}" value = ""/>
+					<#list spring.status.errorMessages as error>
+						<div class="alert alert-warning">${error}</div>
+					</#list><br>
+					<#if wrongOldPassword??>
+						<div class="alert alert-warning">${wrongOldPassword}</div>
+					</#if><br>
+					
 						
 					<button type = "submit" class="btn btn-info">
 						Save

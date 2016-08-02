@@ -15,12 +15,12 @@
 			<h3>Registration</h3>
 				<form action = "<@spring.url "/client/registrationConfirm"/>" method = "Post" role = "form">
 					<div class="form-group col-xs-5" >
-							<#if resultRegistration??>
-								<div class="alert alert-danger">${resultRegistration}</div>
+							<#if error??>
+								<div class="alert alert-danger">${error}</div>
 							</#if>
 
 							<@spring.bind "client.firstName"/>
-							<input type = "text" id = "firstName" name = "${(spring.status.expression)!"firstName"}" 
+							<input type = "text" id = "firstName" name = "${spring.status.expression}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "First Name"/>
 							</br>
 							<#list spring.status.errorMessages as error>
@@ -28,7 +28,7 @@
 							</#list>
 
 							<@spring.bind "client.lastName"/>
-							<input type = "text" id = "lastName" name = "${(spring.status.expression)!"lastName"}" 
+							<input type = "text" id = "lastName" name = "${spring.status.expression}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "Last Name"/>
 							</br>
 							<#list spring.status.errorMessages as error>
@@ -37,7 +37,7 @@
 							
 							Birthday:
 							<@spring.bind "client.birthday"/>
-							<input type = "text" id = "birthday" name = "${(spring.status.expression)!"birthday"}" 
+							<input type = "text" id = "birthday" name = "${spring.status.expression}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "Birthday"/>
 							</br>
 							<#list spring.status.errorMessages as error>
@@ -61,7 +61,7 @@
 							</#list>-->
 							
 							<@spring.bind "client.country"/>
-							<input type = "text" id = "country" name = "${(spring.status.expression)!"country"}" 
+							<input type = "text" id = "country" name = "${spring.status.expression}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "Country"/>
 							</br>
 							<#list spring.status.errorMessages as error>
@@ -69,7 +69,7 @@
 							</#list>
 
 							<@spring.bind "client.city"/>
-							<input type = "text" id = "city" name = "${(spring.status.expression)!"city"}" 
+							<input type = "text" id = "city" name = "${spring.status.expression}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "City"/>
 							</br>
 							<#list spring.status.errorMessages as error>
@@ -77,7 +77,7 @@
 							</#list>
 
 							<@spring.bind "client.phoneNumber"/>
-							<input type = "text" id = "phoneNumber" name = "${(spring.status.expression)!"phoneNumber"}" 
+							<input type = "text" id = "phoneNumber" name = "${spring.status.expression}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "Phone number"/>
 							</br>
 							<#list spring.status.errorMessages as error>
@@ -85,7 +85,7 @@
 							</#list>
 
 							<@spring.bind "client.email"/>
-							<input type = "text" id = "email" name = "${(spring.status.expression)!"email"}" 
+							<input type = "text" id = "email" name = "${spring.status.expression}" 
 							value = "${spring.status.value!""}" class="form-control" placeholder = "Email"/>
 							</br>
 							<#list spring.status.errorMessages as error>
@@ -93,7 +93,7 @@
 							</#list>
 							
 							<@spring.bind "client.password"/>
-							<input type = "password" id = "password" name = "${(spring.status.expression)!"password"}" 
+							<input type = "password" id = "password" name = "${spring.status.expression}" 
 							class="form-control" placeholder = "Password"/>
 							<br>
 							<#list spring.status.errorMessages as error>

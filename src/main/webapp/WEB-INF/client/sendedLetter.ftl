@@ -11,15 +11,15 @@
 		<div class="panel panel-default">
 			<#include "/fragments/authclientheader.ftl">
 			<div class="panel-body" style = "margin: 0px">
-			<#if status.name()=="NOTCONFIRMED">
+			<#if error??>
+				<h4>You have already confirmed your email.</h4>
+				<#else>
 				<h4>Letter for confirmation email is sended to your email <br>
 					<@security.authentication property = "principal.username"/>
 				</h4>
 				<p>After 2-3 minutes letter should be delivered to your email. Please, open letter
 				and go to link for confirmation. After confirmation, all responses on your advertisements
 				will be sended to your email.
-			<#else>
-				<h4>You have already confirmed your email.</h4>
 			</#if>
 			</div>
 		</div>

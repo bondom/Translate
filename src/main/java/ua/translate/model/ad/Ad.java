@@ -39,8 +39,11 @@ import org.springframework.format.annotation.DateTimeFormat.ISO;
 
 import ua.translate.model.Client;
 import ua.translate.model.Comment;
+import ua.translate.model.Language;
+import ua.translate.model.ResponsedAd;
 import ua.translate.model.Translator;
-import ua.translate.model.customvalidators.FieldNotMatch;
+import ua.translate.model.status.AdStatus;
+import ua.translate.model.validator.FieldNotMatch;
 
 @Entity
 @NamedQueries({

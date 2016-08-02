@@ -13,11 +13,11 @@ import org.springframework.stereotype.Component;
 import ua.translate.model.User;
 
 
-@Aspect
+//@Aspect
 @Component
 public class ServiceAspect {
 	
-	Logger logger = LoggerFactory.getLogger(ServiceAspect.class);
+	/*Logger logger = LoggerFactory.getLogger(ServiceAspect.class);
 	
 	@Around("execution(* ua.translate.service.UserService.isEmailUnique(..))")
 	public boolean checkEmailUniqueness(ProceedingJoinPoint thisJoinPoint) throws Throwable{
@@ -140,5 +140,5 @@ public class ServiceAspect {
 		String methodName = thisJoinPoint.getSignature().getName();
 		logger.info("{}.{}:email={},new password={}",
 					className,methodName,email,newPassword);
-	}
+	}*/
 }

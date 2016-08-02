@@ -17,6 +17,9 @@
 			<#include "/fragments/authtranslatorheader.ftl">
 		</@security.authorize>
 		<div class="panel-body" style = "margin: 0px">
+			<#if error??>
+				${error}
+			</#if>
 			<#list adsTime?keys as time>
 				<#assign ad=adsTime[time]>
 				<div>

@@ -14,15 +14,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
 
-import ua.translate.model.ChangeEmailBean;
-import ua.translate.model.ChangePasswordBean;
 import ua.translate.model.User;
+import ua.translate.model.bean.ChangeEmailBean;
+import ua.translate.model.bean.ChangePasswordBean;
 
-@Aspect
+//@Aspect
 @Component
 public class ControllerAspect {
 	
-	Logger logger = LoggerFactory.getLogger(ControllerAspect.class);
+	/*Logger logger = LoggerFactory.getLogger(ControllerAspect.class);
 	
 	@Around("execution(* ua.translate.controller.ClientController.registration(..))")
 	public ModelAndView registration(ProceedingJoinPoint joinPoint) throws Throwable{
@@ -141,6 +141,6 @@ public class ControllerAspect {
 		String className = joinPoint.getTarget().getClass().getName();
 		String methodName = joinPoint.getSignature().getName();
 		logger.debug("{}.{}: view name={}",className,methodName,model.getViewName());
-	}
+	}*/
 	
 }

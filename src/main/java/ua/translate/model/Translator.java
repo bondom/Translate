@@ -6,8 +6,6 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.Language;
-import ua.translate.model.ad.ResponsedAd;
 
 import java.util.ArrayList;
 import java.util.List;
