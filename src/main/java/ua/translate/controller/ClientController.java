@@ -6,6 +6,8 @@ import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -21,14 +23,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import ua.translate.controller.support.ResponsedAdComparatorByDate;
+import ua.translate.controller.support.ControllerHelper;
 import ua.translate.model.Client;
 import ua.translate.model.Language;
-import ua.translate.model.ResponsedAd;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Currency;
+import ua.translate.model.ad.ResponsedAd;
 import ua.translate.model.ad.TranslateType;
-import ua.translate.model.bean.ChangeEmailBean;
-import ua.translate.model.bean.ChangePasswordBean;
+import ua.translate.model.viewbean.ChangeEmailBean;
+import ua.translate.model.viewbean.ChangePasswordBean;
 import ua.translate.service.AdService;
 import ua.translate.service.ClientService;
 import ua.translate.service.ResponsedAdService;
@@ -36,6 +40,7 @@ import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
 import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.NonExistedResponsedAdException;
+import ua.translate.service.exception.UnacceptableActionForAcceptedAd;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.NonExistedAdException;
 
@@ -63,7 +68,7 @@ public class ClientController extends UserController{
 		ModelAndView model = new ModelAndView("/client/profile");
 		model.addObject("client", clientFromDB);
 		if(clientFromDB.getAvatar() != null){
-			model.addObject("image", convertAvaForRendering(clientFromDB.getAvatar()));
+			model.addObject("image", ControllerHelper.convertAvaForRendering(clientFromDB.getAvatar()));
 		}
 		if(psuccess!=null){
 			model.addObject("passSaved","Your password is saved successfully");
@@ -270,7 +275,7 @@ public class ClientController extends UserController{
 		model.addObject("client", clientFromDB);
 		model.addObject("emailSaved","Your email is saved successfully");
 		if(clientFromDB.getAvatar() != null){
-			model.addObject("image", convertAvaForRendering(clientFromDB.getAvatar()));
+			model.addObject("image", ControllerHelper.convertAvaForRendering(clientFromDB.getAvatar()));
 		}
 		return model;
 	}
@@ -307,9 +312,9 @@ public class ClientController extends UserController{
 			return model;
 		}
 		
-		Client clientFromDB = clientService.getClientByEmail(user.getName());
 		ModelAndView model = new ModelAndView("redirect:/client/profile?psuccess");
-		/*model.addObject("client", clientFromDB);
+		/*Client clientFromDB = clientService.getClientByEmail(user.getName());
+		model.addObject("client", clientFromDB);
 		model.addObject("passSaved","Your password is saved successfully");
 		if(clientFromDB.getAvatar() != null){
 			model.addObject("image", convertAvaForRendering(clientFromDB.getAvatar()));
@@ -342,7 +347,7 @@ public class ClientController extends UserController{
 		model.addObject("client", clientFromDB);
 		model.addObject("profileSaved","Your profile is saved successfully");
 		if(clientFromDB.getAvatar() != null){
-			model.addObject("image", convertAvaForRendering(clientFromDB.getAvatar()));
+			model.addObject("image", ControllerHelper.convertAvaForRendering(clientFromDB.getAvatar()));
 		}
 		return model;
 	}
@@ -353,23 +358,28 @@ public class ClientController extends UserController{
 	 * @param user - {@code Principal} object for retrieving {@code Client} from db
 	 * @param file - file chosen to be a avatar
 	 * @return {@code ModelAndView} user's profile page if saving was successfull, otherwise page for editing profile 
+	 * @throws UnsupportedEncodingException 
 	 */
 	@RequestMapping(value = "/saveAvatar",method = RequestMethod.POST)
 	public ModelAndView saveAvatar(Principal user, 
-						@RequestParam("file") MultipartFile file){
+						@RequestParam("file") MultipartFile file) throws UnsupportedEncodingException{
 		if(!file.isEmpty()){
+			Client clientFromDB = clientService.getClientByEmail(user.getName());
 			try {
 				String contentType = file.getContentType();
 				if(contentType.startsWith("image/")){
 					byte[] avatar = file.getBytes();
 					clientService.updateAvatar(user.getName(), avatar);
 				}
-				ModelAndView model = new ModelAndView("/client/edit");
-				model.addObject("error", "Some problem with your avatar, please repeat action");
+				ModelAndView model = new ModelAndView("redirect:/client/profile");
 				return model;
 			} catch (IOException e) {
 				e.printStackTrace();
 				ModelAndView model = new ModelAndView("/client/edit");
+				model.addObject("client", clientFromDB);
+				if(clientFromDB.getAvatar() != null){
+					model.addObject("image", ControllerHelper.convertAvaForRendering(clientFromDB.getAvatar()));
+				}
 				model.addObject("error", "Some problem with your avatar, please repeat action");
 				return model;
 			}
@@ -383,7 +393,7 @@ public class ClientController extends UserController{
 	 */
 	@RequestMapping(value = "/ads",method = RequestMethod.GET)
 	public ModelAndView ads(Principal user){
-		List<Ad> ads = clientService.getAds(user.getName());
+		Set<Ad> ads = clientService.getAds(user.getName());
 		ModelAndView model = new ModelAndView("/client/ads");
 		if(!ads.isEmpty()){
 			model.addObject("ads", ads);
@@ -438,17 +448,25 @@ public class ClientController extends UserController{
 	 * @param adId - id of {@code Ad} object
 	 */
 	@RequestMapping(value = "/ads/delete", method = RequestMethod.GET)
-	public ModelAndView deleteAd(@RequestParam("adId") long adId){
+	public ModelAndView deleteAd(@RequestParam("adId") long adId,Principal user){
+		ModelAndView model = new ModelAndView("/client/ads");
+		
 		try {
 			adService.deleteById(adId);
-			ModelAndView model = new ModelAndView("/client/ads");
 			model.addObject("msg", "Adversiment successfully deleted");
-			return model;
 		} catch (NonExistedAdException e) {
-			ModelAndView model = new ModelAndView("/client/ads");
-			model.addObject("error", e.getMessage());
-			return model;
+			model.addObject("error", "You can't delete non existed ad");
+		} catch (UnacceptableActionForAcceptedAd e) {
+			model.addObject("error", "Sorry, but you can't delete advertisement, "
+					+ "which has Accepted status");
 		}
+		
+		Set<Ad> ads = clientService.getAds(user.getName());
+		if(!ads.isEmpty()){
+			model.addObject("ads", ads);
+		}
+		
+		return model;
 	}
 	
 	/**
@@ -461,17 +479,29 @@ public class ClientController extends UserController{
 	 * @see ClientController#addMapsToAdView(ModelAndView)
 	 */
 	@RequestMapping(value = "/ads/edit", method = RequestMethod.GET)
-	public ModelAndView editAd(@RequestParam("adId") long adId){
+	public ModelAndView editAd(@RequestParam("adId") long adId,Principal user){
 		
 		try {
-			Ad ad = adService.get(adId);
+			Ad ad = adService.getForUpdating(adId);
 			ModelAndView model = new ModelAndView("/client/adbuilder");
 			model.addObject("ad",ad);
 			model = addMapsToAdView(model);
 			return model;
 		} catch (NonExistedAdException e) {
 			ModelAndView model = new ModelAndView("/client/ads");
-			model.addObject("error",e.getMessage());
+			model.addObject("error","You can't edit non existed advertisement");
+			Set<Ad> ads = clientService.getAds(user.getName());
+			if(!ads.isEmpty()){
+				model.addObject("ads", ads);
+			}
+			return model;
+		} catch (UnacceptableActionForAcceptedAd e) {
+			ModelAndView model = new ModelAndView("/client/ads");
+			Set<Ad> ads = clientService.getAds(user.getName());
+			if(!ads.isEmpty()){
+				model.addObject("ads", ads);
+			}
+			model.addObject("error","You can't edit advertisement, which has Accepted status");
 			return model;
 		}
 		
@@ -498,7 +528,6 @@ public class ClientController extends UserController{
 		if(result.hasErrors()){
 			ModelAndView model = new ModelAndView("/client/adbuilder");
 			model = addMapsToAdView(model);
-			editedAd.setId(adId);
 			return model;
 		}
 		try {
@@ -510,7 +539,19 @@ public class ClientController extends UserController{
 			return model;
 		} catch (NonExistedAdException e) {
 			ModelAndView model = new ModelAndView("/client/ads");
-			model.addObject("error",e.getMessage());
+			model.addObject("error","You can't edit non existed advertisement");
+			Set<Ad> ads = clientService.getAds(user.getName());
+			if(!ads.isEmpty()){
+				model.addObject("ads", ads);
+			}
+			return model;
+		} catch (UnacceptableActionForAcceptedAd e) {
+			ModelAndView model = new ModelAndView("/client/ads");
+			model.addObject("error","You can't edit advertisement, which has Accepted status");
+			Set<Ad> ads = clientService.getAds(user.getName());
+			if(!ads.isEmpty()){
+				model.addObject("ads", ads);
+			}
 			return model;
 		}
 		
@@ -518,14 +559,18 @@ public class ClientController extends UserController{
 	
 	/**
 	 * Returns {@code ModelAndView} page with all {@link ResponsedAd}s of this client
+	 * in order from latest to earliest
 	 * @param user - {@code Principal} object for retrieving client from db
 	 * @return
 	 */
 	@RequestMapping(value = "/responses",method = RequestMethod.GET)
 	public ModelAndView responsedAds(Principal user){
-		List<ResponsedAd> responsedAds = clientService.getResponsedAds(user.getName());
+		Set<ResponsedAd> responsedAds = clientService.getResponsedAds(user.getName());
+		Set<ResponsedAd> responsedAdsForRendering = new TreeSet<>(new ResponsedAdComparatorByDate());
+		responsedAdsForRendering.addAll(responsedAds);
+		
 		ModelAndView model = new ModelAndView("/client/responses");
-		model.addObject("responsedAds", responsedAds);
+		model.addObject("responsedAds", responsedAdsForRendering);
 		return model;
 	}
 	
@@ -544,7 +589,6 @@ public class ClientController extends UserController{
 	}
 	
 	/*!!!! Must sends message to appropriate translator's email!!!!*/
-	/*!!!! Must rejects all ResponsedAds related to Ad!!!!*/
 	/**
 	 * If {@code ResponsedAd} with {@code responsedAdId} exists, accepts it,
 	 * in any case redirects to {@link #responsedAds(Principal)}

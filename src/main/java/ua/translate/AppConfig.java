@@ -42,6 +42,10 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 @ComponentScan(basePackages = "ua.translate")
 @EnableTransactionManagement
 @PropertySource("classpath:application.properties")
+
+/*!!!!After creating default avatar for user all checking for null must be destroyed!!!!*/
+
+
 public class AppConfig extends WebMvcConfigurerAdapter{
 	
 	@Value("${db.driver}") private String dbDriver;

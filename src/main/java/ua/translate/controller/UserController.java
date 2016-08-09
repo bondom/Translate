@@ -33,15 +33,6 @@ public class UserController {
 	@Qualifier("authenticationManager")
 	private ProviderManager authenticationManager;
 	
-	/**
-	 * Converts user's avatar from byte[] representation to String representation
-	 * @throws UnsupportedEncodingException
-	 */
-	protected String convertAvaForRendering(byte[] ava) throws UnsupportedEncodingException{
-		byte[] encodeBase64 = Base64.encodeBase64(ava); 
-		String base64Encoded = new String(encodeBase64,"UTF-8");
-		return base64Encoded;
-	}
 	
 	/**
 	 * Checks if user is authenticated via remember-me authentication.

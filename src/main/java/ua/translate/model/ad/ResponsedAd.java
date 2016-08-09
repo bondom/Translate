@@ -1,4 +1,4 @@
-package ua.translate.model;
+package ua.translate.model.ad;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +24,8 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.springframework.stereotype.Component;
 
-import ua.translate.model.ad.Ad;
+import ua.translate.model.Client;
+import ua.translate.model.Translator;
 import ua.translate.model.status.ResponsedAdStatus;
 
 @Entity
@@ -112,18 +113,51 @@ public class ResponsedAd {
 	}
 
 	@Override
-	public boolean equals(Object obj){
-		if ( obj == null || getClass() != obj.getClass() ) {
-            return false;
-        }
-		ResponsedAd ad = (ResponsedAd)obj;
-		return Objects.equals(this.getId(), ad.getId());
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((ad == null) ? 0 : ad.hashCode());
+		result = prime * result + ((client == null) ? 0 : client.hashCode());
+		result = prime * result + ((dateTimeOfResponse == null) ? 0 : dateTimeOfResponse.hashCode());
+		result = prime * result + ((translator == null) ? 0 : translator.hashCode());
+		return result;
 	}
-	
+
 	@Override
-	public int hashCode(){
-		return Long.hashCode(id);
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ResponsedAd other = (ResponsedAd) obj;
+		if (ad == null) {
+			if (other.ad != null)
+				return false;
+		} else if (!ad.equals(other.ad))
+			return false;
+		if (client == null) {
+			if (other.client != null)
+				return false;
+		} else if (!client.equals(other.client))
+			return false;
+		if (dateTimeOfResponse == null) {
+			if (other.dateTimeOfResponse != null)
+				return false;
+		} else if (!dateTimeOfResponse.equals(other.dateTimeOfResponse))
+			return false;
+		if (translator == null) {
+			if (other.translator != null)
+				return false;
+		} else if (!translator.equals(other.translator))
+			return false;
+		return true;
 	}
+
+	
+
+	
 	
 
 }

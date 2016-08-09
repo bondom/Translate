@@ -33,7 +33,7 @@
 				<a href="<@spring.url "/client/email-confirm"/>">Confirm</a></br>
 			</#if>
 			Password:***** <a href="<@spring.url "/client/password"/>">Edit</a></br>
-		
+			
 			<img  src="data:image/jpeg;base64,${image!""}" />
 			<table>
 			<tr><td>First Name: </td><td>${client.getFirstName()}</td></tr>

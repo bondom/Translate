@@ -1,6 +1,7 @@
 package ua.translate.service.impl;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,8 +9,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.ResponsedAdDao;
-import ua.translate.model.ResponsedAd;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.ResponsedAdStatus;
 import ua.translate.service.ResponsedAdService;
 import ua.translate.service.exception.NonExistedResponsedAdException;
@@ -35,7 +37,8 @@ public class ResponsedAdServiceImpl implements ResponsedAdService {
 			throw new NonExistedResponsedAdException();
 		}
 		Ad mainAd = responsedAd.getAd();
-		List<ResponsedAd> responsedAds = responsedAdDao.getResponsedAdsByAd(mainAd);
+		mainAd.setStatus(AdStatus.ACCEPTED);
+		Set<ResponsedAd> responsedAds = mainAd.getResponsedAds();
 		responsedAds.forEach(rad->{
 			if(responsedAd.equals(rad)){
 				rad.setStatus(ResponsedAdStatus.ACCEPTED);

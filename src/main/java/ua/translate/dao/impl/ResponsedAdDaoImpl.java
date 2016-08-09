@@ -9,23 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ua.translate.dao.ResponsedAdDao;
-import ua.translate.model.ResponsedAd;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ResponsedAd;
 
 @Repository
 public class ResponsedAdDaoImpl implements ResponsedAdDao{
 
 	@Autowired
 	SessionFactory sessionFactory;
-
-	@Override
-	public List<ResponsedAd> getResponsedAdsByAd(Ad ad) {
-		Session session = sessionFactory.getCurrentSession();
-		Query query = session.getNamedQuery("responsedAdsByAd");
-		query.setParameter("ad", ad);
-		List<ResponsedAd> responsedAds = query.list();
-		return responsedAds;
-	}
 
 	@Override
 	public Long save(ResponsedAd responsedAd) {

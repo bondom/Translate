@@ -11,10 +11,6 @@ import ua.translate.model.ad.Ad;
  */
 public class NonExistedAdException extends Exception{
 
-	public NonExistedAdException(String msg){
-		super(msg);
-	}
-	
 	public NonExistedAdException(){
 		super();
 	}

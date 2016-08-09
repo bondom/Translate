@@ -1,4 +1,4 @@
-package ua.translate.model.bean;
+package ua.translate.model.viewbean;
 
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;

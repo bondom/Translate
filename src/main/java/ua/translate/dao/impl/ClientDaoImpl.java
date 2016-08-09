@@ -4,6 +4,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 import ua.translate.dao.ClientDao;
@@ -16,7 +17,7 @@ public class ClientDaoImpl extends ClientDao{
 	SessionFactory sessionFactory;
 	
 	@Override
-	public Long save(Client t) {
+	public Long save(Client t){
 		Session session = sessionFactory.getCurrentSession();
 		return (Long) session.save(t);
 	}

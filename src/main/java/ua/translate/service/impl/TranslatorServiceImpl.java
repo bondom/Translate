@@ -1,22 +1,25 @@
 package ua.translate.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.AdDao;
 import ua.translate.dao.ClientDao;
 import ua.translate.dao.ResponsedAdDao;
 import ua.translate.dao.TranslatorDao;
 import ua.translate.model.Client;
-import ua.translate.model.ResponsedAd;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ResponsedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.ResponsedAdStatus;
 import ua.translate.model.status.UserStatus;
@@ -26,8 +29,10 @@ import ua.translate.service.exception.EmailIsConfirmedException;
 import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.NonExistedAdException;
+import ua.translate.service.exception.NonExistedTranslatorException;
 
 @Service
+@Transactional(propagation = Propagation.REQUIRED)
 public class TranslatorServiceImpl extends TranslatorService {
 
 	
@@ -46,6 +51,20 @@ public class TranslatorServiceImpl extends TranslatorService {
 		return translator;
 	}
 
+	@Override
+	public Translator getTranslatorById(long id) throws NonExistedTranslatorException {
+		Translator translator = translatorDao.get(id);
+		if(translator==null){
+			throw new NonExistedTranslatorException();
+		}
+		return translator;
+	}
+
+	@Override
+	public List<Translator> getAllTranslators() {
+		return translatorDao.getAllTranslators();
+	}
+	
 	@Override
 	public void saveResponsedAd(String email,long adId) throws NonExistedAdException {
 		Ad ad = adDao.get(adId);
@@ -82,6 +101,7 @@ public class TranslatorServiceImpl extends TranslatorService {
 		newUser.setStatus(UserStatus.ACTIVE);
 		newUser.setEmailStatus(EmailStatus.NOTCONFIRMED);
 		newUser.setRegistrationTime(LocalDateTime.now());
+		newUser.setPublishingTime(LocalDateTime.now());
 		
 		translatorDao.save(newUser);
 	}
@@ -149,10 +169,8 @@ public class TranslatorServiceImpl extends TranslatorService {
 			throw new EmailIsConfirmedException();
 		}
 		String url = translator.getId() + UUID.randomUUID().toString();
-		translator.setConfirmedUrl(url);
+		translator.setConfirmationUrl(url);
 		return url;
 	}
-
-	
 
 }

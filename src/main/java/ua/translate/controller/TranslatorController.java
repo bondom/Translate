@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import ua.translate.controller.support.ControllerHelper;
 import ua.translate.model.Language;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
@@ -53,7 +56,7 @@ public class TranslatorController extends UserController{
 		ModelAndView model = new ModelAndView("/translator/profile");
 		model.addObject("translator", translatorFromDB);
 		if(translatorFromDB.getAvatar() != null){
-			model.addObject("image", convertAvaForRendering(translatorFromDB.getAvatar()));
+			model.addObject("image", ControllerHelper.convertAvaForRendering(translatorFromDB.getAvatar()));
 		}
 		return model;
 	}
@@ -106,8 +109,8 @@ public class TranslatorController extends UserController{
 			model.addObject("languages",Language.values());
 			return model;
 		}
-		//String[] stringLanguages = request.getParameterValues("selectedLanguages");
-		List<Language> enumLanguages= new ArrayList<>();
+		
+		Set<Language> enumLanguages= new LinkedHashSet<>();
 		for(String language:stringLanguages){
 			enumLanguages.add(Language.valueOf(language));
 		}
