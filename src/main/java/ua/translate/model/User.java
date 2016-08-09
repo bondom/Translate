@@ -40,7 +40,7 @@ import ua.translate.model.status.UserStatus;
 		@NamedQuery(name =  "userByEmail",
 					query = "from User user where user.email = :email"),
 		@NamedQuery(name =  "userByConfirmationUrl",
-					query = "from User user where user.confirmedUrl = :confirmationUrl")
+					query = "from User user where user.confirmationUrl = :confirmationUrl")
 })
 @Table(name = "USER_TEST")
 @Inheritance(strategy=InheritanceType.JOINED)
@@ -112,7 +112,7 @@ public class User implements Serializable{
 	private EmailStatus emailStatus;
 	
 	@Column(name = "CONFIRM_URL")
-	private String confirmedUrl;
+	private String confirmationUrl;
 	
 	@Column(name = "REGISTRATION_DATE",nullable = false)
 	private LocalDateTime registrationTime;
@@ -230,15 +230,12 @@ public class User implements Serializable{
 		return serialVersionUID;
 	}
 	
-	
-
-
-	public String getConfirmedUrl() {
-		return confirmedUrl;
+	public String getConfirmationUrl() {
+		return confirmationUrl;
 	}
 
-	public void setConfirmedUrl(String confirmedUrl) {
-		this.confirmedUrl = confirmedUrl;
+	public void setConfirmationUrl(String confirmationUrl) {
+		this.confirmationUrl = confirmationUrl;
 	}
 
 	@Override

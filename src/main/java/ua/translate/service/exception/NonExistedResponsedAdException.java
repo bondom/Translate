@@ -1,6 +1,6 @@
 package ua.translate.service.exception;
 
-import ua.translate.model.ResponsedAd;
+import ua.translate.model.ad.ResponsedAd;
 
 /**
  * Thrown when client attempts to get, edit or delete {@link ResponsedAd} 

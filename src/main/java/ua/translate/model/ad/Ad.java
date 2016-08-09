@@ -4,8 +4,11 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,6 +34,8 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.validator.constraints.NotBlank;
@@ -40,7 +45,6 @@ import org.springframework.format.annotation.DateTimeFormat.ISO;
 import ua.translate.model.Client;
 import ua.translate.model.Comment;
 import ua.translate.model.Language;
-import ua.translate.model.ResponsedAd;
 import ua.translate.model.Translator;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.validator.FieldNotMatch;
@@ -49,8 +53,8 @@ import ua.translate.model.validator.FieldNotMatch;
 @NamedQueries({
 	@NamedQuery(name =  "getAllAds",
 			query = "from Ad"),
-	@NamedQuery(name =  "deleteById",
-	query = "delete from Ad where id = :id")
+	@NamedQuery(name =  "getAdsByStatus",
+	query = "from Ad where status = :status")
 })
 @FieldNotMatch(first = "initLanguage",second = "resultLanguage", message = "Languages must be different")
 @Table(name = "AD_TEST")
@@ -118,17 +122,17 @@ public class Ad  implements Serializable{
 	@Enumerated(EnumType.STRING)
 	private Currency currency;
 	
-	@Column(name = "AD_CREATING_DATE",nullable = false)
-	private LocalDateTime creationDateTime;
+	@Column(name = "AD_PUBLICATIO_DATE_TIME",nullable = false)
+	private LocalDateTime publicationDateTime;
 	
 	@Column(name = "AD_STATUS",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private AdStatus status;
 	
-	//@OnDelete(action = OnDeleteAction.CASCADE)
 	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "ad")
 	@Cascade(CascadeType.ALL)
-	private List<ResponsedAd> responsedAds = new ArrayList<>();
+	@Fetch(FetchMode.SELECT)
+	private Set<ResponsedAd> responsedAds = new LinkedHashSet<>();
 	
 	public Ad(){}
 
@@ -138,126 +142,125 @@ public class Ad  implements Serializable{
 	public void setId(long id) {
 		this.id = id;
 	}
-
 	
-	public LocalDateTime getCreationDateTime() {
-		return creationDateTime;
+	public LocalDateTime getPublicationDateTime() {
+		return publicationDateTime;
 	}
-
-	public void setCreationDateTime(LocalDateTime creationDateTime) {
-		this.creationDateTime = creationDateTime;
+	
+	public void setPublicationDateTime(LocalDateTime publicationDateTime) {
+		this.publicationDateTime = publicationDateTime;
 	}
-
+	
 	public String getName() {
 		return name;
 	}
-
+	
 	public void setName(String name) {
 		this.name = name;
 	}
-
+	
 	public String getDescription() {
 		return description;
 	}
-
+	
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
+	
 	public LocalDate getEndDate() {
 		return endDate;
 	}
-
+	
 	public void setEndDate(LocalDate endDate) {
 		this.endDate = endDate;
 	}
-
+	
 	public Language getInitLanguage() {
 		return initLanguage;
 	}
-
+	
 	public void setInitLanguage(Language initLanguage) {
 		this.initLanguage = initLanguage;
 	}
-
+	
 	public Language getResultLanguage() {
 		return resultLanguage;
 	}
-
+	
 	public void setResultLanguage(Language resultLanguage) {
 		this.resultLanguage = resultLanguage;
 	}
-
+	
 	public TranslateType getTranslateType() {
 		return translateType;
 	}
-
+	
 	public void setTranslateType(TranslateType translateType) {
 		this.translateType = translateType;
 	}
-
+	
 	public byte[] getFile() {
 		return file;
 	}
-
+	
 	public void setFile(byte[] file) {
 		this.file = file;
 	}
-
+	
 	public double getCost() {
 		return cost;
 	}
-
+	
 	public void setCost(double cost) {
 		this.cost = cost;
 	}
-
+	
 	public Currency getCurrency() {
 		return currency;
 	}
-
+	
 	public void setCurrency(Currency currency) {
 		this.currency = currency;
 	}
-
+	
 	
 	public Client getClient() {
 		return client;
 	}
-
+	
 	public void setClient(Client client) {
 		this.client = client;
 	}
-
+	
 	public String getCountry() {
 		return country;
 	}
-
+	
 	public void setCountry(String country) {
 		this.country = country;
 	}
-
+	
 	public String getCity() {
 		return city;
 	}
-
+	
 	public void setCity(String city) {
 		this.city = city;
 	}
-
+	
 	public AdStatus getStatus() {
 		return status;
 	}
-
+	
 	public void setStatus(AdStatus status) {
 		this.status = status;
 	}
-
+	
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
 	
-	public List<ResponsedAd> getResponsedAds() {
+	public Set<ResponsedAd> getResponsedAds() {
 		return responsedAds;
 	}
 	
@@ -268,21 +271,53 @@ public class Ad  implements Serializable{
 	
 	public void removeResponsedAd(ResponsedAd responsedAd){
 		responsedAds.remove(responsedAd);
-		responsedAd.setAd(null);
 	}
-	
+
 	@Override
-	public boolean equals(Object obj){
-		if ( obj == null || getClass() != obj.getClass() ) {
-            return false;
-        }
-		Ad ad = (Ad)obj;
-		return Objects.equals(this.getId(), ad.getId());
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((client == null) ? 0 : client.hashCode());
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((endDate == null) ? 0 : endDate.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
 	}
-	
+
 	@Override
-	public int hashCode(){
-		return Long.hashCode(id);
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Ad other = (Ad) obj;
+		if (client == null) {
+			if (other.client != null)
+				return false;
+		} else if (!client.equals(other.client))
+			return false;
+		if (description == null) {
+			if (other.description != null)
+				return false;
+		} else if (!description.equals(other.description))
+			return false;
+		if (endDate == null) {
+			if (other.endDate != null)
+				return false;
+		} else if (!endDate.equals(other.endDate))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		return true;
 	}
 	
+	
+
+
+
 }

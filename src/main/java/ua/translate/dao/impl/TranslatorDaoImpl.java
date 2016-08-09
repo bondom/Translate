@@ -1,5 +1,7 @@
 package ua.translate.dao.impl;
 
+import java.util.List;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -49,6 +51,14 @@ public class TranslatorDaoImpl  extends TranslatorDao{
 		query.setParameter("email", email);
 		Translator translator = (Translator)query.uniqueResult();
 		return translator;
+	}
+
+	@Override
+	public List<Translator> getAllTranslators() {
+		Session session = sessionFactory.getCurrentSession();
+		Query query = session.getNamedQuery("allTranslators");
+		List<Translator> translators = (List<Translator>)query.list();
+		return translators;
 	}
 
 }

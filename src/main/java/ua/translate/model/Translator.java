@@ -4,11 +4,18 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ResponsedAd;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -25,7 +32,9 @@ import javax.persistence.PrimaryKeyJoinColumn;
 @Entity
 @NamedQueries({
 	@NamedQuery(name =  "translatorByEmail",
-				query = "from Translator translator where translator.email = :email")
+				query = "from Translator translator where translator.email = :email"),
+	@NamedQuery(name =  "allTranslators",
+				query = "from Translator")
 })
 @Table(name = "TRANSLATOR_TEST")
 @PrimaryKeyJoinColumn(name= "translator_id")
@@ -39,8 +48,9 @@ public class Translator extends User{
 	@Column(nullable = false)
 	private double rating;
 	
-	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true)
+	@OneToMany(fetch = FetchType.LAZY,orphanRemoval = true)
 	@Cascade(CascadeType.ALL)
+	@Fetch(FetchMode.SELECT)
 	private List<Comment> comments = new ArrayList<>();
 	
 	@Column(nullable = false)
@@ -49,15 +59,27 @@ public class Translator extends User{
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	@ElementCollection(targetClass = Language.class,fetch = FetchType.EAGER)
-	private List<Language> languages = new ArrayList<>();
+	@Fetch(FetchMode.JOIN)
+	private Set<Language> languages = new LinkedHashSet<>();
 	
 	private String addedInfo;
 
-	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "translator")
+	@OneToMany(fetch = FetchType.LAZY,orphanRemoval = true,mappedBy = "translator")
 	@Cascade(CascadeType.ALL)
-	private List<ResponsedAd> responsedAds = new ArrayList<>();
+	@Fetch(FetchMode.SELECT)
+	private Set<ResponsedAd> responsedAds = new LinkedHashSet<>();
 	
+	@Column(nullable = false)
+	private LocalDateTime publishingTime;
 	
+	public LocalDateTime getPublishingTime() {
+		return publishingTime;
+	}
+
+	public void setPublishingTime(LocalDateTime publishingTime) {
+		this.publishingTime = publishingTime;
+	}
+
 	public double getRating() {
 		return rating;
 	}
@@ -94,15 +116,16 @@ public class Translator extends User{
 		return serialVersionUID;
 	}
 
-	public List<Language> getLanguages() {
+
+	public Set<Language> getLanguages() {
 		return languages;
 	}
 
-	public void setLanguages(List<Language> languages) {
+	public void setLanguages(Set<Language> languages) {
 		this.languages = languages;
 	}
 
-	public List<ResponsedAd> getResponsedAds() {
+	public Set<ResponsedAd> getResponsedAds() {
 		return responsedAds;
 	}
 
@@ -113,7 +136,6 @@ public class Translator extends User{
 	
 	public void removeResponsedAd(ResponsedAd responsedAd){
 		responsedAds.remove(responsedAd);
-		responsedAd.setTranslator(null);
 	}
 	
 }

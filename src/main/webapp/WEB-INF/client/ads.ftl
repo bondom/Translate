@@ -12,6 +12,12 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
+			<#if error??>
+					<div class="alert alert-danger">${error}</div>
+			</#if>
+			<#if msg??>
+					<div class="alert alert-success">${msg}</div>
+			</#if>
 			<#if ads?? && ads?size gt 0>
 				<#list ads as ad>
 					<div>
@@ -20,10 +26,12 @@
 						<p>Description: ${ad.getDescription()}
 						<p>Init Language: ${ad.getInitLanguage()}
 						<p>Result Language: ${ad.getResultLanguage()}
-						<p>Creating Date: ${ad.getCreationDateTime()}
+						<p>Publication Date: ${ad.getPublicationDateTime()}
 						<p>Status: ${ad.getStatus()}
+						<#if ad.status.name()=="SHOWED">
 						<p><a href = "<@spring.url "/client/ads/delete?adId=${ad.getId()}"/>">DELETE</a>
 						<p><a href = "<@spring.url "/client/ads/edit?adId=${ad.getId()}"/>">EDIT</a>
+						</#if>
 					</div>
 					</br>
 				</#list>

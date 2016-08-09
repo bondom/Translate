@@ -1,6 +1,8 @@
 package ua.translate.dao.impl;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -12,6 +14,7 @@ import ua.translate.dao.AdDao;
 import ua.translate.model.Client;
 import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.status.AdStatus;
 
 @Repository
 public class AdDaoImpl implements AdDao{
@@ -19,14 +22,6 @@ public class AdDaoImpl implements AdDao{
 	@Autowired
 	SessionFactory sessionFactory;
 	
-
-	@Override
-	public List<Ad> getAllAds() {
-		Session session = sessionFactory.getCurrentSession();
-		Query query = session.getNamedQuery("getAllAds");
-		List<Ad> ads = (List<Ad>)query.list();
-		return ads;
-	}
 
 
 	@Override
@@ -54,6 +49,17 @@ public class AdDaoImpl implements AdDao{
 		Session session = sessionFactory.getCurrentSession();
 		session.update(ad);
 		return ad;
+	}
+
+
+	@Override
+	public Set<Ad> getAdsForShowing() {
+		Session session = sessionFactory.getCurrentSession();
+		Query query = session.getNamedQuery("getAdsByStatus");
+		query.setParameter("status",AdStatus.SHOWED);
+		List<Ad> ads = (List<Ad>)query.list();
+		Set<Ad> adsSet = new LinkedHashSet<>(ads);
+		return adsSet;
 	}
 
 

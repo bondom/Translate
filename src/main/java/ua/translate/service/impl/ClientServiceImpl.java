@@ -2,19 +2,23 @@ package ua.translate.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import javax.validation.ConstraintViolationException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.ClientDao;
 import ua.translate.model.Client;
-import ua.translate.model.ResponsedAd;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ResponsedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
 import ua.translate.service.ClientService;
@@ -37,26 +41,26 @@ public class ClientServiceImpl extends ClientService{
 	}
 
 	@Override
-	public List<ResponsedAd> getResponsedAds(String email){
+	public Set<ResponsedAd> getResponsedAds(String email){
 		Client client = getClientByEmail(email);
-		List<ResponsedAd> ads = client.getResponsedAds();
+		Set<ResponsedAd> ads = client.getResponsedAds();
 		return ads;
 	}
 	
 	@Override
-	public List<Ad> getAds(String email) {
+	public Set<Ad> getAds(String email) {
 		Client client = getClientByEmail(email);
-		List<Ad> ads = client.getAds();
+		Set<Ad> ads = client.getAds();
 		return ads;
 	}
 
 	@Override
 	public void registerUser(Client newUser) throws DuplicateEmailException {
-		User user = clientDao.getUserByEmail(newUser.getEmail());
-		if(user!=null){
+/*
+		if(!isEmailUnique(newUser.getEmail())){
 			throw new DuplicateEmailException("User with the same email is registered"
 					+ " in system already");
-		}
+		}*/
 		
 		newUser.setPassword(encodePassword(newUser.getPassword()));
 		newUser.setRole(UserRole.ROLE_CLIENT);
@@ -94,10 +98,10 @@ public class ClientServiceImpl extends ClientService{
 			return;
 		}
 		
-		if(!isEmailUnique(newEmail)){
+		/*if(!isEmailUnique(newEmail)){
 			throw new DuplicateEmailException(
 					"Such email is registered in system already");
-		}
+		}*/
 		
 		client.setEmail(newEmail);
 		client.setEmailStatus(EmailStatus.NOTCONFIRMED);
@@ -132,7 +136,7 @@ public class ClientServiceImpl extends ClientService{
 			throw new EmailIsConfirmedException();
 		}
 		String url = client.getId() + UUID.randomUUID().toString();
-		client.setConfirmedUrl(url);
+		client.setConfirmationUrl(url);
 		return url;
 	}
 

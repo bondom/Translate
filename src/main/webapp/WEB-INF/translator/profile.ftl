@@ -12,7 +12,6 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authtranslatorheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-			<#if translator??>
 				<img  src="data:image/jpeg;base64,${image!""}" />
 				<table>
 				<tr><td>Rating: </td><td>${translator.getRating()}</td></tr>
@@ -39,7 +38,6 @@
 				<tr><td>Registration Time: </td><td>${translator.getRegistrationTime()}</td></tr>
 				</table>
 				<a href = "<@spring.url "/translator/edit"/>">Edit profile</a>
-			</#if>
 			<@security.authorize access="isRememberMe()">
 				<p>O yeep!
 			</@security.authorize>

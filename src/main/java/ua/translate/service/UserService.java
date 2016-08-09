@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.UserDao;
 import ua.translate.model.User;
+import ua.translate.model.UserRole;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
 import ua.translate.service.exception.DuplicateEmailException;
@@ -58,10 +59,25 @@ public abstract class UserService<T extends User> {
 		return userDao.get(id);
 	}
 	
+	/**
+	 * Changes {@code emailStatus} to {@code EmailStatus#CONFIRMED}
+	 * @param confirmationUrl - url, which is stored in data storage
+	 * @return confirmed email
+	 * @throws InvalidConfirmationUrl - if user with such confirmationUrl doesn't exist
+	 */
+	public String confirmUserEmail(String confirmationUrl) throws InvalidConfirmationUrl {
+		User user = getUserByConfirmationUrl(confirmationUrl);
+		if(user==null){
+			throw new InvalidConfirmationUrl();
+		}
+		user.setEmailStatus(EmailStatus.CONFIRMED);
+		return user.getEmail();
+	}
+	
 	
 	/**
 	 * Saves {@code newUser} in data storage.
-	 * <p>Sets appropriate statuses of email, user; sets encoded password
+	 * <p>Sets appropriate statuses of email and user; sets {@link UserRole},encoded password
 	 * and registration time
 	 * @throws DuplicateEmailException  if email of user is registered already 
 	 */
@@ -104,21 +120,6 @@ public abstract class UserService<T extends User> {
 	 * @param avatar 
 	 */
 	public abstract void updateAvatar(String email, byte[] avatar);
-	
-	/**
-	 * Changes {@code emailStatus} to {@code EmailStatus#CONFIRMED}
-	 * @param confirmationUrl - url, which is stored in data storage
-	 * @return confirmed email
-	 * @throws InvalidConfirmationUrl - if user with such confirmationUrl doesn't exist
-	 */
-	public String confirmUserEmail(String confirmationUrl) throws InvalidConfirmationUrl {
-		User user = getUserByConfirmationUrl(confirmationUrl);
-		if(user==null){
-			throw new InvalidConfirmationUrl();
-		}
-		user.setEmailStatus(EmailStatus.CONFIRMED);
-		return user.getEmail();
-	}
 	
 	
 	/**

@@ -16,7 +16,7 @@
 				<#list responsedAds as responsedAd>
 					<#assign translator = responsedAd.translator>
 					<#assign ad = responsedAd.ad>
-					<p>${translator.getFirstName()} ${translator.getLastName()}	response on
+					<p><a href = "<@spring.url "/translators/${translator.getId()}"/>">${translator.getFirstName()} ${translator.getLastName()}</a>	responsed on
 					<a href = "<@spring.url "/ads/${ad.getId()}"/>">${ad.getName()}</a>				
 					<p>at ${responsedAd.getDateTimeOfResponse()}
 					<#assign adstatus = responsedAd.status>

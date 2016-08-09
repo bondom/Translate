@@ -1,4 +1,4 @@
-package ua.translate.aspects;
+package ua.translate.logging.web;
 
 
 import java.security.Principal;
@@ -15,11 +15,10 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
 
 import ua.translate.model.User;
-import ua.translate.model.bean.ChangeEmailBean;
-import ua.translate.model.bean.ChangePasswordBean;
+import ua.translate.model.viewbean.ChangeEmailBean;
+import ua.translate.model.viewbean.ChangePasswordBean;
 
 //@Aspect
-@Component
 public class ControllerAspect {
 	
 	/*Logger logger = LoggerFactory.getLogger(ControllerAspect.class);

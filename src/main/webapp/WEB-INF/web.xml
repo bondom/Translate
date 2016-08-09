@@ -64,7 +64,7 @@
 	      </init-param>
 	      <init-param>
 	          <param-name>contextConfigLocation</param-name>
-	          <param-value>ua.translate.AppConfig</param-value>
+	          <param-value><!-- ua.translate.AppConfig --></param-value>
 	      </init-param>
 	      <load-on-startup>1</load-on-startup>
 	  </servlet>

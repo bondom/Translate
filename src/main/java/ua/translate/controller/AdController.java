@@ -1,129 +1,142 @@
 package ua.translate.controller;
 
+import java.io.UnsupportedEncodingException;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import ua.translate.controller.support.AdComparatorByDate;
+import ua.translate.controller.support.ResponsedAdComparatorByDate;
+import ua.translate.controller.support.ControllerHelper;
+import ua.translate.model.Translator;
+import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.viewbean.AdView;
 import ua.translate.service.AdService;
+import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.NonExistedAdException;
-import ua.translate.support.AdComparatorByDate;
+import ua.translate.service.exception.UnacceptableActionForAcceptedAd;
 
 @Controller
 @RequestMapping("/ads")
 public class AdController {
 	
+	
+	private static Logger logger = LoggerFactory.getLogger(AdController.class);
+	
+	@Value("${webRootPath}")
+	private String webRootPath;
+	
 	@Autowired
 	AdService adService;
+	
+	@Autowired
+	TranslatorService translatorService;
 	
 	@RequestMapping(value = "/{adId}", method = RequestMethod.GET)
 	public ModelAndView ad(@PathVariable("adId") long adId){
 		try {
-			Ad ad = adService.get(adId);
+			Ad ad = adService.getForShowing(adId);
 			ModelAndView model = new ModelAndView("/showedAd");
-			LocalDate creationDate = ad.getCreationDateTime().toLocalDate();
+			LocalDate creationDate = ad.getPublicationDateTime().toLocalDate();
 			
 			model.addObject("ad", ad);
-			/**
-			 * Заменить на дату публикации и возможность скрывать и показывать объявления
-			 * (смена статуса)
-			 */
 			model.addObject("creationDate",creationDate);
 			return model;
-		}catch (NonExistedAdException e) {
-			return new ModelAndView("/exception/404");
+		}catch (NonExistedAdException |UnacceptableActionForAcceptedAd e) {
+			ModelAndView model = new ModelAndView("/exception/invalidAdId");
+			model.addObject("errorUrl", webRootPath+"/ads/"+adId);
+			return model;
 		}
 	}
 	
 	@RequestMapping(method = RequestMethod.GET)
-	public ModelAndView allAds(){
-		List<Ad> ads = adService.getAllAds();
+	public ModelAndView allAds(Principal user){
+
+		Set<Ad> ads = adService.getAdsForShowing();
+		Set<AdView> adsForRendering = new TreeSet<>(new AdComparatorByDate());
 		
-		Collections.sort(ads, new AdComparatorByDate());
-		Collections.reverse(ads);
 		
-		Map<String,Ad> adsWithTimeInfo = new LinkedHashMap<>();
-		ads.forEach(ad ->{
-			/**
-			 * Переработать метод!!!
-			 */
-			adsWithTimeInfo.put(getRelativeTimeCreation(ad),ad);
+		ads.forEach(ad->{
+			User userFromDB = null;
+			if(user!=null){
+				userFromDB = translatorService.getUserByEmail(user.getName());
+			}
+			AdView adView = getAdViewForRendering(userFromDB, ad);
+			adsForRendering.add(adView);
 		});
 		
-		ModelAndView model = new ModelAndView("/adsForAll");
-		model.addObject("adsTime", adsWithTimeInfo);
+		ModelAndView model = new ModelAndView("/publicAds");
+		model.addObject("adsView", adsForRendering);
 		return model;
 	}
 	
 	
-	
 	/**
-	 * Gets user-friendly string representation of creation time of advertisement
-	 * relative to present time close to a larger unit of measurement of time.
-	 * But method doesn't take in account difference in year - 
-	 * it is too long existence of advertisement
-	 * For example:
-	 * <pre>	
-	 * 	creationTime - 2016.07.19 15:00:00
-	 * 	now - 2016.07.20 13:13:13
-	 * 	result - 1 day ago
-	 * </pre>
+	 * Returns {@link AdView} {@code adView} for rendering on page<p>
+	 * If {@link User}, requested page with advertisements is {@link Translator}, and he responded on this {@code ad} ever,
+	 * this method returns {@code adView} with setted {@code adView.respondingTime} field,
+	 * else that field is {@code null}
 	 * 
-	 * <pre>
-	 * 	creationTime - 2016.07.19 15:00:00
-	 * 	now - 2016.07.19 16:13:13
-	 * 	result - 1 hour ago
-	 * </pre>
-	 * 
-	 * @param ad
-	 * @return user-friendly string representation of creation time of advertisement
-	 * relative to present time close to a larger unit of measurement of time
+	 * @param userFromDB - {@code User}, retrieved from data storage
+	 * @param ad - {@link Ad}, which should be rendered
 	 */
-	private String getRelativeTimeCreation(Ad ad){
-		LocalDateTime creationTime = ad.getCreationDateTime();
-		LocalDateTime now = LocalDateTime.now();
-		Integer existsInMonths = now.getMonth().getValue() - creationTime.getMonth().getValue();
-		if(existsInMonths>0){
-			if(existsInMonths==1){
-				return existsInMonths + " month ago";
-			} else return existsInMonths + " months ago";
+	private AdView getAdViewForRendering(User userFromDB,Ad ad){
+		AdView adView;
+		String relativePublishingTime = ControllerHelper.
+				getStringRelativeTime(ad.getPublicationDateTime());
+		if(userFromDB!=null && 
+				userFromDB instanceof Translator){
+			Set<ResponsedAd> responsedAds = ad.getResponsedAds();
+			
+			//Translator can response on one Ad several times,
+			//and we must show latest response on this Ad
+			Set<ResponsedAd> sortedResponsedAds = new TreeSet<>(new ResponsedAdComparatorByDate());	
+			sortedResponsedAds.addAll(responsedAds);
+
+			Optional<ResponsedAd> optionalResponsedAd= 
+					sortedResponsedAds.stream()
+								.filter(rad -> rad.getTranslator().equals(userFromDB))
+								.findFirst();
+			if(optionalResponsedAd.isPresent()){
+				logger.debug("User, who requested page with all advertisements,"
+						+ "is Translator, and he responded on Ad with name '{}'",ad.getName());
+				ResponsedAd responsedByAuthTranslator = optionalResponsedAd.get();
+				adView = new AdView(
+						ad,relativePublishingTime,
+						responsedByAuthTranslator.getDateTimeOfResponse());
+			}else{
+				logger.debug("User, who requested page with all advertisements,"
+						+ "is Translator, but he never responded on Ad with name '{}'",ad.getName());
+				adView = new AdView(ad, relativePublishingTime);
+			}
+			
+		}else{
+			logger.debug("User, who requested page with all advertisements, is not Translator");
+			adView = new AdView(ad, relativePublishingTime);
 		}
-		
-		Integer existsInDays = now.getDayOfMonth()- creationTime.getDayOfMonth();
-		if(existsInDays>0){
-			System.out.println(creationTime + " " + existsInDays + " days");
-			if(existsInDays==1){
-				return existsInDays + " day ago";
-			} else return existsInDays + " days ago";
-		}
-		
-		Integer existsInHours= now.getHour()- creationTime.getHour();
-		if(existsInHours>0){
-			System.out.println(creationTime + " " + existsInHours + " hours");
-			if(existsInHours==1){
-				return existsInHours + " hour ago";
-			}else return existsInHours + " hours ago";
-		}
-		
-		Integer existsInMinutes= now.getMinute()- creationTime.getMinute();
-		if(existsInMinutes>0){
-			System.out.println(creationTime + " " + existsInMinutes + " minutes");
-			if(existsInMinutes==1){
-				return existsInMinutes + " minute ago";
-			}else return existsInMinutes+ " minutes ago";
-		}
-		
-		Integer existsInSeconds = now.getSecond()- creationTime.getSecond();
-		return existsInSeconds+ " seconds ago";
+		return adView;
 	}
+	
+	
+	
 }

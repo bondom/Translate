@@ -17,17 +17,20 @@
 			<#include "/fragments/authtranslatorheader.ftl">
 		</@security.authorize>
 		<div class="panel-body" style = "margin: 0px">
-			<#if error??>
-				${error}
-			</#if>
-			<#list adsTime?keys as time>
-				<#assign ad=adsTime[time]>
+			
+			<#list adsView as adView>
+				<#assign ad=adView.ad>
 				<div>
 					<p><a href = "<@spring.url "/ads/${ad.getId()}"/>">${ad.getName()}</a>
+					<#if adView.respondingTime??>
+						<div class="alert alert-warning">
+							You responded on this advertisement at ${adView.respondingTime}.
+						</div>
+					</#if>
 					<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
 					<p>Init Language: ${ad.getInitLanguage()}
 					<p>Result Language: ${ad.getResultLanguage()}
-					<p>${time}
+					<p>${adView.getMessageWithPublishingTime()}
 				</div>
 				</br>
 			</#list>
