@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import ua.translate.controller.support.ControllerHelper;
@@ -26,10 +28,16 @@ import ua.translate.model.Translator;
 import ua.translate.model.viewbean.TranslatorView;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.NonExistedTranslatorException;
+import ua.translate.service.exception.WrongPageNumber;
 
 @Controller
 @RequestMapping("/translators")
 public class GetTranslatorController {
+	
+	private static final int TRANSLATORS_ON_PAGE=3;
+	
+	@Autowired
+	ControllerHelper controllerHelper;
 	
 	private Logger logger = LoggerFactory.getLogger(ControllerHelper.class);
 	
@@ -40,23 +48,29 @@ public class GetTranslatorController {
 	private String webRootPath;
 	
 	@RequestMapping(method = RequestMethod.GET)
-	public ModelAndView getAllTranslators(){
-		List<Translator> translators = translatorService.getAllTranslators();
+	public ModelAndView getTranslators(@RequestParam(name="page",
+														required = false,
+														defaultValue="1") int page){
+		Set<Translator> translators = null;
+		try {
+			translators = translatorService.getTranslators(page, TRANSLATORS_ON_PAGE);
+		} catch (WrongPageNumber e1) {
+			try {
+				translators = translatorService.getTranslators(1, TRANSLATORS_ON_PAGE);
+			} catch (WrongPageNumber unused) {}
+		}
 		
-		Set<TranslatorView> translatorsForRendering = new TreeSet<>(new TranslatorComparatorByDate());
+		Set<TranslatorView> translatorsForRendering = new LinkedHashSet<>();
 		translators.forEach(translator->{
 			String avatar = null;
 			try {
-				byte[] translatorAvatar = translator.getAvatar();
-				if(translatorAvatar!=null){
-					avatar = ControllerHelper.
-							convertAvaForRendering(translator.getAvatar());
-				}
+				avatar = controllerHelper.
+							getAvaForRendering(translator.getAvatar());
 			} catch (UnsupportedEncodingException e) {
 				avatar = "";
 				logger.error("Problem with converting avatar of translator:{}",e.getMessage());
 			}
-			String relativePublishingTime = ControllerHelper.
+			String relativePublishingTime = controllerHelper.
 					getStringRelativeTime(translator.getPublishingTime());
 			
 			TranslatorView translatorView = new TranslatorView(
@@ -64,8 +78,12 @@ public class GetTranslatorController {
 			
 			translatorsForRendering.add(translatorView);
 		});
+		
+		long numberOfPages= translatorService.
+				getNumberOfPagesForTranslators(TRANSLATORS_ON_PAGE);
 		ModelAndView model = new ModelAndView("/translators");
 		model.addObject("translatorsView", translatorsForRendering);
+		model.addObject("numberOfPages",numberOfPages);
 		return model;
 	}
 	
@@ -75,10 +93,8 @@ public class GetTranslatorController {
 			Translator translator = translatorService.getTranslatorById(translatorId);
 			ModelAndView model = new ModelAndView("/translatorProfile");
 			model.addObject("translator", translator);
-			if(translator.getAvatar() != null){
-				model.addObject("image", ControllerHelper.
-											convertAvaForRendering(translator.getAvatar()));
-			}
+			model.addObject("image", controllerHelper.
+									getAvaForRendering(translator.getAvatar()));
 			return model;
 		} catch (NonExistedTranslatorException e) {
 			ModelAndView model = new ModelAndView("/exception/invalidTranslatorId");

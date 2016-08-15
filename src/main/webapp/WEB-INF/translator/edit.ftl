@@ -78,17 +78,15 @@
 											<div class="alert alert-warning">${error}</div>
 										</#list>
 					</td></tr>
-					<tr><td>Email: </td><td>
-										<@spring.bind "translator.email"/>
-										<input type = "text" id = "email" name = "${(spring.status.expression)!"email"}" 
-										value = "${spring.status.value!""}" class="form-control" placeholder = "Email"/>
-										</br>
-										<#list spring.status.errorMessages as error>
-											<div class="alert alert-warning">${error}</div>
-										</#list>
-										<#if emailExists??>
-											<div class="alert alert-warning">${emailExists}</div>
-										</#if>
+					<tr><td>Languages: </td><td>
+							<#macro enumSelect selectName enumValues>
+								<select name = "${selectName}" multiple = "multiple">
+									<#list enumValues as enum>
+										<option value = "${enum}">${enum}</option>
+									</#list>
+								</select>
+							</#macro>
+							<@enumSelect "selectedLanguages" languages/>
 					</td></tr>
 					<tr><td>Phone Number: </td><td>
 											<@spring.bind "translator.phoneNumber"/>
@@ -99,13 +97,19 @@
 												<div class="alert alert-warning">${error}</div>
 											</#list>
 					</td></tr>
-					<tr><td><input type="submit"/></td>
-						<td><input type="hidden"
-								name="${_csrf.parameterName}"
-								value="${_csrf.token}"/>
-						</td>
-					</tr>
 				</table>
+				<button type = "submit" class="btn btn-info">
+						Save
+					</button>
+					<a href = "<@spring.url "/translator/profile"/>" role="button">Cancel</a>
+					<@spring.bind "translator.email"/>
+					<input type="hidden"
+							name="${spring.status.expression}"
+							value="${spring.status.value}"/>
+					<input type="hidden"
+							name="${_csrf.parameterName}"
+							value="${_csrf.token}"/>
+				</form>
 			</div>
 		</div>
 	</div>

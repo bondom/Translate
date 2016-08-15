@@ -31,7 +31,12 @@ import ua.translate.model.status.ResponsedAdStatus;
 @Entity
 @Table(name = "RESPONSED_AD_TEST")
 @NamedQueries({
-	@NamedQuery(name = "responsedAdsByAd",query="from ResponsedAd where ad = :ad")
+	@NamedQuery(name =  "getRadsByClient",
+			query = "from ResponsedAd rad where rad.client = :client "
+					+ "order by rad.dateTimeOfResponse desc"),
+	@NamedQuery(name =  "getRadsByTranslator",
+			query = "from ResponsedAd rad where rad.translator = :translator "
+					+ "order by rad.dateTimeOfResponse desc")
 })
 @Component
 public class ResponsedAd {

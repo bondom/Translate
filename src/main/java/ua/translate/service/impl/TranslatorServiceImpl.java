@@ -2,8 +2,10 @@ package ua.translate.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -30,9 +32,10 @@ import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.NonExistedAdException;
 import ua.translate.service.exception.NonExistedTranslatorException;
+import ua.translate.service.exception.WrongPageNumber;
 
 @Service
-@Transactional(propagation = Propagation.REQUIRED)
+@Transactional(propagation = Propagation.REQUIRED,rollbackFor = DuplicateEmailException.class)
 public class TranslatorServiceImpl extends TranslatorService {
 
 	
@@ -61,12 +64,24 @@ public class TranslatorServiceImpl extends TranslatorService {
 	}
 
 	@Override
-	public List<Translator> getAllTranslators() {
-		return translatorDao.getAllTranslators();
+	public Set<Translator> getTranslators(int page,int numberTranslatorsOnPage) 
+			throws WrongPageNumber {
+		if(page<1){
+			throw new WrongPageNumber();
+		}
+		return translatorDao.getTranslators(page,numberTranslatorsOnPage);
 	}
 	
 	@Override
-	public void saveResponsedAd(String email,long adId) throws NonExistedAdException {
+	public long getNumberOfPagesForTranslators(int numberOfTranslatorsOnPage) {
+		long numberOfTranslators = translatorDao.getNumberOfTranslators();
+		long numberOfPages = 
+				(long) Math.ceil(((double)numberOfTranslators)/numberOfTranslatorsOnPage);
+		return numberOfPages;
+	}
+	
+	@Override
+	public long saveResponsedAd(String email,long adId) throws NonExistedAdException {
 		Ad ad = adDao.get(adId);
 		if(ad == null){
 			throw new NonExistedAdException();
@@ -84,17 +99,12 @@ public class TranslatorServiceImpl extends TranslatorService {
 		responsedAd.setStatus(ResponsedAdStatus.SENDED);
 		responsedAd.setDateTimeOfResponse(LocalDateTime.now());
 		
-		responsedAdDao.save(responsedAd);
+		return responsedAdDao.save(responsedAd);
 		
 	}
 	
 	@Override
 	public void registerUser(Translator newUser) throws DuplicateEmailException {
-		User user = translatorDao.getUserByEmail(newUser.getEmail());
-		if(user!=null){
-			throw new DuplicateEmailException("User with the same email is registered"
-					+ " in system already");
-		}
 		
 		newUser.setPassword(encodePassword(newUser.getPassword()));
 		newUser.setRole(UserRole.ROLE_TRANSLATOR);
@@ -102,8 +112,13 @@ public class TranslatorServiceImpl extends TranslatorService {
 		newUser.setEmailStatus(EmailStatus.NOTCONFIRMED);
 		newUser.setRegistrationTime(LocalDateTime.now());
 		newUser.setPublishingTime(LocalDateTime.now());
-		
-		translatorDao.save(newUser);
+		try{
+			translatorDao.save(newUser);
+			translatorDao.flush();
+		}catch(ConstraintViolationException e){
+			throw new DuplicateEmailException("User with the same email is registered"
+					+ " in system already");
+		}
 	}
 
 	@Override
@@ -133,14 +148,13 @@ public class TranslatorServiceImpl extends TranslatorService {
 			return;
 		}
 		
-		if(!isEmailUnique(newEmail)){
-			throw new DuplicateEmailException(
-					"Such email is registered in system already");
+		try{
+			translator.setEmail(newEmail);
+			translator.setEmailStatus(EmailStatus.NOTCONFIRMED);
+			translatorDao.flush();
+		}catch(ConstraintViolationException e){
+			throw new DuplicateEmailException();
 		}
-		
-		translator.setEmail(newEmail);
-		translator.setEmailStatus(EmailStatus.NOTCONFIRMED);
-		
 	}
 
 	@Override
@@ -161,16 +175,30 @@ public class TranslatorServiceImpl extends TranslatorService {
 		
 	}
 
-
 	@Override
-	public String saveConfirmationUrl(String email) throws EmailIsConfirmedException {
-		Translator translator = translatorDao.getTranslatorByEmail(email);
-		if(translator.getEmailStatus().equals(EmailStatus.CONFIRMED)){
-			throw new EmailIsConfirmedException();
+	public Set<ResponsedAd> getResponsedAds(String email,
+										    int page,
+										    int numberOfResponsedAdsOnPage) throws WrongPageNumber{
+		if(page<1){
+			throw new WrongPageNumber();
 		}
-		String url = translator.getId() + UUID.randomUUID().toString();
-		translator.setConfirmationUrl(url);
-		return url;
+		Translator translator = getTranslatorByEmail(email);
+		Set<ResponsedAd> responsedAds = responsedAdDao
+				.getResponsedAdsByTranslator(translator, page, numberOfResponsedAdsOnPage);
+		return responsedAds;
 	}
+	
+	@Override
+	public long getNumberOfPagesForResponsedAds(String email, int numberOfResponsedAdsOnPage) {
+		Translator translator = getTranslatorByEmail(email);
+		long numberOfResponsedAds = responsedAdDao.getNumberOfResponsedAdsByTranslator(translator);
+		long numberOfPages = (long) Math
+				.ceil(((double)numberOfResponsedAds)/numberOfResponsedAdsOnPage);
+		return numberOfPages;
+		
+	}
+
+
+
 
 }

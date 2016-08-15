@@ -1,25 +1,62 @@
 package ua.translate.controller.support;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.Scanner;
 
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 
+@Component
 public class ControllerHelper {
 	
 	private static Logger logger = LoggerFactory.getLogger(ControllerHelper.class);
 	
 	/**
-	 * Converts user's avatar from byte[] representation to String representation
+	 * Converts and returns user's avatar from byte[] representation to String representation,<br>
+	 * if {@code ava == null} returns String representation of default avatar
+	 *
 	 * @throws UnsupportedEncodingException
 	 */
-	public static String convertAvaForRendering(byte[] ava) throws UnsupportedEncodingException{
-		byte[] encodeBase64 = Base64.encodeBase64(ava); 
-		String base64Encoded = new String(encodeBase64,"UTF-8");
-		return base64Encoded;
+	public String getAvaForRendering(byte[] ava) throws UnsupportedEncodingException{
+		if(ava != null){
+			byte[] encodeBase64 = Base64.encodeBase64(ava);
+			String base64Encoded = new String(encodeBase64,"UTF-8");
+			return base64Encoded;
+		}
+		
+		//If user doesn't have avatar, return default avatar
+		StringBuilder result = new StringBuilder("");
+
+		//Get file from resources folder
+		ClassLoader classLoader = getClass().getClassLoader();
+		File file;
+		try {
+			file = new File(classLoader.getResource("/defaultAva.txt").toURI());
+			try (Scanner scanner = new Scanner(file)) {
+				
+				while (scanner.hasNextLine()) {
+					String line = scanner.nextLine();
+					result.append(line).append("\n");
+				}
+				scanner.close();
+			} catch (IOException e) {
+				logger.info("Problem with reading default avatar: {}",e.getMessage());
+			}
+		} catch (URISyntaxException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+
+		return result.toString();
+		
 	}
 	
 	/*!!!!Need recoding!!!!*/
@@ -46,7 +83,7 @@ public class ControllerHelper {
 	 * @return user-friendly string representation of period of time between {@code dateTime}
 	 * and {@code LocalDateTime.now()}
 	 */
-	public static String getStringRelativeTime(LocalDateTime dateTime){
+	public String getStringRelativeTime(LocalDateTime dateTime){
 		LocalDateTime now = LocalDateTime.now();
 		
 		if(dateTime.compareTo(now)>0){

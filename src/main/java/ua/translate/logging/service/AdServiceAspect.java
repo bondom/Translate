@@ -73,6 +73,25 @@ public class AdServiceAspect {
 	}
 	
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public long getNumberOfPagesForShowedAds(..)) "
+			 + "&& args(numberOfAds)")
+	public Long getNumberOfPagesForShowedAds(ProceedingJoinPoint thisJoinPoint,long numberOfAds) throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		Long numberOfPages= 0L;
+		try {
+			numberOfPages = (Long)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}:{}:{}",className,methodName,e.getClass());
+			throw e;
+		}
+		
+		logger.info("{}.{}(numberOfAds={}): number of pages={}",
+				className,methodName,numberOfAds,numberOfPages);
+
+		return numberOfPages;
+	}
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " (execution(public ua.translate.model.ad.Ad getForShowing(..)) ||"
 			 + "execution(public ua.translate.model.ad.Ad getForUpdating(..)))&& args(adId)")
 	public Ad getForShowingOrUpdating(ProceedingJoinPoint thisJoinPoint,long adId) throws Throwable {

@@ -30,6 +30,10 @@
 				</div>
 				</br>
 			</#list>
+
+			<#list 1..numberOfPages as page>
+				<a href="<@spring.url "/translators?page=${page}"/>">${page}</a>&nbsp
+			</#list>
 		</div>
 	</div>
 	</div>

@@ -3,6 +3,7 @@ package ua.translate.dao.impl;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
@@ -41,6 +42,11 @@ public class ClientDaoImpl extends ClientDao{
 		Session session = sessionFactory.getCurrentSession();
 		session.update(t);
 		return t;
+	}
+	
+	public void flush() throws ConstraintViolationException{
+		Session session = sessionFactory.getCurrentSession();
+		session.flush();
 	}
 
 	@Override

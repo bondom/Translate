@@ -7,6 +7,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
@@ -104,5 +105,10 @@ public class HibernateTokenRepositoryImpl implements AbstractDao<String,Persiste
 
 	private Criteria createEntityCriteria(){
 		return sessionFactory.getCurrentSession().createCriteria(PersistentLogin.class);
+	}
+	
+	public void flush() throws ConstraintViolationException{
+		Session session = sessionFactory.getCurrentSession();
+		session.flush();
 	}
 }

@@ -1,21 +1,30 @@
 package ua.translate.service;
 
  
+import java.security.Principal;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.Set;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.UserDao;
+import ua.translate.model.Client;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
+import ua.translate.model.ad.ResponsedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
 import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.InvalidPasswordException;
+import ua.translate.service.exception.WrongPageNumber;
 
 /**
  * 
@@ -127,7 +136,42 @@ public abstract class UserService<T extends User> {
 	 * @param email - email of authenticated user, usually is retrieved from {@code Principal} object
 	 * @return generated url
 	 */
-	public abstract String saveConfirmationUrl(String email) throws EmailIsConfirmedException;
+	public String saveConfirmationUrl(String email) throws EmailIsConfirmedException {
+		User user = userDao.getUserByEmail(email);
+		if(user.getEmailStatus().equals(EmailStatus.CONFIRMED)){
+			throw new EmailIsConfirmedException();
+		}
+		String url = user.getId() + UUID.randomUUID().toString();
+		user.setConfirmationUrl(url);
+		return url;
+	}
+	
+	/**
+	 * Returns all {@link ResponsedAd}s, related to object type subclass of {@link User} with email={@code email},
+	 * ordered by {@link ResponsedAd#getDateTimeOfResponse()} 
+	 * from latest to earliest.
+	 * <p>Size of result {@code Set} is not more than {@code numberOfResponsedAdsOnPage}
+	 * @param email - email of authenticated client,
+	 * 					usually is retrieved from {@link Principal} object
+	 * @param page -  page number, can't be less than 1
+	 * @param numberOfResponsedAdsOnPage - 
+	 * 			number {@code ResponsedAd}s, which can be displayed on 1 page
+	 *  @throws WrongPageNumber if {@code page} is less than 1
+	 */
+	public abstract Set<ResponsedAd> getResponsedAds
+					(String email,int page,int numberOfResponsedAdsOnPage) 
+														throws WrongPageNumber;
+	
+	/**
+	 * Returns number of pages for all {@link ResponsedAd}s,
+	 *   related to object type subclass of {@link User} with email={@code email},
+	 * if on one page can be displayed only {@code numberOfResponsedAdsOnPage}  ResponsedAds
+	 * @param numberOfResponsedAdsOnPage - number of {@code ResponsedAd}s, which can be displayed on one page
+	 * @param email - email of authenticated user,
+	 * 					usually is retrieved from {@link Principal} object
+	 */
+	public abstract long getNumberOfPagesForResponsedAds(String email,
+														 int numberOfResponsedAdsOnPage);
 	
 	/**
 	 * Checks if {@code passwordFromPage} matches to encoded password from data storage
@@ -148,18 +192,4 @@ public abstract class UserService<T extends User> {
 		return encodedString;
 	}
 	
-	/**
-	 * Chechs if {@code newEmail} is unique,
-	 * If it is unique - return true, else false
-	 */
-	protected boolean isEmailUnique(String newEmail){
-		User userFromDB = getUserByEmail(newEmail);
-		if(userFromDB==null){
-			//such email doesn't exist
-			return true;
-		}else{
-			//user with the same email is registered in system already
-			return false;
-		}
-	}
 }

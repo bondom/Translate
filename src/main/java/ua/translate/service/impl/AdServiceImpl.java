@@ -32,10 +32,13 @@ import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.ResponsedAd;
 import ua.translate.model.status.AdStatus;
+import ua.translate.model.status.ResponsedAdStatus;
 import ua.translate.model.viewbean.AdView;
 import ua.translate.service.AdService;
+import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.NonExistedAdException;
 import ua.translate.service.exception.UnacceptableActionForAcceptedAd;
+import ua.translate.service.exception.WrongPageNumber;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED)
@@ -94,7 +97,10 @@ public class AdServiceImpl implements AdService {
 	}
 	
 	@Override
-	public Ad updateAd(long adId, Ad updatedAd) throws NonExistedAdException, UnacceptableActionForAcceptedAd {
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public Ad updateAd(long adId, Ad updatedAd) throws NonExistedAdException, 
+													   UnacceptableActionForAcceptedAd, 
+													   IllegalActionForAd {
 		Ad adFromDb= get(adId);
 		if(adFromDb==null){
 			throw new NonExistedAdException();
@@ -102,26 +108,26 @@ public class AdServiceImpl implements AdService {
 		if(adFromDb.getStatus().equals(AdStatus.ACCEPTED)){
 			throw new UnacceptableActionForAcceptedAd();
 		}
-		adFromDb.setName(updatedAd.getName());
-		adFromDb.setDescription(updatedAd.getDescription());
-
-		adFromDb.setInitLanguage(updatedAd.getInitLanguage());
-		adFromDb.setResultLanguage(updatedAd.getResultLanguage());
-
-		adFromDb.setTranslateType(updatedAd.getTranslateType());
-		adFromDb.setCity(updatedAd.getCity());
-		adFromDb.setCountry(updatedAd.getCountry());
-		adFromDb.setCost(updatedAd.getCost());
-		adFromDb.setEndDate(updatedAd.getEndDate());
-		adFromDb.setCurrency(updatedAd.getCurrency());
-		adFromDb.setFile(updatedAd.getFile());
-		adFromDb.setPublicationDateTime(LocalDateTime.now());
-		return adFromDb;
+		if(adContainsSendedResponses(adFromDb)){
+			throw new IllegalActionForAd();
+		}
+		
+		updatedAd.setClient(adFromDb.getClient());
+		updatedAd.setPublicationDateTime(adFromDb.getPublicationDateTime());
+		updatedAd.setStatus(AdStatus.SHOWED);
+		updatedAd.setResponsedAds(adFromDb.getResponsedAds());
+		
+		Ad persistedAd = adDao.merge(updatedAd);
+		
+		return persistedAd;
 	}
 
 	@Override
-	public Set<Ad> getAdsForShowing() {
-		Set<Ad> adsForShowing = adDao.getAdsForShowing();
+	public Set<Ad> getAdsForShowing(int page,int numberAdsOnPage) throws WrongPageNumber{
+		if(page<1){
+			throw new WrongPageNumber();
+		}
+		Set<Ad> adsForShowing = adDao.getAdsForShowing(page,numberAdsOnPage);
 		return adsForShowing;
 	}
 
@@ -135,16 +141,53 @@ public class AdServiceImpl implements AdService {
 		if(ad.getStatus()!=AdStatus.SHOWED){
 			throw new UnacceptableActionForAcceptedAd();
 		}
+		
 		return ad;
 	}
 
 	@Override
-	public Ad getForUpdating(long id) throws NonExistedAdException, UnacceptableActionForAcceptedAd {
-		return getForShowing(id);
+	public Ad getForUpdating(String email,long id) throws NonExistedAdException, 
+														  UnacceptableActionForAcceptedAd,
+														  IllegalActionForAd{
+		Ad ad = adDao.get(id);
+		if(ad==null){
+			throw new NonExistedAdException();
+		}
+		Client authClient = clientDao.getClientByEmail(email);
+		if(!ad.getClient().equals(authClient)){
+			throw new NonExistedAdException();
+		}
+		
+		if(ad.getStatus()!=AdStatus.SHOWED){
+			throw new UnacceptableActionForAcceptedAd();
+		}
+		
+		if(adContainsSendedResponses(ad)){
+			throw new IllegalActionForAd();
+		}
+		return ad;
+	}
+
+
+	@Override
+	public long getNumberOfPagesForShowedAds(int numberOfAds) {
+		long numberOfShowedAds = adDao.getNumberOfShowedAds();
+		long numberOfPages = (long) Math.ceil(((double)numberOfShowedAds)/numberOfAds);
+		return numberOfPages;
 	}
 	
-
-
+	/**
+	 * Checks if {@code ad} contains at least one {@link ResponsedAd} {@code responsedAd}
+	 * with {@code status=SENDED}
+	 * @return true if {@code ad} contains at least one {@link ResponsedAd} {@code responsedAd}
+	 * with {@code status=SENDED}, otherwise false
+	 */
+	private boolean adContainsSendedResponses(Ad ad){
+		Set<ResponsedAd> responsedAds = ad.getResponsedAds();
+		boolean sendedResponsedAdsExist  =  responsedAds.stream().anyMatch(
+				rad -> rad.getStatus().equals(ResponsedAdStatus.SENDED));
+		return sendedResponsedAdsExist;
+	}
 	
 	
 }

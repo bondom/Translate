@@ -18,7 +18,7 @@ public class AppSecurityConfigTranslator extends AppSecurityConfig {
 				.antMatcher("/translator/**")
 				.authorizeRequests()
 				.antMatchers("/translator/registration*","/bulbular*").anonymous()
-				.antMatchers("/translator/index","/translator/login*").permitAll()
+				.antMatchers("/translator/index","/translator/login*","/translator/confirmation").permitAll()
 				.antMatchers("/translator/**").hasRole("TRANSLATOR")
 				.anyRequest().authenticated()
 			.and()

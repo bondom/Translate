@@ -1,6 +1,7 @@
 package ua.translate.logging.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -20,17 +21,39 @@ public class TranslatorServiceAspect {
 	Logger logger = LoggerFactory.getLogger(TranslatorServiceAspect.class);
 
 	@AfterReturning(pointcut = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public * getAllTranslators())",
+			 + " execution(public * getTranslators(..))",
 			 returning = "translators")
-	public void getAllTranslators(JoinPoint thisJoinPoint,List<Translator> translators) {
+	public void getTranslators(JoinPoint thisJoinPoint,Set<Translator> translators) {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		if(translators.size()>0){
-			for(int i = 0;i<translators.size();i++){
-				Translator trs = translators.get(i);
-				logger.debug("{}.{}:{}-{} {}",className,methodName,i,trs.getFirstName(),trs.getLastName());
-			}
+			translators.forEach(trs->{
+				logger.debug("{}.{}:{} {},{}",className,methodName,
+						trs.getFirstName(),trs.getLastName(),trs.getPublishingTime());
+			});
 		}else logger.debug("{}.{}: 0 translators",className,methodName);
+	}
+	
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public long getNumberOfPagesForTranslators(..)) "
+			 + "&& args(numberOfTranslatorsOnPage)")
+	public Long getNumberOfPagesForTranslators(ProceedingJoinPoint thisJoinPoint,
+											   long numberOfTranslatorsOnPage) 
+											   throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		Long numberOfPages= 0L;
+		try {
+			numberOfPages = (Long)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}:{}:{}",className,methodName,e.getClass());
+			throw e;
+		}
+		
+		logger.info("{}.{}(numberOfTranslatorsOnPage={}): number of pages={}",
+				className,methodName,numberOfTranslatorsOnPage,numberOfPages);
+
+		return numberOfPages;
 	}
 	
 	@Around(value = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"

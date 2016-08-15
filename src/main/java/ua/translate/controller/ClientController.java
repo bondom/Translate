@@ -3,6 +3,7 @@ package ua.translate.controller;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,10 @@ import java.util.TreeSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
@@ -23,8 +27,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import ua.translate.controller.support.ResponsedAdComparatorByDate;
 import ua.translate.controller.support.ControllerHelper;
+import ua.translate.controller.support.ResponsedAdComparatorByDate;
+import ua.translate.logging.dao.AbstractUserDaoAspect;
 import ua.translate.model.Client;
 import ua.translate.model.Language;
 import ua.translate.model.ad.Ad;
@@ -38,9 +43,11 @@ import ua.translate.service.ClientService;
 import ua.translate.service.ResponsedAdService;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
+import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.NonExistedResponsedAdException;
 import ua.translate.service.exception.UnacceptableActionForAcceptedAd;
+import ua.translate.service.exception.WrongPageNumber;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.NonExistedAdException;
 
@@ -48,6 +55,8 @@ import ua.translate.service.exception.NonExistedAdException;
 @RequestMapping("/client")
 public class ClientController extends UserController{
 
+	
+	
 	@Autowired
 	private ClientService clientService;
 	
@@ -56,6 +65,11 @@ public class ClientController extends UserController{
 	
 	@Autowired
 	private ResponsedAdService responsedAdService;
+	
+	@Autowired
+	ControllerHelper controllerHelper;
+	
+	private static final int RESPONSED_ADS_ON_PAGE=3;
 	
 	/**
 	 * Returns {@link ModelAndView} client's profile
@@ -67,9 +81,7 @@ public class ClientController extends UserController{
 		Client clientFromDB = clientService.getClientByEmail(user.getName());
 		ModelAndView model = new ModelAndView("/client/profile");
 		model.addObject("client", clientFromDB);
-		if(clientFromDB.getAvatar() != null){
-			model.addObject("image", ControllerHelper.convertAvaForRendering(clientFromDB.getAvatar()));
-		}
+		model.addObject("image", controllerHelper.getAvaForRendering(clientFromDB.getAvatar()));
 		if(psuccess!=null){
 			model.addObject("passSaved","Your password is saved successfully");
 		}
@@ -128,11 +140,11 @@ public class ClientController extends UserController{
 		if(result.hasErrors()){
 			return new ModelAndView("/client/registration");
 		}
-		try {
+		try{
 			clientService.registerUser(client);
-		} catch (DuplicateEmailException e) {
+		}catch (DuplicateEmailException e) {
 			ModelAndView registrationView = new ModelAndView("/client/registration");
-			registrationView.addObject("error",e.getMessage());
+			registrationView.addObject("error","This email is registered in system already");
 			return registrationView;
 		}
 		ModelAndView loginView = new ModelAndView("/client/login");
@@ -220,9 +232,7 @@ public class ClientController extends UserController{
 	}
 	
 	/**
-	 * Returns {@link ModelAndView} client's page for editing of profile if
-	 * client is not authenticated via remember-me authentication
-	 * <p> if is, returns login form page for re-entering email and password, 
+	 * Returns {@link ModelAndView} client's page for editing profile 
 	 */
 	@RequestMapping(value = "/edit",method = RequestMethod.GET)
 	public ModelAndView editProfile(Principal user, HttpServletRequest request){
@@ -260,23 +270,22 @@ public class ClientController extends UserController{
 			clientService.updateUserEmail(user.getName(), 
 										  changeEmailBean.getNewEmail(), 
 										  changeEmailBean.getCurrentPassword());
-		} catch (InvalidPasswordException e) {
+		}catch (InvalidPasswordException e) {
 			ModelAndView model = new ModelAndView("/client/editEmail");
 			model.addObject("invalidPassword",e.getMessage());
 			return model;
-		} catch (DuplicateEmailException e) {
+		}catch (DuplicateEmailException e) {
 			ModelAndView model = new ModelAndView("/client/editEmail");
-			model.addObject("duplicateEmail",e.getMessage());
+			model.addObject("duplicateEmail","This email is registered in system already");
 			return model;
 		}
+		
 		refreshUsername(changeEmailBean.getNewEmail());
 		Client clientFromDB = clientService.getClientByEmail(user.getName());
 		ModelAndView model = new ModelAndView("/client/profile");
 		model.addObject("client", clientFromDB);
 		model.addObject("emailSaved","Your email is saved successfully");
-		if(clientFromDB.getAvatar() != null){
-			model.addObject("image", ControllerHelper.convertAvaForRendering(clientFromDB.getAvatar()));
-		}
+		model.addObject("image", controllerHelper.getAvaForRendering(clientFromDB.getAvatar()));
 		return model;
 	}
 	/**
@@ -346,9 +355,7 @@ public class ClientController extends UserController{
 		ModelAndView model = new ModelAndView("/client/profile");
 		model.addObject("client", clientFromDB);
 		model.addObject("profileSaved","Your profile is saved successfully");
-		if(clientFromDB.getAvatar() != null){
-			model.addObject("image", ControllerHelper.convertAvaForRendering(clientFromDB.getAvatar()));
-		}
+		model.addObject("image", controllerHelper.getAvaForRendering(clientFromDB.getAvatar()));
 		return model;
 	}
 	
@@ -377,9 +384,7 @@ public class ClientController extends UserController{
 				e.printStackTrace();
 				ModelAndView model = new ModelAndView("/client/edit");
 				model.addObject("client", clientFromDB);
-				if(clientFromDB.getAvatar() != null){
-					model.addObject("image", ControllerHelper.convertAvaForRendering(clientFromDB.getAvatar()));
-				}
+				model.addObject("image", controllerHelper.getAvaForRendering(clientFromDB.getAvatar()));
 				model.addObject("error", "Some problem with your avatar, please repeat action");
 				return model;
 			}
@@ -481,29 +486,27 @@ public class ClientController extends UserController{
 	@RequestMapping(value = "/ads/edit", method = RequestMethod.GET)
 	public ModelAndView editAd(@RequestParam("adId") long adId,Principal user){
 		
+		ModelAndView errorView= new ModelAndView("/client/ads");
+		
 		try {
-			Ad ad = adService.getForUpdating(adId);
+			Ad ad = adService.getForUpdating(user.getName(),adId);
 			ModelAndView model = new ModelAndView("/client/adbuilder");
 			model.addObject("ad",ad);
 			model = addMapsToAdView(model);
 			return model;
 		} catch (NonExistedAdException e) {
-			ModelAndView model = new ModelAndView("/client/ads");
-			model.addObject("error","You can't edit non existed advertisement");
-			Set<Ad> ads = clientService.getAds(user.getName());
-			if(!ads.isEmpty()){
-				model.addObject("ads", ads);
-			}
-			return model;
+			errorView.addObject("error","You can't edit non existed advertisement");
 		} catch (UnacceptableActionForAcceptedAd e) {
-			ModelAndView model = new ModelAndView("/client/ads");
-			Set<Ad> ads = clientService.getAds(user.getName());
-			if(!ads.isEmpty()){
-				model.addObject("ads", ads);
-			}
-			model.addObject("error","You can't edit advertisement, which has Accepted status");
-			return model;
+			errorView.addObject("error","You can't edit advertisement, which has Accepted status");
+		} catch (IllegalActionForAd e) {
+			errorView.addObject("error","For editing advertisement, you must reject responses to it");
 		}
+			
+		Set<Ad> ads = clientService.getAds(user.getName());
+		if(!ads.isEmpty()){
+			errorView.addObject("ads", ads);
+		}
+		return errorView;
 		
 	}
 	
@@ -521,7 +524,6 @@ public class ClientController extends UserController{
 	 */
 	@RequestMapping(value = "/saveAdEdits",method = RequestMethod.POST)
 	public ModelAndView saveAdEdits(
-							@RequestParam("adId") long adId,
 							@Valid @ModelAttribute("ad") Ad editedAd,
 							BindingResult result,
 							Principal user){
@@ -530,47 +532,57 @@ public class ClientController extends UserController{
 			model = addMapsToAdView(model);
 			return model;
 		}
+		ModelAndView errorView= new ModelAndView("/client/ads");
+		
 		try {
-			Ad updatedAd = adService.updateAd(adId,editedAd);
+			Ad updatedAd = adService.updateAd(editedAd.getId(),editedAd);
 			ModelAndView model = new ModelAndView("/client/adbuilder");
 			model.addObject("ad", updatedAd);
 			model.addObject("Editmsg", "Advertisement is edited successfully");
 			model = addMapsToAdView(model);
 			return model;
 		} catch (NonExistedAdException e) {
-			ModelAndView model = new ModelAndView("/client/ads");
-			model.addObject("error","You can't edit non existed advertisement");
-			Set<Ad> ads = clientService.getAds(user.getName());
-			if(!ads.isEmpty()){
-				model.addObject("ads", ads);
-			}
-			return model;
+			errorView.addObject("error","You can't edit non existed advertisement");
 		} catch (UnacceptableActionForAcceptedAd e) {
-			ModelAndView model = new ModelAndView("/client/ads");
-			model.addObject("error","You can't edit advertisement, which has Accepted status");
-			Set<Ad> ads = clientService.getAds(user.getName());
-			if(!ads.isEmpty()){
-				model.addObject("ads", ads);
-			}
-			return model;
+			errorView.addObject("error","You can't edit advertisement, which has Accepted status");
+		} catch (IllegalActionForAd e) {
+			errorView.addObject("error","For editing advertisement, you must reject responses to it");
 		}
+			
+		Set<Ad> ads = clientService.getAds(user.getName());
+		if(!ads.isEmpty()){
+			errorView.addObject("ads", ads);
+		}
+		return errorView;
 		
 	}
 	
 	/**
-	 * Returns {@code ModelAndView} page with all {@link ResponsedAd}s of this client
+	 * Returns {@code ModelAndView} page with {@link ResponsedAd}s of this client
 	 * in order from latest to earliest
 	 * @param user - {@code Principal} object for retrieving client from db
 	 * @return
 	 */
 	@RequestMapping(value = "/responses",method = RequestMethod.GET)
-	public ModelAndView responsedAds(Principal user){
-		Set<ResponsedAd> responsedAds = clientService.getResponsedAds(user.getName());
-		Set<ResponsedAd> responsedAdsForRendering = new TreeSet<>(new ResponsedAdComparatorByDate());
-		responsedAdsForRendering.addAll(responsedAds);
+	public ModelAndView responsedAds(Principal user,
+									 @RequestParam(name="page",defaultValue="1",required = false) int page){
 		
+		Set<ResponsedAd> responsedAds = null;
+		try {
+			responsedAds = clientService
+					.getResponsedAds(user.getName(),page,RESPONSED_ADS_ON_PAGE);
+		} catch (WrongPageNumber e) {
+			try {
+				responsedAds = clientService
+						.getResponsedAds(user.getName(),1,RESPONSED_ADS_ON_PAGE);
+			} catch (WrongPageNumber unused) {}
+		}
+		
+		long nunmberOfPages = clientService
+				.getNumberOfPagesForResponsedAds(user.getName(), RESPONSED_ADS_ON_PAGE);
 		ModelAndView model = new ModelAndView("/client/responses");
-		model.addObject("responsedAds", responsedAdsForRendering);
+		model.addObject("responsedAds", responsedAds);
+		model.addObject("numberOfPages",nunmberOfPages);
 		return model;
 	}
 	

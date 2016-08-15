@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,11 +36,13 @@ import ua.translate.service.AdService;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.NonExistedAdException;
 import ua.translate.service.exception.UnacceptableActionForAcceptedAd;
+import ua.translate.service.exception.WrongPageNumber;
 
 @Controller
 @RequestMapping("/ads")
 public class AdController {
 	
+	private static final int ADS_ON_PAGE=6;
 	
 	private static Logger logger = LoggerFactory.getLogger(AdController.class);
 	
@@ -51,6 +54,9 @@ public class AdController {
 	
 	@Autowired
 	TranslatorService translatorService;
+	
+	@Autowired
+	ControllerHelper controllerHelper;
 	
 	@RequestMapping(value = "/{adId}", method = RequestMethod.GET)
 	public ModelAndView ad(@PathVariable("adId") long adId){
@@ -70,11 +76,18 @@ public class AdController {
 	}
 	
 	@RequestMapping(method = RequestMethod.GET)
-	public ModelAndView allAds(Principal user){
-
-		Set<Ad> ads = adService.getAdsForShowing();
-		Set<AdView> adsForRendering = new TreeSet<>(new AdComparatorByDate());
-		
+	public ModelAndView getAds(Principal user,
+							   @RequestParam(name="page",defaultValue="1",required=false) 
+								int page){
+		Set<Ad> ads = null;
+		try {
+			ads = adService.getAdsForShowing(page,ADS_ON_PAGE);
+		} catch (WrongPageNumber e) {
+			try {
+				ads = adService.getAdsForShowing(1, ADS_ON_PAGE);
+			} catch (WrongPageNumber unused) {}	
+		}
+		Set<AdView> adsForRendering = new LinkedHashSet<>();
 		
 		ads.forEach(ad->{
 			User userFromDB = null;
@@ -85,9 +98,13 @@ public class AdController {
 			adsForRendering.add(adView);
 		});
 		
+		long numberOfPages= adService.getNumberOfPagesForShowedAds(ADS_ON_PAGE);
+
 		ModelAndView model = new ModelAndView("/publicAds");
 		model.addObject("adsView", adsForRendering);
+		model.addObject("numberOfPages",numberOfPages);
 		return model;
+		
 	}
 	
 	
@@ -102,7 +119,7 @@ public class AdController {
 	 */
 	private AdView getAdViewForRendering(User userFromDB,Ad ad){
 		AdView adView;
-		String relativePublishingTime = ControllerHelper.
+		String relativePublishingTime = controllerHelper.
 				getStringRelativeTime(ad.getPublicationDateTime());
 		if(userFromDB!=null && 
 				userFromDB instanceof Translator){

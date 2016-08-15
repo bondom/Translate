@@ -53,8 +53,8 @@ import ua.translate.model.validator.FieldNotMatch;
 @NamedQueries({
 	@NamedQuery(name =  "getAllAds",
 			query = "from Ad"),
-	@NamedQuery(name =  "getAdsByStatus",
-	query = "from Ad where status = :status")
+	@NamedQuery(name =  "getAdsByStatusAndDescOrderByPubDate",
+	query = "from Ad ad where ad.status = :status order by ad.publicationDateTime desc")
 })
 @FieldNotMatch(first = "initLanguage",second = "resultLanguage", message = "Languages must be different")
 @Table(name = "AD_TEST")
@@ -92,9 +92,9 @@ public class Ad  implements Serializable{
 	private String city;
 	
 
-	/**
-	 * Добавить проверку валидности даты
-	 */
+	
+	 /*!!!!Добавить проверку валидности даты!!!!*/
+	 
 	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
 	@Column(name = "AD_END_DATE",nullable = false)
 	private LocalDate endDate;
@@ -264,6 +264,10 @@ public class Ad  implements Serializable{
 		return responsedAds;
 	}
 	
+	public void setResponsedAds(Set<ResponsedAd> responsedAds) {
+		this.responsedAds = responsedAds;
+	}
+
 	public void addResponsedAd(ResponsedAd responsedAd){
 		responsedAds.add(responsedAd);
 		responsedAd.setAd(this);

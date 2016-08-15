@@ -12,8 +12,10 @@ import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.ResponsedAd;
 import ua.translate.model.viewbean.AdView;
+import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.NonExistedAdException;
 import ua.translate.service.exception.UnacceptableActionForAcceptedAd;
+import ua.translate.service.exception.WrongPageNumber;
 
 public interface AdService {
 	
@@ -31,8 +33,11 @@ public interface AdService {
 	 * @return  {@code Ad} ad object, never {@code null}
 	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist
 	 * @throws UnacceptableActionForAcceptedAd if {@code Ad} with such id exists, but {@code ad.status==ACCEPTED}
+	 * @throws IllegalActionForAd if {@code Ad} has responses with {@code ResponsedAdStatus#SENDED} status
 	 */
-	public Ad updateAd(long adId, Ad updatedAd) throws NonExistedAdException, UnacceptableActionForAcceptedAd;
+	public Ad updateAd(long adId, Ad updatedAd) throws NonExistedAdException, 
+													   UnacceptableActionForAcceptedAd,
+													   IllegalActionForAd;
 	
 	/**
 	 * Gets advertisement from data storage by Id
@@ -57,23 +62,41 @@ public interface AdService {
 	public Ad getForShowing(long id) throws NonExistedAdException, UnacceptableActionForAcceptedAd;
 	
 	/**
-	 * Gets advertisement from data storage by Id with {@code status==SHOWED}
+	 * Gets {@link Ad } {@code ad} from data storage by Id with {@code status==SHOWED},
+	 * checks if {@code ad} belongs to {@link Client} {@code client} with email={@code email}
 	 * <p>Invoke this method if you want to return to {@code Client} page for editing advertisiment
-	 * @param id
+	 * @param id - id of {@code Ad}, which should be retrieved for updating
+	 * @param email - email of authenticated client
 	 * @return {@code Ad} object, never {@code null}  
-	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist
+	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist, 
+	 * or {@code ad} doesn't belong to {@code client}
 	 * @throws UnacceptableActionForAcceptedAd if {@code Ad} with such id exists, but
 	 * {@code status!=SHOWED}
+	 * @throws IllegalActionForAd if {@code Ad} has responses with {@code ResponsedAdStatus#SENDED} status
 	 */
-	public Ad getForUpdating(long id) throws NonExistedAdException, UnacceptableActionForAcceptedAd;
+	public Ad getForUpdating(String email,long id) throws NonExistedAdException, 
+														  UnacceptableActionForAcceptedAd,
+														  IllegalActionForAd;
 	
 	
 	/**
-	 * Gets advertisements from data storage, 
-	 * which have {@code status==SHOWED}
-	 * @return list of advertisements, never {@code null}
+	 * Gets {@code Set} of advertisements from data storage, 
+	 * which have {@code status==SHOWED}, ordered by {@link Ad#getPublicationDateTime()} 
+	 * from latest to earliest.
+	 * size of result {@code Set} is not more than {@code numberAdsOnPage}
+	 * @param page -  page number, can't be less than 1
+	 * @param numberAdsOnPage - number {@link Ad}s, which can be displayed on 1 page
+	 * @return set of advertisements, never {@code null}
+	 * @throws WrongPageNumber if {@code page} is less than 1
 	 */
-	public Set<Ad> getAdsForShowing();
+	public Set<Ad> getAdsForShowing(int page,int numberAdsOnPage) throws WrongPageNumber;
+	
+	/**
+	 * Returns number of pages for all existed {@link Ad}s with {@code status=SHOWED},
+	 * if on one page can be displayed only {@code numberOfAds} {@code Ad}s
+	 * @param numberOfAds - number of {@code Ad}s, which can be displayed on one page
+	 */
+	public long getNumberOfPagesForShowedAds(int numberOfAds);
 	
 	
 	/**

@@ -45,12 +45,12 @@ public class TranslatorDaoAspect {
 	}
 	
 	@AfterReturning(value = "ua.translate.logging.SystemArchitecture.inDaoLayer() &&"
-			 + " execution(* getAllTranslators())",returning = "translators")
-	public void getAllTranslators(JoinPoint thisJoinPoint, Set<Translator> translators) {
+			 + " execution(* getTranslators(..))",returning = "translators")
+	public void getTranslators(JoinPoint thisJoinPoint, Set<Translator> translators) {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		
-		translators.stream().forEach(translator ->{
+		translators.forEach(translator ->{
 		logger.debug("{}.{}:translator is retrieved from db: email={},id={},"
 				+ "languages={}",
 				className,methodName,translator.getEmail(),translator.getId(),

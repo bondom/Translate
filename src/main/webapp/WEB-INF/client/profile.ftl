@@ -12,7 +12,7 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-		
+			
 			<#if error??>
 				<div class="alert alert-danger">${error}</div>
 			</#if>
@@ -25,16 +25,15 @@
 			<#if profileSaved??>
 				<div class="alert alert-success">${profileSaved}</div>
 			</#if>
-			Email: ${client.getEmail()} <a href="<@spring.url "/client/email"/>">Edit</a></br>
+			<img  src="data:image/jpeg;base64,${image!""}" />
+			Email: ${client.getEmail()} <a href="<@spring.url "/client/email"/>">Edit</a>
 			<#if client.getEmailStatus().name()=="NOTCONFIRMED">
 				<div class="alert alert-warning">
 						You have not confirmed your email.
 				</div>
 				<a href="<@spring.url "/client/email-confirm"/>">Confirm</a></br>
 			</#if>
-			Password:***** <a href="<@spring.url "/client/password"/>">Edit</a></br>
-			
-			<img  src="data:image/jpeg;base64,${image!""}" />
+			</br>Password:***** <a href="<@spring.url "/client/password"/>">Edit</a></br>
 			<table>
 			<tr><td>First Name: </td><td>${client.getFirstName()}</td></tr>
 			<tr><td>Last Name: </td><td>${client.getLastName()}</td></tr>

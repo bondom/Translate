@@ -15,7 +15,7 @@
 				<#if createAd??>
 					<#assign formUrl = "/client/saveAd"/>
 				<#else>
-					<#assign formUrl = "/client/saveAdEdits?adId=${ad.getId()}"/>
+					<#assign formUrl = "/client/saveAdEdits"/>
 				</#if>
 				<#if Editmsg??>
 					<div class="alert alert-success">${Editmsg}</div>
@@ -97,12 +97,17 @@
 												<div class="alert alert-warning">${error}</div>
 											</#list>
 					</td></tr>
+					<tr><td></td><td></td><@spring.bind "ad.id"/>
+										 <input type = "hidden" name = "${spring.status.expression}" 
+										 value = "${spring.status.value}" />
+					</tr>
 					<tr><td><input type="submit"/></td>
 						<td><input type="hidden"
 								name="${_csrf.parameterName}"
 								value="${_csrf.token}"/>
 						</td>
 					</tr>
+					
 				</table>
 				</form>
 		</div>

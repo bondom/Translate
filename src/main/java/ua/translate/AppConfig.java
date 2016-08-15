@@ -1,8 +1,11 @@
 package ua.translate;
 
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
 
+import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -36,6 +39,8 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
 
+import freemarker.template.Version;
+
 @Configuration
 @EnableWebMvc
 @EnableAspectJAutoProxy(proxyTargetClass = true)
@@ -68,6 +73,9 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	@Value("${mail.smtp.starttls.enable}") private String smtpStarttlsEnable;
 	@Value("${mail.smtp.auth}") private String smtpAuth;
 	@Value("${mail.smtp.ssl.trust}") private String smtpSslTrust;
+	
+	@Autowired
+	ServletContext servletContext;
 	
 	@Bean(name = "viewResolver")
 	public FreeMarkerViewResolver getViewResolver() {
@@ -163,6 +171,16 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 		props.put("mail.smtp.ssl.trust", smtpSslTrust);
 		mailSender.setJavaMailProperties(props);
 		return mailSender;
+	}
+	
+	@Bean
+	public freemarker.template.Configuration configuration() throws IOException{
+		freemarker.template.Configuration configuration = 
+				new freemarker.template.Configuration(new Version("2.3.0"));
+		configuration.setDirectoryForTemplateLoading(
+				new File(servletContext.getRealPath("/WEB-INF/mail/")));
+		configuration.setDefaultEncoding("UTF-8");
+		return configuration;
 	}
 	
 	@Bean 

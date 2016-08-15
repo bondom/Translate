@@ -35,8 +35,8 @@ public abstract class AbstractUserDao<PK extends Serializable,T>  implements Abs
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.getNamedQuery("userByConfirmationUrl");
 		query.setParameter("confirmationUrl", confirmationUrl);
-		Client client = (Client)query.uniqueResult();
-		return client;
+		User user= (User)query.uniqueResult();
+		return user;
 	}
 
 	

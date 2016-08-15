@@ -33,8 +33,8 @@ import javax.persistence.PrimaryKeyJoinColumn;
 @NamedQueries({
 	@NamedQuery(name =  "translatorByEmail",
 				query = "from Translator translator where translator.email = :email"),
-	@NamedQuery(name =  "allTranslators",
-				query = "from Translator")
+	@NamedQuery(name =  "getTranslatorsDescOrderByPubTime",
+				query = "from Translator translator order by translator.publishingTime desc")
 })
 @Table(name = "TRANSLATOR_TEST")
 @PrimaryKeyJoinColumn(name= "translator_id")

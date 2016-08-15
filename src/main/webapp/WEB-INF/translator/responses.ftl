@@ -10,33 +10,28 @@
 <body>
 	<div class="container">
 	<div class="panel panel-default">
-		<@security.authorize access="hasRole('ROLE_CLIENT') or ! isAuthenticated()">
-			<#include "/fragments/inittranslatorheader.ftl">
-		</@security.authorize>
-		<@security.authorize access="hasRole('ROLE_TRANSLATOR')">
-			<#include "/fragments/authtranslatorheader.ftl">
-		</@security.authorize>
+		<#include "/fragments/authtranslatorheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-			
-			<#list adsView as adView>
-				<#assign ad=adView.ad>
-				<div>
+			<#if responsedAds?has_content>
+				<#list responsedAds as responsedAd>
+					<#assign ad = responsedAd.ad>
 					<p><a href = "<@spring.url "/ads/${ad.getId()}"/>">${ad.getName()}</a>
-					<#if adView.respondingTime??>
-						<div class="alert alert-warning">
-							You responded on this advertisement at ${adView.respondingTime}.
-						</div>
-					</#if>
+					${responsedAd.getDateTimeOfResponse()}
 					<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
 					<p>Init Language: ${ad.getInitLanguage()}
 					<p>Result Language: ${ad.getResultLanguage()}
-					<p>${adView.getMessageWithPublishingTime()}
-				</div>
+					<p>End Date: ${ad.getEndDate()}
+					<#assign adstatus = responsedAd.status>
+					<p>Status:${adstatus}
+				</#list>
 				</br>
-			</#list>
-		<#list 1..numberOfPages as page>
-			<a href="<@spring.url "/ads?page=${page}"/>">${page}</a>&nbsp
-		</#list>
+				<#list 1..numberOfPages as page>
+					<a href="<@spring.url "/translator/responses?page=${page}"/>">${page}</a>&nbsp
+				</#list>
+			<#else>
+				<p> You haven't responded yet to any one advertisement
+				<p><a href = "<@spring.url "/ads"/>">Find advertisements</a>
+			</#if>
 		</div>
 	</div>
 	</div>

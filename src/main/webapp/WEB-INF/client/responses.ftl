@@ -26,6 +26,10 @@
 						<a href="<@spring.url "/client/accept?radId=${responsedAd.getId()}"/>">Accept</a>
 					</#if>
 				</#list>
+				</br>
+				<#list 1..numberOfPages as page>
+					<a href="<@spring.url "/client/responses?page=${page}"/>">${page}</a>&nbsp
+				</#list>
 			</#if>
 		</div>
 	</div>
