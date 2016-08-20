@@ -1,25 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <class-diagram version="1.1.10" icons="true" always-add-relationships="false" generalizations="true" realizations="true" 
   associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
-  <interface id="1" language="java" name="ua.translate.dao.AbstractDao" project="Translate" 
-    file="/Translate/src/main/java/ua/translate/dao/AbstractDao.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="733" y="80"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
-      sort-features="false" accessors="true" visibility="true">      
-      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
-      <operations public="true" package="true" protected="true" private="true" static="true"/>    
-    </display>  
-  </interface>  
-  <class id="2" language="java" name="ua.translate.dao.AbstractUserDao" project="Translate" 
-    file="/Translate/src/main/java/ua/translate/dao/AbstractUserDao.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="739" y="261"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
-      sort-features="false" accessors="true" visibility="true">      
-      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
-      <operations public="true" package="true" protected="true" private="true" static="true"/>    
-    </display>  
-  </class>  
-  <class id="3" language="java" name="ua.translate.dao.UserDao" project="Translate" 
+  <class id="1" language="java" name="ua.translate.dao.UserDao" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/UserDao.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="499" y="539"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -28,7 +10,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="ua.translate.dao.ClientDao" project="Translate" 
+  <class id="2" language="java" name="ua.translate.dao.ClientDao" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/ClientDao.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="751" y="547"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -37,7 +19,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="5" language="java" name="ua.translate.dao.TranslatorDao" project="Translate" 
+  <class id="3" language="java" name="ua.translate.dao.TranslatorDao" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/TranslatorDao.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1062" y="544"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -46,7 +28,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <interface id="6" language="java" name="ua.translate.dao.AdDao" project="Translate" 
+  <interface id="4" language="java" name="ua.translate.dao.AdDao" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/AdDao.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1084" y="141"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -55,8 +37,8 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </interface>  
-  <interface id="7" language="java" name="ua.translate.dao.ResponsedAdDao" project="Translate" 
-    file="/Translate/src/main/java/ua/translate/dao/ResponsedAdDao.java" binary="false" corner="BOTTOM_RIGHT">    
+  <interface id="5" language="java" name="ua.translate.dao.RespondedAdDao" project="Translate" 
+    file="/Translate/src/main/java/ua/translate/dao/RespondedAdDao.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="306" y="153"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -64,7 +46,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </interface>  
-  <class id="8" language="java" name="ua.translate.dao.impl.AdDaoImpl" project="Translate" 
+  <class id="6" language="java" name="ua.translate.dao.impl.AdDaoImpl" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/impl/AdDaoImpl.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1094" y="353"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -73,8 +55,8 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="9" language="java" name="ua.translate.dao.impl.ResponsedAdDaoImpl" project="Translate" 
-    file="/Translate/src/main/java/ua/translate/dao/impl/ResponsedAdDaoImpl.java" binary="false" corner="BOTTOM_RIGHT">    
+  <class id="7" language="java" name="ua.translate.dao.impl.RespondedAdDaoImpl" project="Translate" 
+    file="/Translate/src/main/java/ua/translate/dao/impl/RespondedAdDaoImpl.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="306" y="344"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
@@ -82,7 +64,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="10" language="java" name="ua.translate.dao.impl.UserDaoImpl" project="Translate" 
+  <class id="8" language="java" name="ua.translate.dao.impl.UserDaoImpl" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/impl/UserDaoImpl.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="475" y="726"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -91,7 +73,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="11" language="java" name="ua.translate.dao.impl.ClientDaoImpl" project="Translate" 
+  <class id="9" language="java" name="ua.translate.dao.impl.ClientDaoImpl" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/impl/ClientDaoImpl.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="756" y="733"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -100,7 +82,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="12" language="java" name="ua.translate.dao.impl.TranslatorDaoImpl" project="Translate" 
+  <class id="10" language="java" name="ua.translate.dao.impl.TranslatorDaoImpl" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/impl/TranslatorDaoImpl.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1067" y="729"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -109,7 +91,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="13" language="java" name="ua.translate.dao.impl.HibernateTokenRepositoryImpl" project="Translate" 
+  <class id="11" language="java" name="ua.translate.dao.impl.HibernateTokenRepositoryImpl" project="Translate" 
     file="/Translate/src/main/java/ua/translate/dao/impl/HibernateTokenRepositoryImpl.java" binary="false" 
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1413" y="300"/>    
@@ -119,54 +101,26 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <generalization id="14">    
-    <end type="SOURCE" refId="6"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <generalization id="15">    
-    <end type="SOURCE" refId="11"/>    
-    <end type="TARGET" refId="4"/>  
-  </generalization>  
-  <generalization id="16">    
-    <end type="SOURCE" refId="12"/>    
-    <end type="TARGET" refId="5"/>  
-  </generalization>  
-  <realization id="17">    
-    <end type="SOURCE" refId="8"/>    
-    <end type="TARGET" refId="6"/>  
-  </realization>  
-  <realization id="18">    
+  <generalization id="12">    
     <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="7"/>  
-  </realization>  
-  <realization id="19">    
-    <end type="SOURCE" refId="2"/>    
-    <end type="TARGET" refId="1"/>  
-  </realization>  
-  <generalization id="20">    
-    <end type="SOURCE" refId="5"/>    
     <end type="TARGET" refId="2"/>  
   </generalization>  
-  <generalization id="21">    
-    <end type="SOURCE" refId="7"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <generalization id="22">    
+  <realization id="13">    
+    <end type="SOURCE" refId="6"/>    
+    <end type="TARGET" refId="4"/>  
+  </realization>  
+  <generalization id="14">    
     <end type="SOURCE" refId="10"/>    
     <end type="TARGET" refId="3"/>  
   </generalization>  
-  <realization id="23">    
-    <end type="SOURCE" refId="13"/>    
+  <generalization id="15">    
+    <end type="SOURCE" refId="8"/>    
     <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <realization id="16">    
+    <end type="SOURCE" refId="7"/>    
+    <end type="TARGET" refId="5"/>  
   </realization>  
-  <generalization id="24">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
-  <generalization id="25">    
-    <end type="SOURCE" refId="3"/>    
-    <end type="TARGET" refId="2"/>  
-  </generalization>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
     sort-features="false" accessors="true" visibility="true">    
     <attributes public="true" package="true" protected="true" private="true" static="true"/>    

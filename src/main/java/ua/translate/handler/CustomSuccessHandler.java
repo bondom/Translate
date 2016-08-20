@@ -43,7 +43,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 		}
 		
 		if(roles.contains("ROLE_ADMIN")){
-			return "/admin/adminPage";
+			return "/bulbular/adminPage";
 		}else if(roles.contains("ROLE_CLIENT")){
 			return "/client/profile";
 		}else if(roles.contains("ROLE_TRANSLATOR")){

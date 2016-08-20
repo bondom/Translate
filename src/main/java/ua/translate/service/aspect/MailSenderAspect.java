@@ -24,11 +24,11 @@ import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.service.AdService;
 import ua.translate.service.ClientService;
-import ua.translate.service.ResponsedAdService;
+import ua.translate.service.RespondedAdService;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.UserService;
 
@@ -52,7 +52,7 @@ public class MailSenderAspect {
 	private AdService adService;
 	
 	@Autowired
-	private ResponsedAdService responsedAdService;
+	private RespondedAdService responsedAdService;
 	
 	@Value("${webRootPath}")
 	private String webRootPath;
@@ -174,7 +174,7 @@ public class MailSenderAspect {
 			throw e;
 		}
 		
-		ResponsedAd responsedAd = responsedAdService.get(radId);
+		RespondedAd responsedAd = responsedAdService.get(radId);
 		Translator translator = responsedAd.getTranslator();
 		String translatorEmail = translator.getEmail();
 		

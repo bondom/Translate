@@ -13,12 +13,12 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.ClientDao;
-import ua.translate.dao.ResponsedAdDao;
+import ua.translate.dao.RespondedAdDao;
 import ua.translate.model.Client;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
 import ua.translate.service.ClientService;
@@ -36,7 +36,7 @@ public class ClientServiceImpl extends ClientService{
 	private ClientDao clientDao;
 	
 	@Autowired
-	private ResponsedAdDao responsedAdDao;
+	private RespondedAdDao responsedAdDao;
 	
 	@Override
 	public Client getClientByEmail(String email) {
@@ -45,24 +45,24 @@ public class ClientServiceImpl extends ClientService{
 	}
 
 	@Override
-	public Set<ResponsedAd> getResponsedAds(String email,
+	public Set<RespondedAd> getRespondedAds(String email,
 										    int page,
-										    int numberOfResponsedAdsOnPage) throws WrongPageNumber{
+										    int numberOfRespondedAdsOnPage) throws WrongPageNumber{
 		if(page<1){
 			throw new WrongPageNumber();
 		}
 		Client client = getClientByEmail(email);
-		Set<ResponsedAd> responsedAds = responsedAdDao
-				.getResponsedAdsByClient(client, page, numberOfResponsedAdsOnPage);
+		Set<RespondedAd> responsedAds = responsedAdDao
+				.getRespondedAdsByClient(client, page, numberOfRespondedAdsOnPage);
 		return responsedAds;
 	}
 	
 	@Override
-	public long getNumberOfPagesForResponsedAds(String email, int numberOfResponsedAdsOnPage) {
+	public long getNumberOfPagesForRespondedAds(String email, int numberOfRespondedAdsOnPage) {
 		Client client = getClientByEmail(email);
-		long numberOfResponsedAds = responsedAdDao.getNumberOfResponsedAdsByClient(client);
+		long numberOfRespondedAds = responsedAdDao.getNumberOfRespondedAdsByClient(client);
 		long numberOfPages = (long) Math
-				.ceil(((double)numberOfResponsedAds)/numberOfResponsedAdsOnPage);
+				.ceil(((double)numberOfRespondedAds)/numberOfRespondedAdsOnPage);
 		return numberOfPages;
 		
 	}

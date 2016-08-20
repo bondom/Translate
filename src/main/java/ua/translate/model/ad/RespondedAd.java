@@ -26,20 +26,20 @@ import org.springframework.stereotype.Component;
 
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.status.ResponsedAdStatus;
+import ua.translate.model.status.RespondedAdStatus;
 
 @Entity
-@Table(name = "RESPONSED_AD_TEST")
+@Table(name = "RESPONDED_AD_TEST")
 @NamedQueries({
 	@NamedQuery(name =  "getRadsByClient",
-			query = "from ResponsedAd rad where rad.client = :client "
+			query = "from RespondedAd rad where rad.client = :client "
 					+ "order by rad.dateTimeOfResponse desc"),
 	@NamedQuery(name =  "getRadsByTranslator",
-			query = "from ResponsedAd rad where rad.translator = :translator "
+			query = "from RespondedAd rad where rad.translator = :translator "
 					+ "order by rad.dateTimeOfResponse desc")
 })
 @Component
-public class ResponsedAd {
+public class RespondedAd {
 	
 	@Id
 	@SequenceGenerator(name = "standart",initialValue = 1)
@@ -64,10 +64,10 @@ public class ResponsedAd {
 	
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
-	private ResponsedAdStatus status;
+	private RespondedAdStatus status;
 	
 	
-	public ResponsedAd(){}
+	public RespondedAd(){}
 	
 	public long getId() {
 		return id;
@@ -109,11 +109,11 @@ public class ResponsedAd {
 		this.translator = translator;
 	}
 	
-	public ResponsedAdStatus getStatus() {
+	public RespondedAdStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(ResponsedAdStatus status) {
+	public void setStatus(RespondedAdStatus status) {
 		this.status = status;
 	}
 
@@ -136,7 +136,7 @@ public class ResponsedAd {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		ResponsedAd other = (ResponsedAd) obj;
+		RespondedAd other = (RespondedAd) obj;
 		if (ad == null) {
 			if (other.ad != null)
 				return false;

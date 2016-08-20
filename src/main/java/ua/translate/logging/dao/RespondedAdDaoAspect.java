@@ -12,17 +12,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 
 @Aspect
 @Component
-public class ResponsedAdDaoAspect {
+public class RespondedAdDaoAspect {
 
-	Logger logger = LoggerFactory.getLogger(ResponsedAdDaoAspect.class);
+	Logger logger = LoggerFactory.getLogger(RespondedAdDaoAspect.class);
 	
 	@Around("ua.translate.logging.SystemArchitecture.inDaoLayer() && "
-			+ "execution(Long save(ua.translate.model.ad.ResponsedAd)) && args(responsedAd)")
-	public Long saving(ProceedingJoinPoint thisJoinPoint, ResponsedAd responsedAd) {
+			+ "execution(Long save(ua.translate.model.ad.RespondedAd)) && args(respondedAd)")
+	public Long saving(ProceedingJoinPoint thisJoinPoint, RespondedAd respondedAd) {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		Long id = 0L;
@@ -32,8 +32,10 @@ public class ResponsedAdDaoAspect {
 			logger.error("{}.{}:{}",className,methodName,e.getStackTrace());
 			return id;
 		}
-		logger.debug("{}.{}: ResponsedAd  is successfully saved with id={}, owner(client)={},translator={},ad={}",
-				className,methodName,id,responsedAd.getClient().getEmail(),responsedAd.getTranslator().getEmail(),responsedAd.getAd().getName());
+		logger.debug("{}.{}: RespondedAd is successfully saved with id={}, "
+				+ "owner(client)={},translator={},ad={}",
+				className,methodName,id,respondedAd.getClient().getEmail(),
+				respondedAd.getTranslator().getEmail(),respondedAd.getAd().getName());
 		return id;
 	}
 	

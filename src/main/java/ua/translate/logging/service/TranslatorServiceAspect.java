@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ua.translate.model.Translator;
+import ua.translate.model.ad.RespondedAd;
 
 @Aspect
 @Component
@@ -20,6 +21,32 @@ public class TranslatorServiceAspect {
 	
 	Logger logger = LoggerFactory.getLogger(TranslatorServiceAspect.class);
 
+	
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public ua.translate.model.Translator getTranslatorById(..)) "
+			 + "&& args(id)")
+	public Translator getTranslatorById(ProceedingJoinPoint thisJoinPoint,
+											   long id) 
+											   throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		Translator translator= null;
+		try {
+			translator = (Translator)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}(id={}):{}:{}",className,methodName,id,e.getClass(),e.getMessage());
+			throw e;
+		}
+		
+		logger.debug("{}.{}(id={}):Translator data: email={},firstName={},lastName={},"
+				+"languages={},rating={},number of executed Ads={}",
+				className,methodName,id,translator.getEmail(),translator.getFirstName(),
+				translator.getLastName(),translator.getLanguages(),translator.getRating(),
+				translator.getNumberOfExecutedAds());
+
+		return translator;
+	}
+	
 	@AfterReturning(pointcut = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public * getTranslators(..))",
 			 returning = "translators")
@@ -32,6 +59,31 @@ public class TranslatorServiceAspect {
 						trs.getFirstName(),trs.getLastName(),trs.getPublishingTime());
 			});
 		}else logger.debug("{}.{}: 0 translators",className,methodName);
+	}
+	
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public long saveRespondedAd(..)) "
+			 + "&& args(email,adId,maxNumberOfSendedRad)")
+	public Long saveRespondedAd(ProceedingJoinPoint thisJoinPoint,
+								String email, long adId,int maxNumberOfSendedRad) 
+																throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		Long generatedId= 0L;
+		try {
+			generatedId = (Long)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}(translator email={},adId={},"
+					+ "maxNumberOfSendedRespondedAd={}):{}",
+					className,methodName,email,adId,maxNumberOfSendedRad,e.getClass());
+			throw e;
+		}
+		
+		logger.info("{}.{}(translator email={},adId={},"
+					+ "maxNumberOfSendedRespondedAd={}):generated id={}",
+					className,methodName,email,adId,maxNumberOfSendedRad,generatedId);
+
+		return generatedId;
 	}
 	
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
@@ -56,45 +108,55 @@ public class TranslatorServiceAspect {
 		return numberOfPages;
 	}
 	
-	@Around(value = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public void saveResponsedAd(..)) && "
-			 + "args(email,adId)")
-	public void saveResponsedAd(ProceedingJoinPoint thisJoinPoint, String email,
-								long adId) throws Throwable {
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public ua.translate.model.ad.RespondedAd getCurrentOrder(..)) "
+			 + "&& args(email)")
+	public RespondedAd getCurrentOrder(ProceedingJoinPoint thisJoinPoint,
+											   String email) 
+											   throws Throwable {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
+		RespondedAd currentOrder= null;
 		try {
-			thisJoinPoint.proceed();
+			currentOrder= (RespondedAd)thisJoinPoint.proceed();
 		} catch (Throwable e) {
-			logger.error("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
+			logger.error("{}.{}(translator email={}):{}:{}",className,methodName,
+					email,e.getClass());
 			throw e;
 		}
-		
-		logger.info("{}.{}:Responsed Ad is successfully saved "
-				+ "for translator with email={} and is related to Ad with id={}",
-				className,methodName,email,adId);
+		if(currentOrder==null){
+			logger.debug("{}.{}(translator email={}): RespondedAd with ACCEEPTED status doesn't exist",
+					className,methodName,email);
+		}else{
+			logger.debug("{}.{}(translator email={}): RespondedAd[id={},ad name={},client email={}]",
+				className,methodName,email,currentOrder.getId(),
+				currentOrder.getAd().getName(),currentOrder.getClient().getEmail());
+		}
+		return currentOrder;
 	}
 	
-
-	@SuppressWarnings("null")
-	@Around(value = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public ua.translate.model.Translator getTranslatorById(..)) && "
-			 + "args(id)")
-	public Translator getTranslatorById(ProceedingJoinPoint thisJoinPoint, long id) throws Throwable {
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public boolean markAsNotChecked(..)) "
+			 + "&& args(email,adId)")
+	public boolean markAsNotChecked(ProceedingJoinPoint thisJoinPoint,
+											   String email, long adId) 
+											   throws Throwable {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
-		Translator translator = null;
+		boolean marked= false;
 		try {
-			translator = (Translator)thisJoinPoint.proceed();
+			marked= (boolean)thisJoinPoint.proceed();
 		} catch (Throwable e) {
-			logger.error("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
+			logger.error("{}.{}:{}:{}",className,methodName,e.getClass());
 			throw e;
 		}
 		
-		logger.debug("{}.{}:translator with id = {} is retrieved from db, "
-				+ "email='{}',languages={},numberOfExecutedAds={},rating={}",
-				className,methodName,id,translator.getEmail(),translator.getLanguages(),
-				translator.getNumberOfExecutedAds(),translator.getRating());
-		return translator;
+		logger.debug("{}.{}(email={},adId={}): marked={}",
+				className,methodName,email,adId,marked);
+
+		return marked;
 	}
+	
+	
+
 }

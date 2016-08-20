@@ -9,9 +9,9 @@ import ua.translate.model.ad.Ad;
  * @author Yuriy Phediv
  *
  */
-public class UnacceptableActionForAcceptedAd extends Exception{
+public class IllegalActionForAcceptedAd extends Exception{
 
-	public UnacceptableActionForAcceptedAd(){
+	public IllegalActionForAcceptedAd(){
 		super();
 	}
 }

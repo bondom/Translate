@@ -25,17 +25,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import ua.translate.controller.support.AdComparatorByDate;
-import ua.translate.controller.support.ResponsedAdComparatorByDate;
+import ua.translate.controller.support.RespondedAdComparatorByDate;
 import ua.translate.controller.support.ControllerHelper;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
+import ua.translate.model.status.AdStatus;
 import ua.translate.model.viewbean.AdView;
 import ua.translate.service.AdService;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.NonExistedAdException;
-import ua.translate.service.exception.UnacceptableActionForAcceptedAd;
+import ua.translate.service.exception.IllegalActionForAcceptedAd;
 import ua.translate.service.exception.WrongPageNumber;
 
 @Controller
@@ -68,15 +69,21 @@ public class AdController {
 			model.addObject("ad", ad);
 			model.addObject("creationDate",creationDate);
 			return model;
-		}catch (NonExistedAdException |UnacceptableActionForAcceptedAd e) {
+		}catch (NonExistedAdException |IllegalActionForAcceptedAd e) {
 			ModelAndView model = new ModelAndView("/exception/invalidAdId");
 			model.addObject("errorUrl", webRootPath+"/ads/"+adId);
 			return model;
 		}
 	}
 	
+	/**
+	 * Returns page with {@link Ad}s, which have SHOWED status, ordered by desc order by 
+	 * {@link Ad#getPublicationDateTime()}
+	 * @param user
+	 * @param page - number of page
+	 */
 	@RequestMapping(method = RequestMethod.GET)
-	public ModelAndView getAds(Principal user,
+	public ModelAndView ads(Principal user,
 							   @RequestParam(name="page",defaultValue="1",required=false) 
 								int page){
 		Set<Ad> ads = null;
@@ -98,7 +105,7 @@ public class AdController {
 			adsForRendering.add(adView);
 		});
 		
-		long numberOfPages= adService.getNumberOfPagesForShowedAds(ADS_ON_PAGE);
+		long numberOfPages= adService.getNumberOfPagesForAdsByStatus(AdStatus.SHOWED,ADS_ON_PAGE);
 
 		ModelAndView model = new ModelAndView("/publicAds");
 		model.addObject("adsView", adsForRendering);
@@ -123,21 +130,21 @@ public class AdController {
 				getStringRelativeTime(ad.getPublicationDateTime());
 		if(userFromDB!=null && 
 				userFromDB instanceof Translator){
-			Set<ResponsedAd> responsedAds = ad.getResponsedAds();
+			Set<RespondedAd> respondedAds = ad.getRespondedAds();
 			
 			//Translator can response on one Ad several times,
 			//and we must show latest response on this Ad
-			Set<ResponsedAd> sortedResponsedAds = new TreeSet<>(new ResponsedAdComparatorByDate());	
-			sortedResponsedAds.addAll(responsedAds);
+			Set<RespondedAd> sortedRespondedAds = new TreeSet<>(new RespondedAdComparatorByDate());	
+			sortedRespondedAds.addAll(respondedAds);
 
-			Optional<ResponsedAd> optionalResponsedAd= 
-					sortedResponsedAds.stream()
+			Optional<RespondedAd> optionalRespondedAd= 
+					sortedRespondedAds.stream()
 								.filter(rad -> rad.getTranslator().equals(userFromDB))
 								.findFirst();
-			if(optionalResponsedAd.isPresent()){
+			if(optionalRespondedAd.isPresent()){
 				logger.debug("User, who requested page with all advertisements,"
 						+ "is Translator, and he responded on Ad with name '{}'",ad.getName());
-				ResponsedAd responsedByAuthTranslator = optionalResponsedAd.get();
+				RespondedAd responsedByAuthTranslator = optionalRespondedAd.get();
 				adView = new AdView(
 						ad,relativePublishingTime,
 						responsedByAuthTranslator.getDateTimeOfResponse());

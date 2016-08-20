@@ -5,11 +5,18 @@ import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.Size;
+
+import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Entity
 @Table(name = "COMMENT_TEST")
@@ -21,23 +28,28 @@ public class Comment implements Serializable{
 	private static final long serialVersionUID = 1L;
 
 	@Id
+	@SequenceGenerator(name = "standart",initialValue = 1)
+	@GeneratedValue(generator = "standart",strategy =GenerationType.SEQUENCE)
 	@Column(name = "COMMENT_ID")
 	private long id;
 	
 	@Lob
 	@Column(name = "COMMENT_TEXT",nullable = false)
+	@Size(min = 7)
 	private String text;
 	
 	@Column(name = "COMMENT_CLIENT_NAME",nullable = false)
 	private String clientName;
 	
-/*	@ManyToOne
-	@JoinColumn(name = "TRANSLATOR_ID",nullable = false)
+	@ManyToOne
+	@JoinColumn(name = "COMMENT_TRANSLATOR",nullable = false)
 	private Translator translator;
-*/
+
 	@Column(name = "COMMENT_CREATING_DATE",nullable = false)
 	private LocalDateTime creatingDate;
 	
+	
+
 	public Comment(){}
 
 	public long getId() {
@@ -64,14 +76,14 @@ public class Comment implements Serializable{
 		this.clientName = clientName;
 	}
 
-/*	public Translator getTranslator() {
+	public Translator getTranslator() {
 		return translator;
 	}
 
 	public void setTranslator(Translator translator) {
 		this.translator = translator;
 	}
-*/
+
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
@@ -86,18 +98,43 @@ public class Comment implements Serializable{
 	}
 
 	@Override
-	public boolean equals(Object obj){
-		Comment comment = (Comment)obj;
-		if(comment == null){
-			return false;
-		}
-		return (this.getId() ==comment.getId());
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((clientName == null) ? 0 : clientName.hashCode());
+		result = prime * result + ((creatingDate == null) ? 0 : creatingDate.hashCode());
+		result = prime * result + ((translator == null) ? 0 : translator.hashCode());
+		return result;
 	}
-	
+
 	@Override
-	public int hashCode(){
-		return Long.hashCode(id);
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Comment other = (Comment) obj;
+		if (clientName == null) {
+			if (other.clientName != null)
+				return false;
+		} else if (!clientName.equals(other.clientName))
+			return false;
+		if (creatingDate == null) {
+			if (other.creatingDate != null)
+				return false;
+		} else if (!creatingDate.equals(other.creatingDate))
+			return false;
+		if (translator == null) {
+			if (other.translator != null)
+				return false;
+		} else if (!translator.equals(other.translator))
+			return false;
+		return true;
 	}
+
+	
 	
 	
 }

@@ -8,45 +8,50 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
+import ua.translate.controller.editor.CommentTextEditor;
+import ua.translate.controller.editor.IdEditor;
 import ua.translate.controller.support.ControllerHelper;
-import ua.translate.controller.support.ResponsedAdComparatorByDate;
-import ua.translate.logging.dao.AbstractUserDaoAspect;
 import ua.translate.model.Client;
+import ua.translate.model.Comment;
 import ua.translate.model.Language;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Currency;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.ad.TranslateType;
 import ua.translate.model.viewbean.ChangeEmailBean;
 import ua.translate.model.viewbean.ChangePasswordBean;
 import ua.translate.service.AdService;
 import ua.translate.service.ClientService;
-import ua.translate.service.ResponsedAdService;
+import ua.translate.service.CommentService;
+import ua.translate.service.RespondedAdService;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
 import ua.translate.service.exception.IllegalActionForAd;
+import ua.translate.service.exception.IllegalActionForRejectedAd;
 import ua.translate.service.exception.InvalidConfirmationUrl;
-import ua.translate.service.exception.NonExistedResponsedAdException;
-import ua.translate.service.exception.UnacceptableActionForAcceptedAd;
+import ua.translate.service.exception.NonExistedRespondedAdException;
+import ua.translate.service.exception.TranslatorDistraction;
+import ua.translate.service.exception.IllegalActionForAcceptedAd;
 import ua.translate.service.exception.WrongPageNumber;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.NonExistedAdException;
@@ -55,8 +60,6 @@ import ua.translate.service.exception.NonExistedAdException;
 @RequestMapping("/client")
 public class ClientController extends UserController{
 
-	
-	
 	@Autowired
 	private ClientService clientService;
 	
@@ -64,27 +67,37 @@ public class ClientController extends UserController{
 	private AdService adService;
 	
 	@Autowired
-	private ResponsedAdService responsedAdService;
+	private RespondedAdService respondedAdService;
+	
+	@Autowired
+	private CommentService commentService;
 	
 	@Autowired
 	ControllerHelper controllerHelper;
 	
+	@Value("${webRootPath}")
+	private String webRootPath;
+	
 	private static final int RESPONSED_ADS_ON_PAGE=3;
+	
+	
+	@InitBinder
+	public void initBinder(WebDataBinder dataBinder){
+		dataBinder.registerCustomEditor(String.class, 
+										"text", 
+										new CommentTextEditor());
+	}
 	
 	/**
 	 * Returns {@link ModelAndView} client's profile
 	 * @throws UnsupportedEncodingException
 	 */
 	@RequestMapping(value = "/profile", method = RequestMethod.GET)
-	public ModelAndView profile(Principal user,
-					@RequestParam(value="psuccess",required = false) String psuccess) throws UnsupportedEncodingException{
+	public ModelAndView profile(Principal user) throws UnsupportedEncodingException{
 		Client clientFromDB = clientService.getClientByEmail(user.getName());
 		ModelAndView model = new ModelAndView("/client/profile");
 		model.addObject("client", clientFromDB);
 		model.addObject("image", controllerHelper.getAvaForRendering(clientFromDB.getAvatar()));
-		if(psuccess!=null){
-			model.addObject("passSaved","Your password is saved successfully");
-		}
 		return model;
 	}
 	
@@ -121,10 +134,13 @@ public class ClientController extends UserController{
 	 * with new {@link Client} object for binding fields on page
 	 */
 	@RequestMapping(value = "/registration",method = RequestMethod.GET)
-	public ModelAndView registrationForm(){
+	public ModelAndView registrationForm(HttpServletRequest request){
 		ModelAndView model = new ModelAndView("/client/registration");
-		Client client = new Client();
-		model.addObject("client", client);
+		Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+	    if (inputFlashMap == null || !inputFlashMap.containsKey("client")) {
+	    	Client client = new Client();
+			model.addObject("client", client);
+	    }
 		return model;
 	}
 	
@@ -136,21 +152,21 @@ public class ClientController extends UserController{
 	 */
 	@RequestMapping(value = "/registrationConfirm",method = RequestMethod.POST)
 	public ModelAndView registration(@Valid @ModelAttribute("client") Client client,
-								BindingResult result){
+								BindingResult result,RedirectAttributes attr){
 		if(result.hasErrors()){
-			return new ModelAndView("/client/registration");
+			attr.addFlashAttribute("org.springframework.validation.BindingResult.client", 
+					result);
+			attr.addFlashAttribute("client",client);
+			return new ModelAndView("redirect:/client/registration");
 		}
 		try{
 			clientService.registerUser(client);
 		}catch (DuplicateEmailException e) {
-			ModelAndView registrationView = new ModelAndView("/client/registration");
-			registrationView.addObject("error","This email is registered in system already");
-			return registrationView;
+			attr.addFlashAttribute("error","This email is registered in system already");
+			return new ModelAndView("redirect:/client/registration");
 		}
-		ModelAndView loginView = new ModelAndView("/client/login");
-		loginView.addObject("msg", 
-								"You successfully registered!");
-		return loginView;
+		attr.addFlashAttribute("msg","You successfully registered!");
+		return new ModelAndView("redirect:/client/login");
 	}
 	
 	/**
@@ -199,15 +215,18 @@ public class ClientController extends UserController{
 	 * <p>if is, return login form page for re-entering credentials
 	 */
 	@RequestMapping(value = "/email",method = RequestMethod.GET)
-	public ModelAndView editEmail(Principal user){
+	public ModelAndView editEmail(Principal user,HttpServletRequest request){
 		if(isRememberMeAuthenticated()){
 			ModelAndView model = new ModelAndView("/client/login");
 			model.addObject("loginUpdate",true);
 			return model;
 		}else{
 			ModelAndView model = new ModelAndView("/client/editEmail");
-			ChangeEmailBean changeEmailBean = new ChangeEmailBean();
-			model.addObject("changeEmailBean",changeEmailBean);
+			Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+		    if (inputFlashMap == null || !inputFlashMap.containsKey("changeEmailBean")) {
+		    	ChangeEmailBean changeEmailBean = new ChangeEmailBean();
+				model.addObject("changeEmailBean",changeEmailBean);
+		    }
 			return model;
 		}
 	}
@@ -218,15 +237,18 @@ public class ClientController extends UserController{
 	 * <p>if is, return login form page for re-entering credentials
 	 */
 	@RequestMapping(value = "/password",method = RequestMethod.GET)
-	public ModelAndView editPassword(Principal user){
+	public ModelAndView editPassword(Principal user,HttpServletRequest request){
 		if(isRememberMeAuthenticated()){
 			ModelAndView model = new ModelAndView("/client/login");
 			model.addObject("loginUpdate",true);
 			return model;
 		}else{
 			ModelAndView model = new ModelAndView("/client/editPassword");
-			ChangePasswordBean changePasswordBean = new ChangePasswordBean();
-			model.addObject("changePasswordBean",changePasswordBean);
+			Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+		    if (inputFlashMap == null || !inputFlashMap.containsKey("changePasswordBean")) {
+		    	ChangePasswordBean changePasswordBean = new ChangePasswordBean();
+				model.addObject("changePasswordBean",changePasswordBean);
+		    }
 			return model;
 		}
 	}
@@ -236,10 +258,13 @@ public class ClientController extends UserController{
 	 */
 	@RequestMapping(value = "/edit",method = RequestMethod.GET)
 	public ModelAndView editProfile(Principal user, HttpServletRequest request){
-		Client clientFromDB = clientService.getClientByEmail(user.getName());
-	
+		
 		ModelAndView model = new ModelAndView("/client/edit");
-		model.addObject("client", clientFromDB);
+		Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+	    if (inputFlashMap == null || !inputFlashMap.containsKey("client")) {
+	    	Client clientFromDB = clientService.getClientByEmail(user.getName());
+			model.addObject("client",clientFromDB);
+	    }
 		return model;
 	}
 	
@@ -250,10 +275,11 @@ public class ClientController extends UserController{
 	 */
 	@RequestMapping(value = "/saveEmail",method = RequestMethod.POST)
 	public ModelAndView saveEmail(
-			@Valid @ModelAttribute("changeEmailBean") ChangeEmailBean changeEmailBean,
-			BindingResult changeEmailResult,
-			Principal user,
-			HttpServletRequest request) throws UnsupportedEncodingException{
+								@Valid @ModelAttribute("changeEmailBean") ChangeEmailBean changeEmailBean,
+								BindingResult changeEmailResult,
+								Principal user,
+								HttpServletRequest request,
+								RedirectAttributes attr) throws UnsupportedEncodingException{
 		
 		if(isRememberMeAuthenticated()){
 			//setRememberMeTargetUrlToSession(clientFromDB,request);
@@ -263,30 +289,26 @@ public class ClientController extends UserController{
 		}
 		
 		if(changeEmailResult.hasErrors()){
-			ModelAndView model = new ModelAndView("/client/editEmail");
-			return model;
+			attr.addFlashAttribute("org.springframework.validation.BindingResult.changeEmailBean", 
+										changeEmailResult);
+			attr.addFlashAttribute("changeEmailBean",changeEmailBean);
+			return new ModelAndView("redirect:/client/email");
 		}
 		try {
 			clientService.updateUserEmail(user.getName(), 
 										  changeEmailBean.getNewEmail(), 
 										  changeEmailBean.getCurrentPassword());
 		}catch (InvalidPasswordException e) {
-			ModelAndView model = new ModelAndView("/client/editEmail");
-			model.addObject("invalidPassword",e.getMessage());
-			return model;
+			attr.addFlashAttribute("invalidPassword", e.getMessage());
+			return new ModelAndView("redirect:/client/email");
 		}catch (DuplicateEmailException e) {
-			ModelAndView model = new ModelAndView("/client/editEmail");
-			model.addObject("duplicateEmail","This email is registered in system already");
-			return model;
+			attr.addFlashAttribute("duplicateEmail", "This email is registered in system already");
+			return new ModelAndView("redirect:/client/email");
 		}
 		
 		refreshUsername(changeEmailBean.getNewEmail());
-		Client clientFromDB = clientService.getClientByEmail(user.getName());
-		ModelAndView model = new ModelAndView("/client/profile");
-		model.addObject("client", clientFromDB);
-		model.addObject("emailSaved","Your email is saved successfully");
-		model.addObject("image", controllerHelper.getAvaForRendering(clientFromDB.getAvatar()));
-		return model;
+		attr.addFlashAttribute("emailSaved", "Your email is saved successfully");
+		return new ModelAndView("redirect:/client/profile");
 	}
 	/**
      * Attempts to update client's password, if password is invalid,
@@ -298,7 +320,8 @@ public class ClientController extends UserController{
 			@Valid @ModelAttribute("changePasswordBean") ChangePasswordBean changePasswordBean,
 			BindingResult changePasswordResult,
 			Principal user,
-			HttpServletRequest request) throws UnsupportedEncodingException{
+			HttpServletRequest request,
+			RedirectAttributes attr) throws UnsupportedEncodingException{
 		
 		if(isRememberMeAuthenticated()){
 			//setRememberMeTargetUrlToSession(clientFromDB,request);
@@ -308,27 +331,22 @@ public class ClientController extends UserController{
 		}
 		
 		if(changePasswordResult.hasErrors()){
-			ModelAndView model = new ModelAndView("/client/editPassword");
-			return model;
+			attr.addFlashAttribute("org.springframework.validation.BindingResult.changePasswordBean", 
+					changePasswordResult);
+			attr.addFlashAttribute("changePasswordBean",changePasswordBean);
+			return new ModelAndView("redirect:/client/password");
 		}
 		try {
 			clientService.updateUserPassword(user.getName(), 
 											 changePasswordBean.getOldPassword(), 
 											 changePasswordBean.getNewPassword());
 		} catch (InvalidPasswordException e) {
-			ModelAndView model = new ModelAndView("/client/editPassword");
-			model.addObject("wrongOldPassword",e.getMessage());
-			return model;
+			attr.addFlashAttribute("wrongOldPassword",e.getMessage());
+			return new ModelAndView("redirect:/client/password");
 		}
 		
-		ModelAndView model = new ModelAndView("redirect:/client/profile?psuccess");
-		/*Client clientFromDB = clientService.getClientByEmail(user.getName());
-		model.addObject("client", clientFromDB);
-		model.addObject("passSaved","Your password is saved successfully");
-		if(clientFromDB.getAvatar() != null){
-			model.addObject("image", convertAvaForRendering(clientFromDB.getAvatar()));
-		}*/
-		return model;
+		attr.addFlashAttribute("passSaved","Your password is saved successfully");
+		return new ModelAndView("redirect:/client/profile");
 	}
 	
 	/**
@@ -342,21 +360,20 @@ public class ClientController extends UserController{
 	public ModelAndView saveProfileEdits(
 							@Valid @ModelAttribute("client") Client editedClient,
 							BindingResult result,
-							Principal user) throws UnsupportedEncodingException{
+							Principal user,
+							RedirectAttributes attr) throws UnsupportedEncodingException{
 		
 		if(result.hasErrors()){
-			ModelAndView model = new ModelAndView("/client/edit");
-			return model;
+			attr.addFlashAttribute("org.springframework.validation.BindingResult.client", 
+					result);
+			attr.addFlashAttribute("client", editedClient);
+			return new ModelAndView("redirect:/client/edit");
 		}
 		
 		clientService.updateUserProfile(user.getName(), editedClient);
 		
-		Client clientFromDB = clientService.getClientByEmail(user.getName());
-		ModelAndView model = new ModelAndView("/client/profile");
-		model.addObject("client", clientFromDB);
-		model.addObject("profileSaved","Your profile is saved successfully");
-		model.addObject("image", controllerHelper.getAvaForRendering(clientFromDB.getAvatar()));
-		return model;
+		attr.addFlashAttribute("profileSaved","Your profile is saved successfully");
+		return new ModelAndView("redirect:/client/profile");
 	}
 	
 	/**
@@ -369,24 +386,22 @@ public class ClientController extends UserController{
 	 */
 	@RequestMapping(value = "/saveAvatar",method = RequestMethod.POST)
 	public ModelAndView saveAvatar(Principal user, 
-						@RequestParam("file") MultipartFile file) throws UnsupportedEncodingException{
+						@RequestParam("file") MultipartFile file,
+						RedirectAttributes attr) throws UnsupportedEncodingException{
 		if(!file.isEmpty()){
-			Client clientFromDB = clientService.getClientByEmail(user.getName());
 			try {
 				String contentType = file.getContentType();
 				if(contentType.startsWith("image/")){
 					byte[] avatar = file.getBytes();
 					clientService.updateAvatar(user.getName(), avatar);
+				}else{
+					attr.addFlashAttribute("error", "Please choose image");
 				}
 				ModelAndView model = new ModelAndView("redirect:/client/profile");
 				return model;
 			} catch (IOException e) {
-				e.printStackTrace();
-				ModelAndView model = new ModelAndView("/client/edit");
-				model.addObject("client", clientFromDB);
-				model.addObject("image", controllerHelper.getAvaForRendering(clientFromDB.getAvatar()));
-				model.addObject("error", "Some problem with your avatar, please repeat action");
-				return model;
+				attr.addFlashAttribute("error", "Some problem with your avatar, please repeat action");
+				return new ModelAndView("redirect:/client/profile");
 			}
 		}
 		ModelAndView model = new ModelAndView("redirect:/client/profile");
@@ -415,12 +430,18 @@ public class ClientController extends UserController{
 	 * @see #addMapsToAdView(ModelAndView)
 	 */
 	@RequestMapping(value = "/adbuilder",method = RequestMethod.GET)
-	public ModelAndView adbuilder(Principal user){
+	public ModelAndView adbuilder(Principal user,HttpServletRequest request){
 		ModelAndView model = new ModelAndView("/client/adbuilder");
-		Ad ad = new Ad();
-		model.addObject("ad",ad);
-		model.addObject("createAd", true);
-		model = addMapsToAdView(model);
+		Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+	    if (inputFlashMap == null || !inputFlashMap.containsKey("ad")) {
+	    	Ad ad = new Ad();
+			model.addObject("ad",ad);
+	    }
+	    
+	    if (inputFlashMap == null || !inputFlashMap.containsKey("createAd")) {
+			model.addObject("createAd", true);
+	    }
+	    model = addMapsToAdView(model);
 		return model;
 	}
 	
@@ -435,76 +456,88 @@ public class ClientController extends UserController{
 	@RequestMapping(value = "/saveAd", method = RequestMethod.POST)
 	public ModelAndView saveAd(@Valid @ModelAttribute("ad") Ad ad,
 								BindingResult result,
-								Principal user){
+								Principal user,
+								RedirectAttributes attr){
 		if(result.hasErrors()){
-			ModelAndView model = new ModelAndView("/client/adbuilder");
-			model = addMapsToAdView(model);
-			return model;
+			attr.addFlashAttribute("org.springframework.validation.BindingResult.ad", 
+					result);
+			attr.addFlashAttribute("ad",ad);
+			return new ModelAndView("redirect:/client/adbuilder");
 		}
 		Long adId = adService.saveAd(ad, user.getName());
-		ModelAndView model = new ModelAndView("/client/createdAd");
-		model.addObject("adId", adId);
-		return model;
+
+		attr.addFlashAttribute("adUrl",webRootPath+"/ads/"+adId);
+		attr.addFlashAttribute("adId",adId);
+		return new ModelAndView("redirect:/client/success");
 	}
 	
 	/**
-	 * Deletes {@code Ad}, if such exists, and redirects to {@link #ads(Principal)}
-	 * 
+	 * Deletes {@code Ad}, if such exists or it status is not accepted, 
+	 * and redirects to {@link #ads(Principal)}
 	 * @param adId - id of {@code Ad} object
 	 */
 	@RequestMapping(value = "/ads/delete", method = RequestMethod.GET)
-	public ModelAndView deleteAd(@RequestParam("adId") long adId,Principal user){
-		ModelAndView model = new ModelAndView("/client/ads");
+	public ModelAndView deleteAd(@RequestParam("adId") long adId,Principal user,
+								  RedirectAttributes attr){
+		ModelAndView model = new ModelAndView("redirect:/client/ads");
 		
 		try {
 			adService.deleteById(adId);
-			model.addObject("msg", "Adversiment successfully deleted");
+			attr.addFlashAttribute("msg", "Adversiment successfully deleted");
 		} catch (NonExistedAdException e) {
-			model.addObject("error", "You can't delete non existed ad");
-		} catch (UnacceptableActionForAcceptedAd e) {
-			model.addObject("error", "Sorry, but you can't delete advertisement, "
+			attr.addFlashAttribute("error", "You can't delete non existed ad");
+		} catch (IllegalActionForAcceptedAd e) {
+			attr.addFlashAttribute("error", "Sorry, but you can't delete advertisement, "
 					+ "which has Accepted status");
-		}
-		
-		Set<Ad> ads = clientService.getAds(user.getName());
-		if(!ads.isEmpty()){
-			model.addObject("ads", ads);
 		}
 		
 		return model;
 	}
 	
 	/**
-	 * Returns {@code ModelAndView} page for editing existed advertisement,
-	 * and adds {@code Ad} object and maps of enum types for binding if such ad exists
+	 * If flash attribute {@code adUrl} and {@code adId} exist, returns page with message about successful 
+	 * creation of Ad, otherwise redirects to {@link #ads(Principal)} 
+	 * @param request
+	 * @return
+	 */
+	@RequestMapping(value = "/success", method = RequestMethod.GET)
+	public ModelAndView createdAd(HttpServletRequest request){
+		Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+	    if (inputFlashMap == null || !inputFlashMap.containsKey("adUrl")
+	    							|| !inputFlashMap.containsKey("adId")) {
+	    	return new ModelAndView("redirect:/client/ads");
+	    }
+		return new ModelAndView("/client/createdAd");
+	}
+	
+	/**
+	 * Redirects to page for editing existed advertisement,
+	 * and adds flashAttribute {@code createAd} with {@code false} value
 	 * 
-	 * <p>if {@code Ad} with {@code Ad.id=adId} doesn't exist, redirects to {@link #ads(Principal)}
+	 * <p>If Ad doesn't exist or his status doesn't allow to edit this Ad,
+	 * redirects to {@link #ads(Principal)} with added flash attribute {@code error}
 	 * 
 	 * @param adId - id of {@code Ad} object
 	 * @see ClientController#addMapsToAdView(ModelAndView)
 	 */
 	@RequestMapping(value = "/ads/edit", method = RequestMethod.GET)
-	public ModelAndView editAd(@RequestParam("adId") long adId,Principal user){
+	public ModelAndView editAd(@RequestParam("adId") long adId,Principal user,
+								RedirectAttributes attr){
 		
-		ModelAndView errorView= new ModelAndView("/client/ads");
+		ModelAndView errorView= new ModelAndView("redirect:/client/ads");
 		
 		try {
 			Ad ad = adService.getForUpdating(user.getName(),adId);
-			ModelAndView model = new ModelAndView("/client/adbuilder");
-			model.addObject("ad",ad);
-			model = addMapsToAdView(model);
+			attr.addFlashAttribute("ad", ad);
+			attr.addFlashAttribute("createAd", false);
+			ModelAndView model = new ModelAndView("redirect:/client/adbuilder");
 			return model;
-		} catch (NonExistedAdException e) {
-			errorView.addObject("error","You can't edit non existed advertisement");
-		} catch (UnacceptableActionForAcceptedAd e) {
-			errorView.addObject("error","You can't edit advertisement, which has Accepted status");
+		}  catch (NonExistedAdException e) {
+			attr.addFlashAttribute("error","You can't edit non existed advertisement");
+		} catch (IllegalActionForAcceptedAd e) {
+			attr.addFlashAttribute("error","You can't edit advertisement, which has Accepted status");
 		} catch (IllegalActionForAd e) {
-			errorView.addObject("error","For editing advertisement, you must reject responses to it");
-		}
-			
-		Set<Ad> ads = clientService.getAds(user.getName());
-		if(!ads.isEmpty()){
-			errorView.addObject("ads", ads);
+			attr.addFlashAttribute("error","For editing advertisement, you must reject responses to it");
 		}
 		return errorView;
 		
@@ -512,11 +545,14 @@ public class ClientController extends UserController{
 	
 	/**
 	 * Checks {@code BindingResult} for errors, if such exists, 
-	 * returns page for editing advertisement(for entering valid data)
+	 * redirects to page for editing advertisement(for entering valid data)
+	 * with added flash attributes {@code ad} and {@code result}
 	 * 
 	 * <p>If data is valid updates old ad and returns page for editing with message 
-	 * about successful editing
+	 * about successful saving
 	 * 
+	 * If Ad doesn't exist or his status doesn't allow to edit this Ad,
+	 * redirects to {@link #ads(Principal)} with added flash attribute {@code error}
 	 * @param adId
 	 * @param editedAd
 	 * @param result
@@ -526,96 +562,134 @@ public class ClientController extends UserController{
 	public ModelAndView saveAdEdits(
 							@Valid @ModelAttribute("ad") Ad editedAd,
 							BindingResult result,
-							Principal user){
+							Principal user,
+							RedirectAttributes attr){
 		if(result.hasErrors()){
-			ModelAndView model = new ModelAndView("/client/adbuilder");
-			model = addMapsToAdView(model);
-			return model;
+			attr.addFlashAttribute("org.springframework.validation.BindingResult.ad", 
+					result);
+			attr.addFlashAttribute("ad",editedAd);
+			return new ModelAndView("redirect:/client/adbuilder");
 		}
-		ModelAndView errorView= new ModelAndView("/client/ads");
+		ModelAndView errorView= new ModelAndView("redirect:/client/ads");
 		
 		try {
-			Ad updatedAd = adService.updateAd(editedAd.getId(),editedAd);
-			ModelAndView model = new ModelAndView("/client/adbuilder");
-			model.addObject("ad", updatedAd);
-			model.addObject("Editmsg", "Advertisement is edited successfully");
-			model = addMapsToAdView(model);
-			return model;
+			Ad updatedAd = adService.updateAd(user.getName(),editedAd.getId(),editedAd);
+			attr.addFlashAttribute("ad", updatedAd);
+			attr.addFlashAttribute("Editmsg", "Advertisement is edited successfully");
+			return new ModelAndView("redirect:/client/adbuilder");
 		} catch (NonExistedAdException e) {
-			errorView.addObject("error","You can't edit non existed advertisement");
-		} catch (UnacceptableActionForAcceptedAd e) {
-			errorView.addObject("error","You can't edit advertisement, which has Accepted status");
+			attr.addFlashAttribute("error","You can't edit non existed advertisement");
+		} catch (IllegalActionForAcceptedAd e) {
+			attr.addFlashAttribute("error","You can't edit advertisement, which has Accepted status");
 		} catch (IllegalActionForAd e) {
-			errorView.addObject("error","For editing advertisement, you must reject responses to it");
+			attr.addFlashAttribute("error","For editing advertisement, you must reject responses to it");
 		}
 			
-		Set<Ad> ads = clientService.getAds(user.getName());
-		if(!ads.isEmpty()){
-			errorView.addObject("ads", ads);
-		}
 		return errorView;
 		
 	}
 	
 	/**
-	 * Returns {@code ModelAndView} page with {@link ResponsedAd}s of this client
+	 * Returns {@code ModelAndView} page with {@link RespondedAd}s of this client
 	 * in order from latest to earliest
 	 * @param user - {@code Principal} object for retrieving client from db
 	 * @return
 	 */
 	@RequestMapping(value = "/responses",method = RequestMethod.GET)
-	public ModelAndView responsedAds(Principal user,
+	public ModelAndView respondedAds(Principal user,
 									 @RequestParam(name="page",defaultValue="1",required = false) int page){
 		
-		Set<ResponsedAd> responsedAds = null;
+		Set<RespondedAd> respondedAds = null;
 		try {
-			responsedAds = clientService
-					.getResponsedAds(user.getName(),page,RESPONSED_ADS_ON_PAGE);
+			respondedAds = clientService
+					.getRespondedAds(user.getName(),page,RESPONSED_ADS_ON_PAGE);
 		} catch (WrongPageNumber e) {
 			try {
-				responsedAds = clientService
-						.getResponsedAds(user.getName(),1,RESPONSED_ADS_ON_PAGE);
+				respondedAds = clientService
+						.getRespondedAds(user.getName(),1,RESPONSED_ADS_ON_PAGE);
 			} catch (WrongPageNumber unused) {}
 		}
 		
 		long nunmberOfPages = clientService
-				.getNumberOfPagesForResponsedAds(user.getName(), RESPONSED_ADS_ON_PAGE);
+				.getNumberOfPagesForRespondedAds(user.getName(), RESPONSED_ADS_ON_PAGE);
 		ModelAndView model = new ModelAndView("/client/responses");
-		model.addObject("responsedAds", responsedAds);
+		model.addObject("respondedAds", respondedAds);
 		model.addObject("numberOfPages",nunmberOfPages);
 		return model;
 	}
 	
 	/**
-	 * If {@code ResponsedAd} with {@code responsedAdId} exists, rejects it,
-	 * in any case redirects to {@link #responsedAds(Principal)}
+	 * If {@code RespondedAd} with {@code respondedAdId} exists, rejects it,
+	 * in any case redirects to {@link #respondedAds(Principal)}
 	 */
-	@RequestMapping(value = "/reject",method = RequestMethod.GET)
-	public ModelAndView rejectResponsedAd(@RequestParam("radId") long responsedAdId){
+	@RequestMapping(value = "/reject",method = RequestMethod.POST)
+	public ModelAndView rejectRespondedAd(@RequestParam(name="id") long respondedAdId,
+										  Principal user){
 		try {
-			responsedAdService.reject(responsedAdId);
-		} catch (NonExistedResponsedAdException e) {
+			respondedAdService.reject(user.getName(),respondedAdId);
+		} catch (NonExistedRespondedAdException | IllegalActionForAcceptedAd e) {
 			return new ModelAndView("redirect:/client/responses");
-		}
+		} 
 		return new ModelAndView("redirect:/client/responses");
 	}
 	
-	/*!!!! Must sends message to appropriate translator's email!!!!*/
 	/**
-	 * If {@code ResponsedAd} with {@code responsedAdId} exists, accepts it,
-	 * in any case redirects to {@link #responsedAds(Principal)}
+	 * If {@code RespondedAd} with {@code respondedAdId} exists,this respondedAd
+	 * hasn't ACCEPTED status,and translator, related to respondedAd, isn't busy, 
+	 * accepts it
+	 * <p>If  translator is busy, redirects to appropriate page with message about that,
+	 * otherwise redirects to {@link #respondedAds(Principal, int)}
 	 */
-	@RequestMapping(value = "/accept",method = RequestMethod.GET)
-	public ModelAndView acceptResponsedAd(@RequestParam("radId") long responsedAdId,
+	@RequestMapping(value = "/accept",method = RequestMethod.POST)
+	public ModelAndView acceptRespondedAd(@RequestParam("id") long respondedAdId,
 										Principal user){
 		
 		try {
-			responsedAdService.accept(responsedAdId);
-		} catch (NonExistedResponsedAdException e) {
+			respondedAdService.accept(user.getName(),respondedAdId);
+		} catch (NonExistedRespondedAdException | IllegalActionForAcceptedAd |IllegalActionForRejectedAd e) {
 			return new ModelAndView("redirect:/client/responses");
-		}
+		} catch (TranslatorDistraction e) {
+			return new ModelAndView("redirect:/client/error/busyTranslator");
+		} 
 		return new ModelAndView("redirect:/client/responses");
 	}
+	
+	/**
+	 * Returns page with message, that translator executes another order in that moment
+	 */
+	@RequestMapping(value = "/error/busyTranslator",method = RequestMethod.GET)
+	public ModelAndView busyTranslator(){
+		return new ModelAndView("/client/error/busyTranslator");
+	}
+	
+	/**
+	 * Attempts to add comment to {@link Translator} with id={@code translatorId}
+	 * Redirects to profile of this translator
+	 * @param comment
+	 * @param result
+	 * @param translatorId
+	 * @param user
+	 * @param attr
+	 */
+	@RequestMapping(value = "/addComment",method = RequestMethod.POST)
+	public ModelAndView addComment(@Valid @ModelAttribute("comment") Comment comment,
+									BindingResult result,
+									@RequestParam(name = "translatorId",required=true) long translatorId,
+									Principal user,
+									RedirectAttributes attr){
+		if(result.hasErrors()){
+			attr.addFlashAttribute("comment", comment);
+			attr.addFlashAttribute(
+					"org.springframework.validation.BindingResult.comment", result);
+			return new ModelAndView(
+					"redirect:/translators/"+translatorId);
+		}
+		commentService.save(comment,user.getName(),translatorId);
+		return new ModelAndView(
+				"redirect:/translators/"+translatorId);
+	}
+	
+	
 	
 	/**
 	 * Adds maps of {@link Language}, {@link TranslateType}, {@link Currency}

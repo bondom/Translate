@@ -20,7 +20,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 
 @Entity
 @NamedQueries({
@@ -44,7 +44,7 @@ public class Client extends User{
 	@OneToMany(fetch = FetchType.LAZY,orphanRemoval = true,mappedBy = "client")
 	@Fetch(FetchMode.SELECT)
 	@Cascade(CascadeType.ALL)
-	private Set<ResponsedAd> responsedAds = new LinkedHashSet<>();
+	private Set<RespondedAd> respondedAds = new LinkedHashSet<>();
 
 	public Client(){}
 
@@ -66,16 +66,16 @@ public class Client extends User{
 		ad.setClient(null);
 	}
 
-	public Set<ResponsedAd> getResponsedAds() {
-		return responsedAds;
+	public Set<RespondedAd> getRespondedAds() {
+		return respondedAds;
 	}
 
-	public void addResponsedAd(ResponsedAd responsedAd){
-		responsedAds.add(responsedAd);
-		responsedAd.setClient(this);
+	public void addRespondedAd(RespondedAd respondedAd){
+		respondedAds.add(respondedAd);
+		respondedAd.setClient(this);
 	}
 	
-	public void removeResponsedAd(ResponsedAd responsedAd){
-		responsedAds.remove(responsedAd);
+	public void removeRespondedAd(RespondedAd respondedAd){
+		respondedAds.remove(respondedAd);
 	}
 }

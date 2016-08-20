@@ -2,7 +2,7 @@ package ua.translate.controller.support;
 
 import java.util.Comparator;
 
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 
 /**
  * Note: this comparator imposes orderings that are inconsistent with equals.
@@ -10,10 +10,10 @@ import ua.translate.model.ad.ResponsedAd;
  * @author Yuriy Phediv
  *
  */
-public class ResponsedAdComparatorByDate implements Comparator<ResponsedAd> {
+public class RespondedAdComparatorByDate implements Comparator<RespondedAd> {
 
 	@Override
-	public int compare(ResponsedAd o1, ResponsedAd o2) {
+	public int compare(RespondedAd o1, RespondedAd o2) {
 		return o2.getDateTimeOfResponse().
 				compareTo(o1.getDateTimeOfResponse());
 	}

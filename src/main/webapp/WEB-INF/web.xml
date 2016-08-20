@@ -64,15 +64,17 @@
 	      </init-param>
 	      <init-param>
 	          <param-name>contextConfigLocation</param-name>
-	          <param-value><!-- ua.translate.AppConfig --></param-value>
+	          <param-value></param-value>
 	      </init-param>
 	      <load-on-startup>1</load-on-startup>
 	  </servlet>
-	
+	  
 	  <servlet-mapping>
 	      <servlet-name>dispatcher</servlet-name>
 	      <url-pattern>/</url-pattern>
 	  </servlet-mapping>
+	  
+
 	  
 	  <session-config>
 	  	<session-timeout>10</session-timeout>

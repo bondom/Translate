@@ -13,7 +13,7 @@
 			<#include "/fragments/inittranslatorheader.ftl">
 			<div class="panel-body" style = "margin: 0px">
 			<h3>Registration</h3>
-				<form action = "<@spring.url "/translator/registrationConfirm"/>" method = "Post" role = "form">
+				<form action = "<@spring.url "/translator/registrationConfirm"/>" method = "post" role = "form">
 					<div class="form-group col-xs-5" >
 							<#if resultRegistration??>
 								<div class="alert alert-danger">${resultRegistration}</div>

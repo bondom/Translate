@@ -1,5 +1,7 @@
 package ua.translate.logging.service;
 
+import java.util.Set;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
+import ua.translate.model.ad.RespondedAd;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
 import ua.translate.service.exception.InvalidPasswordException;
@@ -79,27 +82,6 @@ public class UserServiceAspect {
 				className,methodName,password,newPassword,email);
 	}
 	
-	
-	@Around(value = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public String saveConfirmationUrl(..)) && "
-			 + "args(email)")
-	public String saveConfirmationUrl(ProceedingJoinPoint thisJoinPoint, String email) throws Throwable {
-		String className = thisJoinPoint.getTarget().getClass().getName();
-		String methodName = thisJoinPoint.getSignature().getName();
-		String url = "";
-		try {
-			url = (String)thisJoinPoint.proceed();
-		} catch (Throwable e) {
-			logger.error("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
-			throw e;
-		}
-		
-		logger.info("{}.{}:confirmation url='{}' is successfully saved for user with email='{}'",
-				className,methodName,url,email);
-		return url;
-	}
-	
-	
 	@AfterReturning(pointcut = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public void updateUserProfile(..))")
 	public void updateUserProfileSuccess(JoinPoint thisJoinPoint) {
@@ -122,6 +104,98 @@ public class UserServiceAspect {
 		}
 		logger.info("{}.{}:avatar is successfully updated for user with email={},size={}",
 				className,methodName,email,avatar.length);
+	}
+	
+	@Around(value = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public String saveConfirmationUrl(..)) && "
+			 + "args(email)")
+	public String saveConfirmationUrl(ProceedingJoinPoint thisJoinPoint, String email) throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		String url = "";
+		try {
+			url = (String)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
+			throw e;
+		}
+		
+		logger.info("{}.{}:confirmation url='{}' is successfully saved for user with email='{}'",
+				className,methodName,url,email);
+		return url;
+	}
+	
+	@Around(value = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public String confirmUserEmail(..)) && "
+			 + "args(confirmationUrl)")
+	public String confirmUserEmail(ProceedingJoinPoint thisJoinPoint, String confirmationUrl) throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		String email = "";
+		try {
+			email = (String)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}(confirmationUrl={}):{}:{}",className,methodName,
+					confirmationUrl,e.getClass(),e.getMessage());
+			throw e;
+		}
+		
+		logger.info("{}.{}(confirmationUrl={}): email='{}' is confirmed",
+				className,methodName,confirmationUrl,email);
+		return email;
+	}
+	
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public * getRespondedAds(..)) && "
+			 + "args(email,page,numberOfRespondedAdsOnPage)")
+	public  Set<RespondedAd> getRespondedAds(ProceedingJoinPoint thisJoinPoint,
+											 String email,
+											 int page,
+											 int numberOfRespondedAdsOnPage) throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		Set<RespondedAd> respondedAds = null;
+		try {
+			respondedAds = (Set<RespondedAd>)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}(email={},page={},numberOfRespondedAdsOnPage={}):{}:{}",
+					className,methodName,email,page,numberOfRespondedAdsOnPage,
+					e.getClass(),e.getMessage());
+			throw e;
+		}
+		if(respondedAds.size()>0){
+			respondedAds.stream().forEach(rad->{
+				logger.debug("{}.{}(email={},page={},numberOfRespondedAdsOnPage={}):"
+						+ "translator email='{}',client email={}, status='{}', ad name='{}' ad id='{}'",
+						className,methodName,email,page,numberOfRespondedAdsOnPage,
+						rad.getTranslator().getEmail(),rad.getClient().getEmail(),
+						rad.getStatus(),rad.getAd().getName(),rad.getAd().getId());
+			});
+		}else logger.debug("{}.{}(email={},page={},numberOfRespondedAdsOnPage={}): "
+				+ "0 responsed ads",className,methodName,email,page,numberOfRespondedAdsOnPage);
+		return respondedAds;
+	}
+	
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public * getNumberOfPagesForRespondedAds(..)) && "
+			 + "args(email,numberOfRespondedAdsOnPage)")
+	public long getNumberOfPagesForRespondedAds(ProceedingJoinPoint thisJoinPoint,
+												String email,int numberOfRespondedAdsOnPage)
+														throws Throwable{
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		long numberOfPages = 0L;
+		try {
+			numberOfPages = (long)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}(email={},numberOfRespondedAdsOnPage={}):{}:{}",
+					className,methodName,email,numberOfRespondedAdsOnPage,
+					e.getClass(),e.getMessage());
+			throw e;
+		}
+		logger.debug("{}.{}(email={},numberOfRespondedAdsOnPage={}): {} - number of pages "
+				,className,methodName,email,numberOfRespondedAdsOnPage,numberOfPages);
+		return numberOfPages;
 	}
 
 }

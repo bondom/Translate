@@ -12,16 +12,16 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authtranslatorheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-			<#if responsedAds?has_content>
-				<#list responsedAds as responsedAd>
-					<#assign ad = responsedAd.ad>
+			<#if respondedAds?has_content>
+				<#list respondedAds as respondedAd>
+					<#assign ad = respondedAd.ad>
 					<p><a href = "<@spring.url "/ads/${ad.getId()}"/>">${ad.getName()}</a>
-					${responsedAd.getDateTimeOfResponse()}
+					${respondedAd.getDateTimeOfResponse()}
 					<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
 					<p>Init Language: ${ad.getInitLanguage()}
 					<p>Result Language: ${ad.getResultLanguage()}
 					<p>End Date: ${ad.getEndDate()}
-					<#assign adstatus = responsedAd.status>
+					<#assign adstatus = respondedAd.status>
 					<p>Status:${adstatus}
 				</#list>
 				</br>

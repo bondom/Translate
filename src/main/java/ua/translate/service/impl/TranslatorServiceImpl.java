@@ -2,8 +2,10 @@ package ua.translate.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,16 +16,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.AdDao;
 import ua.translate.dao.ClientDao;
-import ua.translate.dao.ResponsedAdDao;
+import ua.translate.dao.RespondedAdDao;
 import ua.translate.dao.TranslatorDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
+import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.EmailStatus;
-import ua.translate.model.status.ResponsedAdStatus;
+import ua.translate.model.status.RespondedAdStatus;
 import ua.translate.model.status.UserStatus;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.DuplicateEmailException;
@@ -32,13 +35,16 @@ import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.NonExistedAdException;
 import ua.translate.service.exception.NonExistedTranslatorException;
+import ua.translate.service.exception.NumberExceedsException;
+import ua.translate.service.exception.TranslatorDistraction;
 import ua.translate.service.exception.WrongPageNumber;
 
 @Service
-@Transactional(propagation = Propagation.REQUIRED,rollbackFor = DuplicateEmailException.class)
+@Transactional(propagation = Propagation.REQUIRED,
+			   rollbackFor = {DuplicateEmailException.class,
+					   		  NumberExceedsException.class})
 public class TranslatorServiceImpl extends TranslatorService {
 
-	
 	@Autowired
 	private TranslatorDao translatorDao;
 	
@@ -46,7 +52,7 @@ public class TranslatorServiceImpl extends TranslatorService {
 	private AdDao adDao;
 	
 	@Autowired
-	private ResponsedAdDao responsedAdDao;
+	private RespondedAdDao respondedAdDao;
 	
 	@Override
 	public Translator getTranslatorByEmail(String email) {
@@ -81,25 +87,39 @@ public class TranslatorServiceImpl extends TranslatorService {
 	}
 	
 	@Override
-	public long saveResponsedAd(String email,long adId) throws NonExistedAdException {
+	public long saveRespondedAd(
+			String email,long adId, int maxNumberOfSendedRespondedAds) 
+									throws NonExistedAdException, 
+										   NumberExceedsException, 
+										   TranslatorDistraction{
 		Ad ad = adDao.get(adId);
 		if(ad == null){
 			throw new NonExistedAdException();
 		}
 		
-		ResponsedAd responsedAd = new ResponsedAd();
-		
 		Translator translator = translatorDao.getTranslatorByEmail(email);
+		
+		if(hasAcceptedAd(translator)){
+			throw new TranslatorDistraction();
+		}
+		
+		if(!numberRespondedAdsInNormalRange(translator,maxNumberOfSendedRespondedAds)){
+			throw new NumberExceedsException();
+		}
+		
+		
+		RespondedAd respondedAd = new RespondedAd();
+		
 		Client client = ad.getClient();
 		
-		translator.addResponsedAd(responsedAd);
-		client.addResponsedAd(responsedAd);
-		ad.addResponsedAd(responsedAd);
+		translator.addRespondedAd(respondedAd);
+		client.addRespondedAd(respondedAd);
+		ad.addRespondedAd(respondedAd);
 		
-		responsedAd.setStatus(ResponsedAdStatus.SENDED);
-		responsedAd.setDateTimeOfResponse(LocalDateTime.now());
+		respondedAd.setStatus(RespondedAdStatus.SENDED);
+		respondedAd.setDateTimeOfResponse(LocalDateTime.now());
 		
-		return responsedAdDao.save(responsedAd);
+		return respondedAdDao.save(respondedAd);
 		
 	}
 	
@@ -176,29 +196,115 @@ public class TranslatorServiceImpl extends TranslatorService {
 	}
 
 	@Override
-	public Set<ResponsedAd> getResponsedAds(String email,
+	public Set<RespondedAd> getRespondedAds(String email,
 										    int page,
-										    int numberOfResponsedAdsOnPage) throws WrongPageNumber{
+										    int numberOfRespondedAdsOnPage) throws WrongPageNumber{
 		if(page<1){
 			throw new WrongPageNumber();
 		}
 		Translator translator = getTranslatorByEmail(email);
-		Set<ResponsedAd> responsedAds = responsedAdDao
-				.getResponsedAdsByTranslator(translator, page, numberOfResponsedAdsOnPage);
-		return responsedAds;
+		Set<RespondedAd> respondedAds = respondedAdDao
+				.getRespondedAdsByTranslator(translator, page, numberOfRespondedAdsOnPage);
+		return respondedAds;
 	}
 	
 	@Override
-	public long getNumberOfPagesForResponsedAds(String email, int numberOfResponsedAdsOnPage) {
+	public long getNumberOfPagesForRespondedAds(String email, int numberOfRespondedAdsOnPage) {
 		Translator translator = getTranslatorByEmail(email);
-		long numberOfResponsedAds = responsedAdDao.getNumberOfResponsedAdsByTranslator(translator);
+		long numberOfRespondedAds = respondedAdDao.getNumberOfRespondedAdsByTranslator(translator);
 		long numberOfPages = (long) Math
-				.ceil(((double)numberOfResponsedAds)/numberOfResponsedAdsOnPage);
+				.ceil(((double)numberOfRespondedAds)/numberOfRespondedAdsOnPage);
 		return numberOfPages;
 		
 	}
+	
+	@Override
+	public RespondedAd getCurrentOrder(String email) {
+		Translator translator = getTranslatorByEmail(email);
+		Set<RespondedAd> respondedAds = translator.getRespondedAds();
+		Optional<RespondedAd> wrapperRespondedAd = 
+				respondedAds.stream()
+					.filter(rad -> rad.getStatus().equals(RespondedAdStatus.ACCEPTED)).findFirst();
+		if(wrapperRespondedAd.isPresent()){
+			return wrapperRespondedAd.get();
+		}else return null;
+	}
+	
+	@Override
+	public boolean markAsNotChecked(String email, long adId) {
+		Ad ad = adDao.get(adId);
+		if(ad==null){
+			return false;
+		}
+		if(!ad.getStatus().equals(AdStatus.ACCEPTED)){
+			return false;
+		}
+		if(translatorOwnsAd(email, adId)){
+			ad.setStatus(AdStatus.NOTCHECKED);
+			return true;
+		}
+		
+		
+		return false;
+	}
+	
+	/**
+	 * Checks if {@link Translator} {@code translator} has RespondedAd with ACCEPTED status
+	 * @param translator - {@code Translator} object, representation of authenticated user with Translator role
+	 * @return true - if {@code translator} has RespondedAd with ACCEPTED status, else false
+	 */
+	private boolean hasAcceptedAd(Translator translator) {
+		Set<RespondedAd> respondedAds = translator.getRespondedAds();
+		boolean acceptedAdExists = 
+				respondedAds.stream()
+							.anyMatch(rad -> 
+							 	rad.getStatus().equals(RespondedAdStatus.ACCEPTED));
+		return acceptedAdExists;
+	}
+	
+	
+	
+	/**
+	 * Check if number of {@link RespondedAd}s of {@code translator} in normal range,
+	 * doesn't exceed {@code maxNumberOfSendedRespondedAds}
+	 * @param translator - {@link Translator} object, who represents authenticated translator
+	 * @return true - if number of {@code RespondedAd}s in normal range, else false
+	 */
+	private boolean numberRespondedAdsInNormalRange(Translator translator,
+													int maxNumberOfSendedRespondedAds){
+		Set<RespondedAd> respondedAds = translator.getRespondedAds();
+		int numberOfSendedRespondedAds = 
+					respondedAds.stream()
+					.filter(rad -> rad.getStatus().equals(RespondedAdStatus.SENDED))
+					.collect(Collectors.toSet()).size();
+		if(numberOfSendedRespondedAds>=maxNumberOfSendedRespondedAds){
+			return false;
+		}
+		return true;
+			
+	}
 
+	
+	
+	/**
+	 * Checks if {@link Ad} with id={@code adId} belongs to translator with {@code email}
+	 * @param email - email of authenticated translator, <b>must</b> be retrieved from Principal object
+	 * @param adId - id of {@code Ad}
+	 * @return true if translator owns Ad with id={@code adId}, else false
+	 */
+	private boolean translatorOwnsAd(String email,long adId){
+		Translator translator = translatorDao.getTranslatorByEmail(email);
+		Set<RespondedAd> respondedAd = translator.getRespondedAds();
+		boolean translatorOwns = respondedAd.stream()
+										    .map(rad -> rad.getAd())
+										    .anyMatch(ad -> 
+										    	(new Long(ad.getId())).equals(adId));
+		return translatorOwns;
+	}
 
+	
+
+	
 
 
 }

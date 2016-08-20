@@ -18,7 +18,7 @@
 				<#if Session.SPRING_SECURITY_LAST_EXCEPTION?? && 
 					Session.SPRING_SECURITY_LAST_EXCEPTION.message?has_content>
 						<div class="alert alert-danger">
-							<@spring.message "login.badcredentials"/>
+							${Session.SPRING_SECURITY_LAST_EXCEPTION.message} 
 						</div>
 				</#if> 
 				<input type = "text" id= "userLogin" name = "username"

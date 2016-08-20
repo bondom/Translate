@@ -13,7 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
+import ua.translate.model.status.AdStatus;
 
 @Aspect
 @Component
@@ -30,7 +31,7 @@ public class AdServiceAspect {
 		try {
 			adId = (long)thisJoinPoint.proceed();
 		} catch (Throwable e) {
-			logger.warn("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
+			logger.error("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
 			throw e;
 		}
 		
@@ -41,27 +42,29 @@ public class AdServiceAspect {
 	}
 	
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public ua.translate.model.ad.Ad updateAd(..)) && args(adId,..)")
-	public Ad updateAd(ProceedingJoinPoint thisJoinPoint,long adId) throws Throwable {
+			 + " execution(public ua.translate.model.ad.Ad updateAd(..)) && args(email,adId,..)")
+	public Ad updateAd(ProceedingJoinPoint thisJoinPoint,String email,long adId) throws Throwable {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		Ad savedAd= null;
 		try {
 			savedAd = (Ad)thisJoinPoint.proceed();
 		} catch (Throwable e) {
-			logger.error("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
+			logger.error("{}.{}(email={},adId={}):{}:{}",className,methodName,
+					email,adId,e.getClass(),e.getMessage());
 			throw e;
 		}
 		
-		logger.info("{}.{}(adId={}): Ad is successfully updated",
-				className,methodName,adId);
+		logger.info("{}.{}(email={},adId={}): Ad is successfully updated - [ad name={}]"
+				+"",
+				className,methodName,email,adId,savedAd.getName());
 
 		return savedAd;
 	}
 	
 	@AfterReturning(pointcut = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public * getAdsForShowing(..))",returning = "ads")
-	public void getAdsForShowing(JoinPoint thisJoinPoint,Set<Ad> ads) throws Throwable {
+			 + " execution(public * getAdsFor*(..))",returning = "ads")
+	public void getAdsForShowingOrChecking(JoinPoint thisJoinPoint,Set<Ad> ads) throws Throwable {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		if(ads.size()>0){
@@ -73,9 +76,9 @@ public class AdServiceAspect {
 	}
 	
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public long getNumberOfPagesForShowedAds(..)) "
-			 + "&& args(numberOfAds)")
-	public Long getNumberOfPagesForShowedAds(ProceedingJoinPoint thisJoinPoint,long numberOfAds) throws Throwable {
+			 + " execution(public long getNumberOfPagesForAdsByStatus(..)) "
+			 + "&& args(adStatus,numberOfAds)")
+	public Long getNumberOfPagesForAdsByStatus(ProceedingJoinPoint thisJoinPoint,AdStatus adStatus,long numberOfAds) throws Throwable {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		Long numberOfPages= 0L;
@@ -86,15 +89,33 @@ public class AdServiceAspect {
 			throw e;
 		}
 		
-		logger.info("{}.{}(numberOfAds={}): number of pages={}",
-				className,methodName,numberOfAds,numberOfPages);
+		logger.debug("{}.{}(numberOfAdsOnPage={},status={}): number of pages={}",
+				className,methodName,numberOfAds,adStatus,numberOfPages);
 
 		return numberOfPages;
 	}
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " (execution(public ua.translate.model.ad.Ad getForShowing(..)) ||"
-			 + "execution(public ua.translate.model.ad.Ad getForUpdating(..)))&& args(adId)")
-	public Ad getForShowingOrUpdating(ProceedingJoinPoint thisJoinPoint,long adId) throws Throwable {
+			 + " execution(public ua.translate.model.ad.Ad getForShowing(..)) && args(adId)")
+	public Ad getForShowing(ProceedingJoinPoint thisJoinPoint,long adId) throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		Ad ad= null;
+		try {
+			ad = (Ad)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}(adId={}):{}:{}",className,methodName,adId,e.getClass());
+			throw e;
+		}
+		
+		logger.debug("{}.{}(adId={}): Ad is successfully retrieved",
+				className,methodName,adId);
+
+		return ad;
+	}
+	
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public ua.translate.model.ad.Ad getForUpdating(..)) && args(email,adId)")
+	public Ad getForUpdating(ProceedingJoinPoint thisJoinPoint,String email,long adId) throws Throwable {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		Ad ad= null;
@@ -105,8 +126,8 @@ public class AdServiceAspect {
 			throw e;
 		}
 		
-		logger.info("{}.{}(adId={}): Ad is successfully retrieved",
-				className,methodName,adId);
+		logger.debug("{}.{}(client email ={}, adId={}): Ad is successfully retrieved",
+				className,methodName,email,adId);
 
 		return ad;
 	}
@@ -128,33 +149,5 @@ public class AdServiceAspect {
 
 	}
 	
-	/*@Around(value = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public ua.translate.model.ad.Ad get(..)) && args(id)")
-	public Ad getting(ProceedingJoinPoint thisJoinPoint, Long id) {
-		String className = thisJoinPoint.getTarget().getClass().getName();
-		String methodName = thisJoinPoint.getSignature().getName();
-		Ad ad = null;
-		try {
-			ad = (Ad)thisJoinPoint.proceed();
-		} catch (Throwable e) {
-			logger.info("{}.{}:{}",className,methodName,e.getStackTrace());
-			return null;
-		}
-		
-		if(ad!=null){
-			logger.info("{}.{}(id={}):advertisement is retrieved from db, name='{}',status={}",
-					className,methodName,id,ad.getName(),ad.getStatus());
-			List<ResponsedAd> responsedAds = ad.getResponsedAds();
-			responsedAds.forEach(rad->{
-				logger.info("{}.{}(id={}): ad contains - ResponsedAd with id = {},"
-						+ "it translator id={}",
-					className,methodName,id,rad.getId(),rad.getTranslator().getId());
-			});
-		}else{
-			logger.info("{}.{}(id={}):ad with such id doesn't exist",
-					className,methodName,id);
-		}
-		return ad;
-	}*/
 
 }

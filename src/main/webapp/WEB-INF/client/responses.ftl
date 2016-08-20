@@ -1,4 +1,4 @@
-<#ftl encoding="UTF-8">
+	<#ftl encoding="UTF-8">
 <#import "/spring.ftl" as spring>
 <#assign security=JspTaglibs["http://www.springframework.org/security/tags"] />
 <html>
@@ -12,18 +12,34 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-			<#if responsedAds?has_content>
-				<#list responsedAds as responsedAd>
-					<#assign translator = responsedAd.translator>
-					<#assign ad = responsedAd.ad>
+			<#if respondedAds?has_content>
+				<#list respondedAds as respondedAd>
+					<#assign translator = respondedAd.translator>
+					<#assign ad = respondedAd.ad>
 					<p><a href = "<@spring.url "/translators/${translator.getId()}"/>">${translator.getFirstName()} ${translator.getLastName()}</a>	responsed on
 					<a href = "<@spring.url "/ads/${ad.getId()}"/>">${ad.getName()}</a>				
-					<p>at ${responsedAd.getDateTimeOfResponse()}
-					<#assign adstatus = responsedAd.status>
+					<p>at ${respondedAd.getDateTimeOfResponse()}
+					<#assign adstatus = respondedAd.status>
 					<p>Status:${adstatus}
 					<#if adstatus.name()="SENDED">
-						<a href="<@spring.url "/client/reject?radId=${responsedAd.getId()}"/>">Reject</a>						
-						<a href="<@spring.url "/client/accept?radId=${responsedAd.getId()}"/>">Accept</a>
+						<form action = "<@spring.url "/client/reject"/>" method = "Post" role = "form">
+							<input name="id" type="hidden" value="${respondedAd.getId()}"/>
+							<button type = "submit" class="btn btn-info">
+								Reject
+							</button>
+							<input type="hidden"
+									name="${_csrf.parameterName}"
+									value="${_csrf.token}"/>
+						</form>
+						<form action = "<@spring.url "/client/accept"/>" method = "Post" role = "form">
+							<input name="id" type="hidden" value="${respondedAd.getId()}"/>
+							<button type = "submit" class="btn btn-info">
+								Accept
+							</button>
+							<input type="hidden"
+									name="${_csrf.parameterName}"
+									value="${_csrf.token}"/>
+						</form>
 					</#if>
 				</#list>
 				</br>

@@ -69,7 +69,7 @@
 					</td></tr>
 					<tr><td>Added info: </td><td>
 										<@spring.bind "translator.addedInfo"/>
-										<textarea id = "addedInfo" name = "${(spring.status.expression)!"addedInfo"}" cols = 20 rows = 4>
+										<textarea id = "addedInfo" name = "${spring.status.expression}" cols = 20 rows = 4>
 										<#if translator.addedInfo??>
 										${translator.addedInfo}
 										</#if>

@@ -3,11 +3,18 @@ package ua.translate.dao;
 import java.util.List;
 import java.util.Set;
 
+import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
 
 public abstract class TranslatorDao  extends AbstractUserDao<Long, Translator>{
 	
+	/**
+	 * Gets {@link Translator} {@code translator} from data storage by {@code email}
+	 * @param email - email of translator
+	 * @return {@code Translator} object or {@code null}, if translator with such email doesn't
+	 * exist in data storage
+	 */
 	public abstract Translator getTranslatorByEmail(String email);
 	
 	/**

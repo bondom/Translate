@@ -39,6 +39,41 @@
 				<tr><td>City: </td><td>${translator.getCity()}</td></tr>
 				<tr><td>Date of birth: </td><td>${translator.getBirthday()}</td></tr>
 				</table>
+				<br>
+				Comments:<br>
+				<#assign comments = translator.comments>
+				<#if comments?has_content>
+					<#list comments as comment>
+						Client name:${comment.getClientName()}&nbsp${comment.getCreatingDate()}<br>
+						${comment.getText()}<br>
+					</#list>
+				<#else>					
+					This translator hasn't yet comments
+				</#if>
+				
+				<@security.authorize access="hasRole('ROLE_CLIENT')">
+					<form action = "<@spring.url "/client/addComment"/>" method = "Post" role = "form">
+					<div class="form-group col-xs-5" >
+				
+							<@spring.bind "comment.text"/>
+							<textarea id = "addedInfo" name = "${spring.status.expression}" cols = 40 rows = 4>
+							</textarea>
+							<#list spring.status.errorMessages as error>
+								<div class="alert alert-warning">${error}</div>
+							</#list>
+							<br>
+							<input type="hidden"
+									name="translatorId"
+									value="${translator.getId()}"/>
+							<button type = "submit" class="btn btn-info">
+								Add comment
+							</button>
+							<input type="hidden"
+									name="${_csrf.parameterName}"
+									value="${_csrf.token}"/>
+						</div>
+					</form>
+				</@security.authorize>
 		</div>
 	</div>
 	</div>

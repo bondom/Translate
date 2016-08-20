@@ -67,13 +67,28 @@ public class AdDaoImpl implements AdDao{
 		Set<Ad> adsSet = new LinkedHashSet<>(ads);
 		return adsSet;
 	}
+	
+	@Override
+	public Set<Ad> getAdsForChecking(int page, int numberAdsOnPage) {
+		Session session = sessionFactory.getCurrentSession();
+		Query query = session.getNamedQuery("getAdsByStatusAndAscOrderByPubDate");
+		
+		query.setParameter("status",AdStatus.NOTCHECKED);
+		query.setMaxResults(numberAdsOnPage);
+		final int firstResult = numberAdsOnPage*(page-1);
+		query.setFirstResult(firstResult);
+		
+		List<Ad> ads = (List<Ad>)query.list();
+		Set<Ad> adsSet = new LinkedHashSet<>(ads);
+		return adsSet;
+	}
 
 	@Override
-	public long getNumberOfShowedAds() {
+	public long getNumberOfAdsByStatus(AdStatus adStatus) {
 		Session session = sessionFactory.getCurrentSession();
 		ScrollableResults scrollableResults = session
 				.getNamedQuery("getAdsByStatusAndDescOrderByPubDate")
-				.setParameter("status",AdStatus.SHOWED)
+				.setParameter("status",adStatus)
 				.scroll();
 
 		scrollableResults.last();
@@ -94,6 +109,8 @@ public class AdDaoImpl implements AdDao{
 		Session session = sessionFactory.getCurrentSession();
 		session.flush();
 	}
+
+	
 
 
 

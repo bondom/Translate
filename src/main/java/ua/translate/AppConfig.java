@@ -47,10 +47,6 @@ import freemarker.template.Version;
 @ComponentScan(basePackages = "ua.translate")
 @EnableTransactionManagement
 @PropertySource("classpath:application.properties")
-
-/*!!!!After creating default avatar for user all checking for null must be destroyed!!!!*/
-
-
 public class AppConfig extends WebMvcConfigurerAdapter{
 	
 	@Value("${db.driver}") private String dbDriver;

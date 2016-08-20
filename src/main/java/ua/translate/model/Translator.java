@@ -6,9 +6,11 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.SortComparator;
 
+import ua.translate.controller.support.CommentComparatorByDate;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,6 +18,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -23,10 +27,12 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 
 @Entity
@@ -48,10 +54,11 @@ public class Translator extends User{
 	@Column(nullable = false)
 	private double rating;
 	
-	@OneToMany(fetch = FetchType.LAZY,orphanRemoval = true)
+	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "translator")
 	@Cascade(CascadeType.ALL)
 	@Fetch(FetchMode.SELECT)
-	private List<Comment> comments = new ArrayList<>();
+	@SortComparator(value = CommentComparatorByDate.class)
+	private SortedSet<Comment> comments = new TreeSet<>();
 	
 	@Column(nullable = false)
 	private short numberOfExecutedAds;
@@ -67,7 +74,7 @@ public class Translator extends User{
 	@OneToMany(fetch = FetchType.LAZY,orphanRemoval = true,mappedBy = "translator")
 	@Cascade(CascadeType.ALL)
 	@Fetch(FetchMode.SELECT)
-	private Set<ResponsedAd> responsedAds = new LinkedHashSet<>();
+	private Set<RespondedAd> respondedAds = new LinkedHashSet<>();
 	
 	@Column(nullable = false)
 	private LocalDateTime publishingTime;
@@ -88,12 +95,12 @@ public class Translator extends User{
 		this.rating = rating;
 	}
 
-	public List<Comment> getComments() {
+	public SortedSet<Comment> getComments() {
 		return comments;
 	}
 
-	public void setComments(List<Comment> comments) {
-		this.comments = comments;
+	public void setRespondedAds(Set<RespondedAd> respondedAds) {
+		this.respondedAds = respondedAds;
 	}
 
 	public short getNumberOfExecutedAds() {
@@ -125,17 +132,17 @@ public class Translator extends User{
 		this.languages = languages;
 	}
 
-	public Set<ResponsedAd> getResponsedAds() {
-		return responsedAds;
+	public Set<RespondedAd> getRespondedAds() {
+		return respondedAds;
 	}
 
-	public void addResponsedAd(ResponsedAd responsedAd){
-		responsedAds.add(responsedAd);
-		responsedAd.setTranslator(this);
+	public void addRespondedAd(RespondedAd respondedAd){
+		respondedAds.add(respondedAd);
+		respondedAd.setTranslator(this);
 	}
 	
-	public void removeResponsedAd(ResponsedAd responsedAd){
-		responsedAds.remove(responsedAd);
+	public void removeRespondedAd(RespondedAd respondedAd){
+		respondedAds.remove(respondedAd);
 	}
 	
 }

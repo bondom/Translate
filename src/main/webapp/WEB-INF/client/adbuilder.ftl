@@ -12,7 +12,7 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-				<#if createAd??>
+				<#if createAd==true>
 					<#assign formUrl = "/client/saveAd"/>
 				<#else>
 					<#assign formUrl = "/client/saveAdEdits"/>

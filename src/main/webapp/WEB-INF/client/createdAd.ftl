@@ -14,7 +14,7 @@
 		<div class="panel-body" style = "margin: 0px">
 					<div>
 						Advertisement is created successfully.
-						It is placed on <a href = "<@spring.url "/ads/${adId}"/>"  role="button">languages.ru/ads/${adId}</a>
+						It is placed on <a href = "<@spring.url "/ads/${adId}"/>"  role="button">${adUrl}</a>
 					</div>
 			
 		</div>

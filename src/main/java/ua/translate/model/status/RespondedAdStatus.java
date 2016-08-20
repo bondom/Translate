@@ -1,5 +1,5 @@
 package ua.translate.model.status;
 
-public enum ResponsedAdStatus {
+public enum RespondedAdStatus {
 	SENDED,REJECTED,ACCEPTED
 }

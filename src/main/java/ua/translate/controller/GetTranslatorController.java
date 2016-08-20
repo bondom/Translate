@@ -11,6 +11,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +23,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
 import ua.translate.controller.support.ControllerHelper;
 import ua.translate.controller.support.TranslatorComparatorByDate;
+import ua.translate.model.Comment;
 import ua.translate.model.Translator;
 import ua.translate.model.viewbean.TranslatorView;
 import ua.translate.service.TranslatorService;
@@ -39,7 +43,7 @@ public class GetTranslatorController {
 	@Autowired
 	ControllerHelper controllerHelper;
 	
-	private Logger logger = LoggerFactory.getLogger(ControllerHelper.class);
+	private Logger logger = LoggerFactory.getLogger(GetTranslatorController.class);
 	
 	@Autowired
 	private TranslatorService translatorService;
@@ -48,7 +52,7 @@ public class GetTranslatorController {
 	private String webRootPath;
 	
 	@RequestMapping(method = RequestMethod.GET)
-	public ModelAndView getTranslators(@RequestParam(name="page",
+	public ModelAndView translators(@RequestParam(name="page",
 														required = false,
 														defaultValue="1") int page){
 		Set<Translator> translators = null;
@@ -88,13 +92,21 @@ public class GetTranslatorController {
 	}
 	
 	@RequestMapping(value = "/{tId}", method = RequestMethod.GET)
-	public ModelAndView translator(@PathVariable("tId") long translatorId) throws UnsupportedEncodingException{
+	public ModelAndView translator(HttpServletRequest request,
+								   @PathVariable("tId") long translatorId) throws UnsupportedEncodingException{
 		try {
 			Translator translator = translatorService.getTranslatorById(translatorId);
 			ModelAndView model = new ModelAndView("/translatorProfile");
 			model.addObject("translator", translator);
 			model.addObject("image", controllerHelper.
 									getAvaForRendering(translator.getAvatar()));
+			Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+		    if (inputFlashMap == null || !inputFlashMap.containsKey("comment")) {
+				Comment comment = new Comment();
+				comment.setTranslator(translator);
+				model.addObject("comment",comment);
+		    }
+			
 			return model;
 		} catch (NonExistedTranslatorException e) {
 			ModelAndView model = new ModelAndView("/exception/invalidTranslatorId");

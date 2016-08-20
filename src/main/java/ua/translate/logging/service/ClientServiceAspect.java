@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 
 @Aspect
 @Component
@@ -42,25 +42,4 @@ public class ClientServiceAspect {
 		return ads;
 	}
 	
-	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public * getResponsedAds(..)) && args(email)")
-	public  Set<ResponsedAd> getResponsedAds(ProceedingJoinPoint thisJoinPoint,String email) throws Throwable {
-		String className = thisJoinPoint.getTarget().getClass().getName();
-		String methodName = thisJoinPoint.getSignature().getName();
-		Set<ResponsedAd> responsedAds = null;
-		try {
-			responsedAds = (Set<ResponsedAd>)thisJoinPoint.proceed();
-		} catch (Throwable e) {
-			logger.error("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
-			throw e;
-		}
-		if(responsedAds.size()>0){
-			responsedAds.stream().forEach(rad->{
-				logger.debug("{}.{}(email={}):translator='{}', status='{}', ad name='{}' ad id='{}'",
-					className,methodName,email,rad.getTranslator().getEmail(),
-					rad.getStatus(),rad.getAd().getName(),rad.getAd().getId());
-			});
-		}else logger.debug("{}.{}(email={}): 0 responsed ads",className,methodName);
-		return responsedAds;
-	}
 }

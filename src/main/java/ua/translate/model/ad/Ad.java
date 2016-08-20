@@ -54,7 +54,9 @@ import ua.translate.model.validator.FieldNotMatch;
 	@NamedQuery(name =  "getAllAds",
 			query = "from Ad"),
 	@NamedQuery(name =  "getAdsByStatusAndDescOrderByPubDate",
-	query = "from Ad ad where ad.status = :status order by ad.publicationDateTime desc")
+	query = "from Ad ad where ad.status = :status order by ad.publicationDateTime desc"),
+	@NamedQuery(name =  "getAdsByStatusAndAscOrderByPubDate",
+	query = "from Ad ad where ad.status = :status order by ad.publicationDateTime asc")
 })
 @FieldNotMatch(first = "initLanguage",second = "resultLanguage", message = "Languages must be different")
 @Table(name = "AD_TEST")
@@ -132,7 +134,7 @@ public class Ad  implements Serializable{
 	@OneToMany(fetch = FetchType.EAGER,orphanRemoval = true,mappedBy = "ad")
 	@Cascade(CascadeType.ALL)
 	@Fetch(FetchMode.SELECT)
-	private Set<ResponsedAd> responsedAds = new LinkedHashSet<>();
+	private Set<RespondedAd> respondedAds = new LinkedHashSet<>();
 	
 	public Ad(){}
 
@@ -260,21 +262,22 @@ public class Ad  implements Serializable{
 		return serialVersionUID;
 	}
 	
-	public Set<ResponsedAd> getResponsedAds() {
-		return responsedAds;
-	}
-	
-	public void setResponsedAds(Set<ResponsedAd> responsedAds) {
-		this.responsedAds = responsedAds;
+
+	public Set<RespondedAd> getRespondedAds() {
+		return respondedAds;
 	}
 
-	public void addResponsedAd(ResponsedAd responsedAd){
-		responsedAds.add(responsedAd);
-		responsedAd.setAd(this);
+	public void setRespondedAds(Set<RespondedAd> respondedAds) {
+		this.respondedAds = respondedAds;
+	}
+
+	public void addRespondedAd(RespondedAd respondedAd){
+		respondedAds.add(respondedAd);
+		respondedAd.setAd(this);
 	}
 	
-	public void removeResponsedAd(ResponsedAd responsedAd){
-		responsedAds.remove(responsedAd);
+	public void removeRespondedAd(RespondedAd respondedAd){
+		respondedAds.remove(respondedAd);
 	}
 
 	@Override

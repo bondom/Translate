@@ -12,44 +12,44 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ua.translate.dao.ResponsedAdDao;
+import ua.translate.dao.RespondedAdDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.AdStatus;
 
 @Repository
-public class ResponsedAdDaoImpl implements ResponsedAdDao{
+public class RespondedAdDaoImpl implements RespondedAdDao{
 
 	@Autowired
 	SessionFactory sessionFactory;
 
 	@Override
-	public Long save(ResponsedAd responsedAd) {
+	public Long save(RespondedAd respondedAd) {
 		Session session = sessionFactory.getCurrentSession();
-		return (Long) session.save(responsedAd);
+		return (Long) session.save(respondedAd);
 	}
 
 	@Override
-	public ResponsedAd get(Long id) {
+	public RespondedAd get(Long id) {
 		Session session = sessionFactory.getCurrentSession();
-		ResponsedAd responsedAd = session.get(ResponsedAd.class, id);
-		return responsedAd;
+		RespondedAd respondedAd = session.get(RespondedAd.class, id);
+		return respondedAd;
 	}
 
 	@Override
-	public void delete(ResponsedAd responsedAd) {
+	public void delete(RespondedAd respondedAd) {
 		Session session = sessionFactory.getCurrentSession();
-		session.delete(responsedAd);
+		session.delete(respondedAd);
 		
 	}
 
 	@Override
-	public ResponsedAd update(ResponsedAd responsedAd) {
+	public RespondedAd update(RespondedAd respondedAd) {
 		Session session = sessionFactory.getCurrentSession();
-		session.update(responsedAd);
-		return responsedAd;
+		session.update(respondedAd);
+		return respondedAd;
 	}
 	
 	@Override
@@ -59,22 +59,22 @@ public class ResponsedAdDaoImpl implements ResponsedAdDao{
 	}
 	
 	@Override
-	public Set<ResponsedAd> getResponsedAdsByClient(Client client, int page, int numberResponsedAdsOnPage) {
+	public Set<RespondedAd> getRespondedAdsByClient(Client client, int page, int numberRespondedAdsOnPage) {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.getNamedQuery("getRadsByClient");
 		
 		query.setParameter("client", client);
-		query.setMaxResults(numberResponsedAdsOnPage);
-		final int firstResult = numberResponsedAdsOnPage*(page-1);
+		query.setMaxResults(numberRespondedAdsOnPage);
+		final int firstResult = numberRespondedAdsOnPage*(page-1);
 		query.setFirstResult(firstResult);
 		
-		List<ResponsedAd> responsedAds = (List<ResponsedAd>)query.list();
-		Set<ResponsedAd> setOfResponsedAds = new LinkedHashSet<>(responsedAds);
-		return setOfResponsedAds;
+		List<RespondedAd> respondedAds = (List<RespondedAd>)query.list();
+		Set<RespondedAd> setOfRespondedAds = new LinkedHashSet<>(respondedAds);
+		return setOfRespondedAds;
 	}
 
 	@Override
-	public long getNumberOfResponsedAdsByClient(Client client) {
+	public long getNumberOfRespondedAdsByClient(Client client) {
 		Session session = sessionFactory.getCurrentSession();
 		ScrollableResults scrollableResults = session
 				.getNamedQuery("getRadsByClient")
@@ -89,22 +89,22 @@ public class ResponsedAdDaoImpl implements ResponsedAdDao{
 	
 	
 	@Override
-	public Set<ResponsedAd> getResponsedAdsByTranslator(Translator translator, int page, int numberResponsedAdsOnPage) {
+	public Set<RespondedAd> getRespondedAdsByTranslator(Translator translator, int page, int numberRespondedAdsOnPage) {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.getNamedQuery("getRadsByTranslator");
 		
 		query.setParameter("translator", translator);
-		query.setMaxResults(numberResponsedAdsOnPage);
-		final int firstResult = numberResponsedAdsOnPage*(page-1);
+		query.setMaxResults(numberRespondedAdsOnPage);
+		final int firstResult = numberRespondedAdsOnPage*(page-1);
 		query.setFirstResult(firstResult);
 		
-		List<ResponsedAd> responsedAds = (List<ResponsedAd>)query.list();
-		Set<ResponsedAd> setOfResponsedAds = new LinkedHashSet<>(responsedAds);
-		return setOfResponsedAds;
+		List<RespondedAd> respondedAds = (List<RespondedAd>)query.list();
+		Set<RespondedAd> setOfRespondedAds = new LinkedHashSet<>(respondedAds);
+		return setOfRespondedAds;
 	}
 
 	@Override
-	public long getNumberOfResponsedAdsByTranslator(Translator translator) {
+	public long getNumberOfRespondedAdsByTranslator(Translator translator) {
 		Session session = sessionFactory.getCurrentSession();
 		ScrollableResults scrollableResults = session
 				.getNamedQuery("getRadsByTranslator")

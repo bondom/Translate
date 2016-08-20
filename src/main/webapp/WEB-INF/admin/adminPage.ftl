@@ -11,7 +11,13 @@
 <body>
 	
 	<div class="container">
-		Hello <@security.authentication property = "principal.username"/>
+		<div class="panel panel-default">
+			<#include "/fragments/authadminheader.ftl">
+			<div class="panel-body" style = "margin: 0px">
+			It is page for admin
+			
+			</div>
+		</div>
 	</div>
 
 </body>

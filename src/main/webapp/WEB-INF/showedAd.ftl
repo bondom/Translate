@@ -28,7 +28,16 @@
 						<p>Expiration date: ${ad.getEndDate()}
 						<p>Cost: ${ad.getCost()} ${ad.getCurrency()}
 						<@security.authorize access="hasRole('ROLE_TRANSLATOR')">
-							<a href = "<@spring.url "/translator/response?adId=${ad.getId()}"/>">Respond</a>
+							<form action = "<@spring.url "/translator/response"/>" method="post" role="form">
+								
+								<@spring.formHiddenInput "ad.id"/>
+								<button type = "submit" class="btn btn-info">
+									Respond
+								</button>
+								<input type="hidden"
+									name="${_csrf.parameterName}"
+									value="${_csrf.token}"/>
+							</form>
 						</@security.authorize>
 					</div>
 			

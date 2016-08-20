@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -30,9 +31,9 @@ import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 import ua.translate.handler.CustomSuccessHandler;
 
 @EnableWebSecurity
-@Configuration
 @ComponentScan(basePackages = {"ua.translate"})
-public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
+@Order(99)
+public class BaseSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	protected CustomSuccessHandler customSuccessHandler;
 
@@ -44,7 +45,7 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 	protected PersistentTokenRepository tokenRepository;
     
     @Autowired
-    private UserDetailsService uds;
+    protected UserDetailsService uds;
     
 	@Override
 	public void configure(WebSecurity web){
@@ -53,12 +54,6 @@ public class AppSecurityConfig extends WebSecurityConfigurerAdapter {
 			.antMatchers(new String[]{"/resources/**"});
 	}
 	
-	/*@Autowired
-	public void configureGlobal(AuthenticationManagerBuilder auth,@Qualifier("detailsService") UserDetailsService uds) throws Exception{
-		auth.userDetailsService(uds)
-			.passwordEncoder(bcryptEncoder());
-		
-	}*/
 	
 	@Bean
 	public AuthenticationProvider daoAuthenticationProvider() {

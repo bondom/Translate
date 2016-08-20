@@ -17,7 +17,7 @@ import ua.translate.dao.UserDao;
 import ua.translate.model.Client;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
-import ua.translate.model.ad.ResponsedAd;
+import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
 import ua.translate.service.exception.DuplicateEmailException;
@@ -69,25 +69,10 @@ public abstract class UserService<T extends User> {
 	}
 	
 	/**
-	 * Changes {@code emailStatus} to {@code EmailStatus#CONFIRMED}
-	 * @param confirmationUrl - url, which is stored in data storage
-	 * @return confirmed email
-	 * @throws InvalidConfirmationUrl - if user with such confirmationUrl doesn't exist
-	 */
-	public String confirmUserEmail(String confirmationUrl) throws InvalidConfirmationUrl {
-		User user = getUserByConfirmationUrl(confirmationUrl);
-		if(user==null){
-			throw new InvalidConfirmationUrl();
-		}
-		user.setEmailStatus(EmailStatus.CONFIRMED);
-		return user.getEmail();
-	}
-	
-	
-	/**
 	 * Saves {@code newUser} in data storage.
 	 * <p>Sets appropriate statuses of email and user; sets {@link UserRole},encoded password
 	 * and registration time
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @throws DuplicateEmailException  if email of user is registered already 
 	 */
 	public abstract void registerUser(T newUser) throws DuplicateEmailException;
@@ -95,6 +80,7 @@ public abstract class UserService<T extends User> {
 	/**
 	 * Updates user's profile information, such as first name, last name, date of birth etc.
 	 * <b>CAN'T</b> update user's email or password.
+	 * <p><b>NOTE:</b>AfterReturning Logging via Spring AOP is present
 	 * @param email - email of authenticated user, usually is retrieved from {@code Principal} object
 	 * @param updatedUser - {@code User} with some new values of fields
 	 * @see #updateUserEmail(String, String, String)
@@ -104,6 +90,7 @@ public abstract class UserService<T extends User> {
 	
 	/**
 	 * Replaces user's old email with new one and changes {@code emailStatus} to {@code NOTCONFIRMED}
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated user, usually is retrieved from {@code Principal} object
 	 * @param newEmail - new email
 	 * @param password - current user's password
@@ -115,6 +102,7 @@ public abstract class UserService<T extends User> {
 	
 	/**
 	 * Replaces user's password with new one
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated user, usually is retrieved from {@code Principal} object
 	 * @param password - current password of user
 	 * @param newPassword - new password, entered by user
@@ -125,6 +113,7 @@ public abstract class UserService<T extends User> {
 	
 	/**
 	 * Replaces old avatar of user
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated user, usually is retrieved from {@code Principal} object
 	 * @param avatar 
 	 */
@@ -133,6 +122,7 @@ public abstract class UserService<T extends User> {
 	
 	/**
 	 * Generates random url and saves it in data storage
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated user, usually is retrieved from {@code Principal} object
 	 * @return generated url
 	 */
@@ -146,32 +136,51 @@ public abstract class UserService<T extends User> {
 		return url;
 	}
 	
+	
 	/**
-	 * Returns all {@link ResponsedAd}s, related to object type subclass of {@link User} with email={@code email},
-	 * ordered by {@link ResponsedAd#getDateTimeOfResponse()} 
+	 * Changes {@code emailStatus} to {@code EmailStatus#CONFIRMED}
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
+	 * @param confirmationUrl - url, which is stored in data storage
+	 * @return confirmed email
+	 * @throws InvalidConfirmationUrl - if user with such confirmationUrl doesn't exist
+	 */
+	public String confirmUserEmail(String confirmationUrl) throws InvalidConfirmationUrl {
+		User user = getUserByConfirmationUrl(confirmationUrl);
+		if(user==null){
+			throw new InvalidConfirmationUrl();
+		}
+		user.setEmailStatus(EmailStatus.CONFIRMED);
+		return user.getEmail();
+	}
+	
+	/**
+	 * Returns all {@link RespondedAd}s, related to object type subclass of {@link User} with email={@code email},
+	 * ordered by {@link RespondedAd#getDateTimeOfResponse()} 
 	 * from latest to earliest.
-	 * <p>Size of result {@code Set} is not more than {@code numberOfResponsedAdsOnPage}
-	 * @param email - email of authenticated client,
+	 * <p>Size of result {@code Set} is not more than {@code numberOfRespondedAdsOnPage}
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
+	 * @param email - email of authenticated user,
 	 * 					usually is retrieved from {@link Principal} object
 	 * @param page -  page number, can't be less than 1
-	 * @param numberOfResponsedAdsOnPage - 
-	 * 			number {@code ResponsedAd}s, which can be displayed on 1 page
+	 * @param numberOfRespondedAdsOnPage - 
+	 * 			number {@code RespondedAd}s, which can be displayed on 1 page
 	 *  @throws WrongPageNumber if {@code page} is less than 1
 	 */
-	public abstract Set<ResponsedAd> getResponsedAds
-					(String email,int page,int numberOfResponsedAdsOnPage) 
+	public abstract Set<RespondedAd> getRespondedAds
+					(String email,int page,int numberOfRespondedAdsOnPage) 
 														throws WrongPageNumber;
 	
 	/**
-	 * Returns number of pages for all {@link ResponsedAd}s,
+	 * Returns number of pages for all {@link RespondedAd}s,
 	 *   related to object type subclass of {@link User} with email={@code email},
-	 * if on one page can be displayed only {@code numberOfResponsedAdsOnPage}  ResponsedAds
-	 * @param numberOfResponsedAdsOnPage - number of {@code ResponsedAd}s, which can be displayed on one page
+	 * if on one page can be displayed only {@code numberOfRespondedAdsOnPage}  RespondedAds
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
+	 * @param numberOfRespondedAdsOnPage - number of {@code RespondedAd}s, which can be displayed on one page
 	 * @param email - email of authenticated user,
 	 * 					usually is retrieved from {@link Principal} object
 	 */
-	public abstract long getNumberOfPagesForResponsedAds(String email,
-														 int numberOfResponsedAdsOnPage);
+	public abstract long getNumberOfPagesForRespondedAds(String email,
+														 int numberOfRespondedAdsOnPage);
 	
 	/**
 	 * Checks if {@code passwordFromPage} matches to encoded password from data storage
