@@ -35,8 +35,8 @@ public class ClientServiceAspect {
 		}
 		if(ads.size()>0){
 			ads.stream().forEach(ad->{
-				logger.debug("{}.{}(email={}): ad id = {}, ad name='{}', ad status= '{}', ad end date = '{}'",className,methodName,email
-					,ad.getId(),ad.getName(),ad.getStatus(),ad.getEndDate());
+				logger.debug("{}.{}(email={}): ad id = {}, ad name='{}', ad status= '{}'",className,methodName,email
+					,ad.getId(),ad.getName(),ad.getStatus());
 			});
 		}else logger.debug("{}.{}(email={}): 0 ads",className,methodName);
 		return ads;

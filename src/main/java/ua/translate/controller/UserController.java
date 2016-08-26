@@ -1,6 +1,11 @@
 package ua.translate.controller;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -10,14 +15,31 @@ import org.springframework.security.authentication.RememberMeAuthenticationToken
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import ua.translate.model.Language;
 import ua.translate.model.User;
 import ua.translate.model.UserRole;
+import ua.translate.model.ad.Currency;
+import ua.translate.model.ad.TranslateType;
 import ua.translate.model.security.UserImpl;
 
 public class UserController {
 	
 	@Autowired
 	private AuthenticationTrustResolver authenticationTrustResolver;
+	
+	/**
+	 * This array contains countries, which can be used by user for registration,
+	 * creating and searching Ad. 
+	 * <p><b>NOTE:</b> In that moment there is several countries for testing purposes
+	 */
+	private static String[] ALLOWED_COUNTRIES = {"Ukraine","Russia"};
+	
+	/**
+	 * This array contains cities, which can be used by user for registration,
+	 * creating and searching Ad. 
+	 * <p><b>NOTE:</b> In that moment there is several cities for testing purposes
+	 */
+	private static String[] ALLOWED_CITIES= {"Kiev","Chernivtsi","Moscow"};
 	
 	/**
 	 * Checks if user is authenticated via remember-me authentication.
@@ -78,4 +100,76 @@ public class UserController {
         UserImpl userDetails = (UserImpl) authentication.getPrincipal();
         userDetails.setUsername(newUsername);
     }
+    
+    /**
+     * Returns {@code Map}, where keys - {@link Language} values,
+     * objects - user-friendly names of languages
+     */
+    protected Map<String,String> getLanguagesForSelect(){
+  		Language[] languages = Language.values();
+  		Map<String, String> languagesMap = new HashMap<String, String>();
+  		for(Language language:languages){
+  			//creating user-friendly name of language and adding to map
+  			String renderedLanguage = language.name();
+  			renderedLanguage = renderedLanguage.substring(0, 1) + 
+  					renderedLanguage.substring(1, renderedLanguage.length()).toLowerCase();
+  			languagesMap.put(language.name(), renderedLanguage);
+  		}
+  		return languagesMap;
+    }
+    
+    
+    /**
+     * Returns {@code Map}, where keys - {@link TranslateType} values,
+     * objects - user-friendly names of translate types
+     */
+    protected Map<String,String> getTranslateTypesForSelect(){
+  		TranslateType[] types = TranslateType.values();
+  		Map<String, String> typesMap = new HashMap<String, String>();
+  		for(TranslateType type:types){
+  			String renderedTranslateType = type.name();
+  			renderedTranslateType = renderedTranslateType.substring(0, 1) + 
+  					renderedTranslateType.substring(1, renderedTranslateType.length()).toLowerCase();
+  			typesMap.put(type.name(), renderedTranslateType);
+  		}
+  		return typesMap;
+  	}
+    
+    /**
+     * Returns {@code Map}, where keys - {@link Currency} values,
+     * objects - user-friendly names of currencies
+     */
+    protected Map<String,String> getCurrenciesForSelect(){
+    	Currency[] currencies = Currency.values();
+  		Map<String,String> currenciesMap = new HashMap<>();
+  		for(Currency currency: currencies){
+  			currenciesMap.put(currency.name(),"(" +currency.name()+")");
+  		}
+  		return currenciesMap;
+    }
+    
+    /**
+     * Returns {@code Map}, where keys and
+     * objects - names of countries
+     */
+    protected Map<String,String> getCountriesForSelect(){
+  		Map<String,String> countriesMap = new HashMap<>();
+  		for(String country: ALLOWED_COUNTRIES){
+  			countriesMap.put(country,country);
+  		}
+  		return countriesMap;
+    }
+    
+    /**
+     * Returns {@code Map}, where keys and
+     * objects - names of cities
+     */
+    protected Map<String,String> getCitiesForSelect(){
+  		Map<String,String> citiesMap = new HashMap<>();
+  		for(String city: ALLOWED_CITIES){
+  			citiesMap.put(city,city);
+  		}
+  		return citiesMap;
+    }
+    
 }

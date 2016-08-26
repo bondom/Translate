@@ -157,6 +157,8 @@ public abstract class UserService<T extends User> {
 	 * Returns all {@link RespondedAd}s, related to object type subclass of {@link User} with email={@code email},
 	 * ordered by {@link RespondedAd#getDateTimeOfResponse()} 
 	 * from latest to earliest.
+	 * <p>If {@code numberOfRespondedAdsOnPage} is less then 1, default
+	 * number is used. If {@code page} is less then 1, exception is thrown
 	 * <p>Size of result {@code Set} is not more than {@code numberOfRespondedAdsOnPage}
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated user,

@@ -66,8 +66,8 @@ public class AdDaoAspect {
 		String methodName = thisJoinPoint.getSignature().getName();
 		
 		ads.stream().forEach(ad->{
-			logger.debug("{}.{}: {} ad is retrieved from db: id = {}name={}, status={}, publicationDateTime={}, endDate={}",
-					className,methodName,ad.getId(),ad.getName(),ad.getStatus(),ad.getPublicationDateTime(),ad.getEndDate());
+			logger.debug("{}.{}: {} ad is retrieved from db: id = {}name={}, status={}, publicationDateTime={}",
+					className,methodName,ad.getId(),ad.getName(),ad.getStatus(),ad.getPublicationDateTime());
 		});
 	}
 	
@@ -78,8 +78,8 @@ public class AdDaoAspect {
 		String methodName = thisJoinPoint.getSignature().getName();
 		
 		ads.stream().forEach(ad->{
-			logger.debug("{}.{}: id={} SHOWED ad is retrieved from db: id = {}name={}, publicationDateTime={}, endDate={}",
-					className,methodName,ad.getId(),ad.getName(),ad.getPublicationDateTime(),ad.getEndDate());
+			logger.debug("{}.{}: id={} SHOWED ad is retrieved from db: id = {}name={}, publicationDateTime={}",
+					className,methodName,ad.getId(),ad.getName(),ad.getPublicationDateTime());
 		});
 	}
 }

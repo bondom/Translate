@@ -22,12 +22,23 @@
 				<#list ads as ad>
 					<div>
 						<p>Name: ${ad.getName()}
-						<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
 						<p>Description: ${ad.getDescription()}
 						<p>Init Language: ${ad.getInitLanguage()}
 						<p>Result Language: ${ad.getResultLanguage()}
-						<p>Publication Date: ${ad.getPublicationDateTime()}
+						<p>TranslateType: ${ad.getTranslateType()}
+						<#if ad.translateType.name()=="ORAL">
+						<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
+						<p>From: ${ad.getInitialDateTime()} To: ${ad.getFinishDateTime()}
+						</#if>
+						<#if ad.translateType.name()=="WRITTEN">
+						<p>End Date: ${ad.getEndDate()} 
+						<p>File:
+						<a href="<@spring.url "/translator/download/${ad.id}"/>" target="_blank" >
+								${ad.document.fileName}
+						</a>
+						</#if>
 						<p>Status: ${ad.getStatus()}
+						<p>Publication Date: ${ad.getPublicationDateTime()}
 						<#if ad.status.name()=="SHOWED">
 						<p><a href = "<@spring.url "/client/ads/delete?adId=${ad.getId()}"/>">DELETE</a>
 						<p><a href = "<@spring.url "/client/ads/edit?adId=${ad.getId()}"/>">EDIT</a>

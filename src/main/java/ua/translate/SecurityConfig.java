@@ -92,7 +92,8 @@ public class SecurityConfig {
 					.antMatcher("/translator/**")
 					.authorizeRequests()
 					.antMatchers("/translator/registration*").anonymous()
-					.antMatchers("/translator/index","/translator/login*","/translator/confirmation").permitAll()
+					.antMatchers("/translator/index","/translator/login*",
+							"/translator/confirmation","/translator/download/**").permitAll()
 					.antMatchers("/translator/**").hasRole("TRANSLATOR")
 					.anyRequest().authenticated()
 				.and()

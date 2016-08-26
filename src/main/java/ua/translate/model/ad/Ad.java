@@ -18,6 +18,8 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
@@ -25,6 +27,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -60,6 +63,7 @@ import ua.translate.model.validator.FieldNotMatch;
 })
 @FieldNotMatch(first = "initLanguage",second = "resultLanguage", message = "Languages must be different")
 @Table(name = "AD_TEST")
+@Inheritance(strategy=InheritanceType.JOINED)
 public class Ad  implements Serializable{
 	
 	/**
@@ -87,20 +91,9 @@ public class Ad  implements Serializable{
 	@Size(min = 0, max = 1000)
 	private String description;
 
-	@Column(name = "AD_COUNTRY", nullable = false)
-	private String country;
-	
-	@Column(name = "AD_CITY", nullable = false)
-	private String city;
-	
-
 	
 	 /*!!!!Добавить проверку валидности даты!!!!*/
 	 
-	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
-	@Column(name = "AD_END_DATE",nullable = false)
-	private LocalDate endDate;
-
 	@Column(name = "AD_INIT_LANGUAGE",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Language initLanguage;
@@ -109,16 +102,8 @@ public class Ad  implements Serializable{
 	@Enumerated(EnumType.STRING)
 	private Language resultLanguage;
 	
-	@Column(name = "AD_TRANSLATE_TYPE",nullable = false)
-	@Enumerated(EnumType.STRING)
-	private TranslateType translateType;
-	
-	@Lob
-	@Column(name = "AD_FILE")
-	private byte[] file;
-	
-	@Column(name = "AD_COST",nullable = false,precision = 2)
-	private double cost;
+	@Column(name = "AD_COST",nullable = false)
+	private Integer cost;
 	
 	@Column(name = "AD_CURRENCY",nullable = false)
 	@Enumerated(EnumType.STRING)
@@ -135,6 +120,38 @@ public class Ad  implements Serializable{
 	@Cascade(CascadeType.ALL)
 	@Fetch(FetchMode.SELECT)
 	private Set<RespondedAd> respondedAds = new LinkedHashSet<>();
+	
+	@Column(name = "AD_TRANSLATE_TYPE",nullable = false)
+	@Enumerated(EnumType.STRING)
+	private TranslateType translateType;
+	
+	/**
+	 * Properties for Ad with translateType={@link TranslateType#ORAL}
+	 */
+	@Column(name = "ORAL_AD_COUNTRY")
+	private String country;
+	
+	@Column(name = "ORAL_AD_CITY")
+	private String city;
+	
+	@DateTimeFormat(iso = ISO.DATE_TIME,pattern = "dd.MM.yyyy HH:mm:ss")
+	@Column(name = "ORAL_AD_INIT_DATE")
+	private LocalDateTime initialDateTime;
+	
+	@DateTimeFormat(iso = ISO.DATE_TIME,pattern = "dd.MM.yyyy HH:mm:ss")
+	@Column(name = "ORAL_AD_FINISH_DATE")
+	private LocalDateTime finishDateTime;
+	
+	/**
+	 * Properties for Ad with translateType={@link TranslateType#WRITTEN}
+	 */
+	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
+	@Column(name = "WRITTEN_AD_END_DATE")
+	private LocalDate endDate;
+	
+	@OneToOne(mappedBy = "ad",fetch = FetchType.EAGER,orphanRemoval = true)
+	@Cascade(CascadeType.ALL)
+	private Document document;
 	
 	public Ad(){}
 
@@ -169,14 +186,6 @@ public class Ad  implements Serializable{
 		this.description = description;
 	}
 	
-	public LocalDate getEndDate() {
-		return endDate;
-	}
-	
-	public void setEndDate(LocalDate endDate) {
-		this.endDate = endDate;
-	}
-	
 	public Language getInitLanguage() {
 		return initLanguage;
 	}
@@ -193,30 +202,14 @@ public class Ad  implements Serializable{
 		this.resultLanguage = resultLanguage;
 	}
 	
-	public TranslateType getTranslateType() {
-		return translateType;
-	}
-	
-	public void setTranslateType(TranslateType translateType) {
-		this.translateType = translateType;
-	}
-	
-	public byte[] getFile() {
-		return file;
-	}
-	
-	public void setFile(byte[] file) {
-		this.file = file;
-	}
-	
-	public double getCost() {
+	public Integer getCost() {
 		return cost;
 	}
-	
-	public void setCost(double cost) {
+
+	public void setCost(Integer cost) {
 		this.cost = cost;
 	}
-	
+
 	public Currency getCurrency() {
 		return currency;
 	}
@@ -232,22 +225,6 @@ public class Ad  implements Serializable{
 	
 	public void setClient(Client client) {
 		this.client = client;
-	}
-	
-	public String getCountry() {
-		return country;
-	}
-	
-	public void setCountry(String country) {
-		this.country = country;
-	}
-	
-	public String getCity() {
-		return city;
-	}
-	
-	public void setCity(String city) {
-		this.city = city;
 	}
 	
 	public AdStatus getStatus() {
@@ -279,6 +256,62 @@ public class Ad  implements Serializable{
 	public void removeRespondedAd(RespondedAd respondedAd){
 		respondedAds.remove(respondedAd);
 	}
+	
+	public TranslateType getTranslateType() {
+		return translateType;
+	}
+
+	public void setTranslateType(TranslateType translateType) {
+		this.translateType = translateType;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public LocalDateTime getInitialDateTime() {
+		return initialDateTime;
+	}
+
+	public void setInitialDateTime(LocalDateTime initialDateTime) {
+		this.initialDateTime = initialDateTime;
+	}
+
+	public LocalDateTime getFinishDateTime() {
+		return finishDateTime;
+	}
+
+	public void setFinishDateTime(LocalDateTime finishDateTime) {
+		this.finishDateTime = finishDateTime;
+	}
+
+	public LocalDate getEndDate() {
+		return endDate;
+	}
+
+	public void setEndDate(LocalDate endDate) {
+		this.endDate = endDate;
+	}
+	
+	public Document getDocument() {
+		return document;
+	}
+
+	public void setDocument(Document document) {
+		this.document = document;
+	}
 
 	@Override
 	public int hashCode() {
@@ -286,8 +319,9 @@ public class Ad  implements Serializable{
 		int result = 1;
 		result = prime * result + ((client == null) ? 0 : client.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
-		result = prime * result + ((endDate == null) ? 0 : endDate.hashCode());
+		result = prime * result + ((initLanguage == null) ? 0 : initLanguage.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((resultLanguage == null) ? 0 : resultLanguage.hashCode());
 		return result;
 	}
 
@@ -310,21 +344,16 @@ public class Ad  implements Serializable{
 				return false;
 		} else if (!description.equals(other.description))
 			return false;
-		if (endDate == null) {
-			if (other.endDate != null)
-				return false;
-		} else if (!endDate.equals(other.endDate))
+		if (initLanguage != other.initLanguage)
 			return false;
 		if (name == null) {
 			if (other.name != null)
 				return false;
 		} else if (!name.equals(other.name))
 			return false;
+		if (resultLanguage != other.resultLanguage)
+			return false;
 		return true;
 	}
-	
-	
-
-
 
 }

@@ -54,6 +54,11 @@ public class TranslatorServiceImpl extends TranslatorService {
 	@Autowired
 	private RespondedAdDao respondedAdDao;
 	
+	/**
+	 * It is default number of responded ads on one page
+	 */
+	private static final int DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE=3;
+	
 	@Override
 	public Translator getTranslatorByEmail(String email) {
 		Translator translator = translatorDao.getTranslatorByEmail(email);
@@ -201,6 +206,11 @@ public class TranslatorServiceImpl extends TranslatorService {
 										    int numberOfRespondedAdsOnPage) throws WrongPageNumber{
 		if(page<1){
 			throw new WrongPageNumber();
+		}
+		
+		if(numberOfRespondedAdsOnPage<1){
+			//default value is used
+			numberOfRespondedAdsOnPage = DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE;
 		}
 		Translator translator = getTranslatorByEmail(email);
 		Set<RespondedAd> respondedAds = respondedAdDao

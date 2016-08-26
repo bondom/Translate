@@ -14,14 +14,22 @@ import ua.translate.controller.AdController;
 import ua.translate.dao.AdDao;
 import ua.translate.dao.ClientDao;
 import ua.translate.model.Client;
+import ua.translate.model.Language;
 import ua.translate.model.Translator;
+import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.Currency;
+import ua.translate.model.ad.Document;
 import ua.translate.model.ad.RespondedAd;
+import ua.translate.model.ad.TranslateType;
+import ua.translate.model.searchbean.SearchAdBean;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.RespondedAdStatus;
+import ua.translate.model.viewbean.SearchFilterForAds;
 import ua.translate.service.AdService;
 import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.NonExistedAdException;
+import ua.translate.service.exception.DownloadFileAccessDenied;
 import ua.translate.service.exception.IllegalActionForAcceptedAd;
 import ua.translate.service.exception.WrongPageNumber;
 
@@ -36,6 +44,11 @@ public class AdServiceImpl implements AdService {
 	
 	@Autowired
 	private AdDao adDao;
+	
+	/**
+	 * It is default number of ads on one page
+	 */
+	private static final int DEFAULT_NUMBER_ADS_ON_PAGE=3;
 	
 	@Override
 	public Ad get(long id) throws NonExistedAdException {
@@ -101,6 +114,10 @@ public class AdServiceImpl implements AdService {
 			throw new IllegalActionForAd();
 		}
 		
+		//if client didn't choose new file
+		if(updatedAd.getDocument() == null){
+			updatedAd.setDocument(adFromDb.getDocument());
+		}
 		updatedAd.setClient(adFromDb.getClient());
 		updatedAd.setPublicationDateTime(adFromDb.getPublicationDateTime());
 		updatedAd.setStatus(AdStatus.SHOWED);
@@ -116,6 +133,12 @@ public class AdServiceImpl implements AdService {
 		if(page<1){
 			throw new WrongPageNumber();
 		}
+		if(numberAdsOnPage<1){
+			//default value is used
+			logger.debug("numberAdsOnPage={} less then 1, default value is used={}",numberAdsOnPage,
+					DEFAULT_NUMBER_ADS_ON_PAGE);
+			numberAdsOnPage = DEFAULT_NUMBER_ADS_ON_PAGE;
+		}
 		Set<Ad> adsForShowing = adDao.getAdsForShowing(page,numberAdsOnPage);
 		return adsForShowing;
 	}
@@ -125,9 +148,80 @@ public class AdServiceImpl implements AdService {
 		if(page<1){
 			throw new WrongPageNumber();
 		}
+		if(numberAdsOnPage<1){
+			//default value is used
+			logger.debug("numberAdsOnPage={} less then 1, default value is used={}",numberAdsOnPage,
+					DEFAULT_NUMBER_ADS_ON_PAGE);
+			numberAdsOnPage = DEFAULT_NUMBER_ADS_ON_PAGE;
+		}
 		Set<Ad> adsForChecking = adDao.getAdsForChecking(page,numberAdsOnPage);
 		return adsForChecking;
 	}
+	
+	@Override
+	public Set<Ad> getAdsForShowingByFilter(int page, int numberAdsOnPage,
+			SearchFilterForAds searchFilter,String valueWithoutFilter)
+			throws WrongPageNumber {
+		if(page<1){
+			throw new WrongPageNumber();
+		}
+		if(numberAdsOnPage<1){
+			//default value is used
+			logger.debug("numberAdsOnPage={} less then 1, default value is used={}",numberAdsOnPage,
+					DEFAULT_NUMBER_ADS_ON_PAGE);
+			numberAdsOnPage = DEFAULT_NUMBER_ADS_ON_PAGE;
+		}
+		String countryValue = searchFilter.getCountry();
+		String cityValue = searchFilter.getCity();
+		String currencyValue = searchFilter.getCurrency();
+		String resultLanguageValue = searchFilter.getResultLanguage();
+		String initLanguageValue = searchFilter.getInitLanguage();
+		String translateTypeValue = searchFilter.getTranslateType();
+		int minCostValue= searchFilter.getMinCost();
+		int maxCostValue= searchFilter.getMaxCost();
+		
+		//parameters, which will be transferred to dao layer for making request
+		Currency currency = null;
+		Language resultLanguage = null;
+		Language initLanguage = null;
+		TranslateType translateType = null;
+		String country = null;
+		String city = null;
+		int minCost = minCostValue;
+		int maxCost = maxCostValue;
+		
+		if(!valueWithoutFilter.equals(currencyValue)){
+			currency = Currency.valueOf(currencyValue);
+		}
+		
+		if(!valueWithoutFilter.equals(resultLanguageValue)){
+			resultLanguage = Language.valueOf(resultLanguageValue);
+		}
+		
+		if(!valueWithoutFilter.equals(initLanguageValue)){
+			initLanguage = Language.valueOf(initLanguageValue);
+		}
+		
+		if(!valueWithoutFilter.equals(translateTypeValue)){
+			translateType = TranslateType.valueOf(translateTypeValue);
+		}
+		
+		if(!valueWithoutFilter.equals(countryValue)){
+			country = countryValue;
+		}
+		
+		if(!valueWithoutFilter.equals(cityValue)){
+			city = cityValue;
+		}
+		
+		SearchAdBean searchAdBean = 
+				new SearchAdBean(currency, resultLanguage, initLanguage, 
+								 translateType, country, city, minCost, maxCost);
+		Set<Ad> ads = adDao.getFilteredAdsForShowing(page, numberAdsOnPage, 
+														searchAdBean);
+		return ads;
+	}
+	
 	
 	@Override
 	public Ad getForShowing(long id) throws NonExistedAdException, IllegalActionForAcceptedAd {
@@ -169,11 +263,79 @@ public class AdServiceImpl implements AdService {
 
 	@Override
 	public long getNumberOfPagesForAdsByStatus(AdStatus adStatus,int numberOfAds) {
+		if(numberOfAds<1){
+			//default value is used
+			logger.debug("numberAdsOnPage={} less then 1, default value is used={}",
+					numberOfAds, DEFAULT_NUMBER_ADS_ON_PAGE);
+			numberOfAds = DEFAULT_NUMBER_ADS_ON_PAGE;
+		}
 		long numberOfShowedAds = adDao.getNumberOfAdsByStatus(adStatus);
 		long numberOfPages = (long) Math.ceil(((double)numberOfShowedAds)/numberOfAds);
 		return numberOfPages;
 	}
 	
+	@Override
+	public long getNumberOfPagesForAdsByStatusAndFilter(AdStatus adStatus, 
+														int numberOfAds, 
+														SearchFilterForAds searchFilter,
+														String valueWithoutFilter) {
+		if(numberOfAds<1){
+			//default value is used
+			logger.debug("numberAdsOnPage={} less then 1, default value is used={}",
+					numberOfAds, DEFAULT_NUMBER_ADS_ON_PAGE);
+			numberOfAds = DEFAULT_NUMBER_ADS_ON_PAGE;
+		}
+		String countryValue = searchFilter.getCountry();
+		String cityValue = searchFilter.getCity();
+		String currencyValue = searchFilter.getCurrency();
+		String resultLanguageValue = searchFilter.getResultLanguage();
+		String initLanguageValue = searchFilter.getInitLanguage();
+		String translateTypeValue = searchFilter.getTranslateType();
+		int minCostValue= searchFilter.getMinCost();
+		int maxCostValue= searchFilter.getMaxCost();
+		
+		//parameters, which will be transferred to dao layer for making request
+		Currency currency = null;
+		Language resultLanguage = null;
+		Language initLanguage = null;
+		TranslateType translateType = null;
+		String country = null;
+		String city = null;
+		int minCost = minCostValue;
+		int maxCost = maxCostValue;
+		
+		if(!valueWithoutFilter.equals(currencyValue)){
+			currency = Currency.valueOf(currencyValue);
+		}
+		
+		if(!valueWithoutFilter.equals(resultLanguageValue)){
+			resultLanguage = Language.valueOf(resultLanguageValue);
+		}
+		
+		if(!valueWithoutFilter.equals(initLanguageValue)){
+			initLanguage = Language.valueOf(initLanguageValue);
+		}
+		
+		if(!valueWithoutFilter.equals(translateTypeValue)){
+			translateType = TranslateType.valueOf(translateTypeValue);
+		}
+		
+		if(!valueWithoutFilter.equals(countryValue)){
+			country = countryValue;
+		}
+		
+		if(!valueWithoutFilter.equals(cityValue)){
+			city = cityValue;
+		}
+		
+		SearchAdBean searchAdBean = 
+				new SearchAdBean(currency, resultLanguage, initLanguage, 
+								 translateType, country, city, minCost, maxCost);
+		long numberOfShowedAds = adDao.getNumberOfAdsByStatusAndFilter(adStatus, searchAdBean);
+		long numberOfPages = (long) Math.ceil(((double)numberOfShowedAds)/numberOfAds);
+		return numberOfPages;
+	}
+
 	/**
 	 * Checks if {@code ad} contains at least one {@link RespondedAd} {@code respondedAd}
 	 * with SENDED status
@@ -186,6 +348,24 @@ public class AdServiceImpl implements AdService {
 				rad -> rad.getStatus().equals(RespondedAdStatus.SENDED));
 		return sendedRespondedAdsExist;
 	}
+
+
+	@Override
+	public Document getDocumentForDownloading(long id, String userEmail) throws NonExistedAdException, DownloadFileAccessDenied {
+		Ad ad = adDao.get(id);
+		if(ad == null){
+			throw new NonExistedAdException();
+		}
+		User user = clientDao.getUserByEmail(userEmail);
+		if(user instanceof Translator){
+			return ad.getDocument();
+		}
+		if(user.getEmail().equals(ad.getClient().getEmail())){
+			return ad.getDocument();
+		}
+		throw new DownloadFileAccessDenied();
+	}
+
 
 
 	

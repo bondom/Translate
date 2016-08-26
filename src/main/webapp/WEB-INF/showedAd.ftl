@@ -19,13 +19,27 @@
 		<div class="panel-body" style = "margin: 0px">
 					<div>
 						<p>Name: ${ad.getName()}
-						<p>Publication Date: ${creationDate}
-						<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
+						<p>Publication Date: ${ad.publicationDateTime.toLocalDate()}
 						<p>Description: ${ad.getDescription()}
 						<p>Init Language: ${ad.getInitLanguage()}
 						<p>Result Language${ad.getResultLanguage()}
-						<p>Translate type: ${ad.getTranslateType()}
-						<p>Expiration date: ${ad.getEndDate()}
+						<p>TranslateType: ${ad.getTranslateType()}
+						<#if ad.translateType.name()=="ORAL">
+							<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
+							<p>From: ${ad.getInitialDateTime()} To: ${ad.getFinishDateTime()}
+						</#if>
+						<#if ad.translateType.name()=="WRITTEN">
+							<p>End Date: ${ad.getEndDate()} 
+							<p>File:
+							 <@security.authorize access="hasRole('ROLE_TRANSLATOR')">
+								<a href="<@spring.url "/translator/download/${ad.id}"/>" target="_blank" >
+									${ad.document.fileName}
+								</a>
+							 </@security.authorize>
+							 <@security.authorize access="hasRole('ROLE_CLIENT') or ! isAuthenticated()">
+									${ad.document.fileName}
+							 </@security.authorize>
+						</#if>
 						<p>Cost: ${ad.getCost()} ${ad.getCurrency()}
 						<@security.authorize access="hasRole('ROLE_TRANSLATOR')">
 							<form action = "<@spring.url "/translator/response"/>" method="post" role="form">

@@ -65,10 +65,6 @@
 								<div class="alert alert-warning">${error}</div>
 							</#list>
 								
-							<#--<@spring.bind "translator.languages"/>
-							<@spring.formMultiSelect "translator.languages"/>
-							<@spring.showErrors/>-->
-							
 							<#macro enumSelect selectName enumValues>
 								<select name = "${selectName}" multiple = "multiple">
 									<#list enumValues as enum>

@@ -4,14 +4,19 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.Month;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.mail.internet.ContentType;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -36,10 +41,14 @@ import ua.translate.model.Comment;
 import ua.translate.model.Language;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Currency;
+import ua.translate.model.ad.Document;
+import ua.translate.model.ad.OralAd;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.ad.TranslateType;
+import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.viewbean.ChangeEmailBean;
 import ua.translate.model.viewbean.ChangePasswordBean;
+import ua.translate.model.viewbean.ChooseTranslateTypeBean;
 import ua.translate.service.AdService;
 import ua.translate.service.ClientService;
 import ua.translate.service.CommentService;
@@ -75,10 +84,15 @@ public class ClientController extends UserController{
 	@Autowired
 	ControllerHelper controllerHelper;
 	
+	Logger logger = LoggerFactory.getLogger(ClientController.class);
+	
 	@Value("${webRootPath}")
 	private String webRootPath;
 	
-	private static final int RESPONSED_ADS_ON_PAGE=3;
+	private static final int RESPONDED_ADS_ON_PAGE=3;
+	
+	private static final String[] ALLOWED_CONTENT_TYPES_FOR_TEXT=
+		{"application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document"};
 	
 	
 	@InitBinder
@@ -430,39 +444,94 @@ public class ClientController extends UserController{
 	 * @see #addMapsToAdView(ModelAndView)
 	 */
 	@RequestMapping(value = "/adbuilder",method = RequestMethod.GET)
-	public ModelAndView adbuilder(Principal user,HttpServletRequest request){
-		ModelAndView model = new ModelAndView("/client/adbuilder");
-		Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
-	    if (inputFlashMap == null || !inputFlashMap.containsKey("ad")) {
-	    	Ad ad = new Ad();
-			model.addObject("ad",ad);
+	public ModelAndView adbuilder(@RequestParam(name="page",required=false,defaultValue="1")
+																				int page,
+								  @ModelAttribute("cTTBean") ChooseTranslateTypeBean 
+																chosenTranslateTypeBean,
+								  BindingResult result,
+								  Principal user,HttpServletRequest request){
+		if(result.hasErrors()){
+			return new ModelAndView("redirect:/client/adbuilder");
+		}
+		if(page==1){
+			ModelAndView model = new ModelAndView("/client/adbuilderstep1");
+			model.addObject("translateTypes", getTranslateTypesForSelect());
+			ChooseTranslateTypeBean chooseTranslateType = new ChooseTranslateTypeBean();
+			model.addObject("cTTBean",chooseTranslateType);
+			return model;
+		}
+		
+		final Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+	    if (inputFlashMap != null && inputFlashMap.containsKey("translateType") &&
+	    		inputFlashMap.containsKey("ad")) {
+	    	//if saving of ad failed
+	    	//get translate type and return appropriate
+	    	//page for editing
+	    	TranslateType translateType = 
+	    				(TranslateType)inputFlashMap.get("translateType");
+	    	if(translateType.equals(TranslateType.ORAL)){
+	    		ModelAndView model = new ModelAndView("/client/adbuilderoral");
+	    		model=addMapsToAdView(model);
+	    		model.addObject("createAd", true);
+	    		return model;
+	    	}else if(translateType.equals(TranslateType.WRITTEN)){
+	    		ModelAndView model = new ModelAndView("/client/adbuilderwritten");
+	    		model=addMapsToAdView(model);
+	    		model.addObject("createAd", true);
+	    		return model;
+	    	}else{
+	    		//unacceptable situation
+	    		logger.error("'translateType' variable exists in flash attributes,"
+	    				+ " but doesn't equal to ORAL or WRITTEN");
+	    	}
 	    }
 	    
-	    if (inputFlashMap == null || !inputFlashMap.containsKey("createAd")) {
+		
+		if((page==2) && (chosenTranslateTypeBean!=null)){
+			//if it is first call of method(without redirecting)
+			ModelAndView model = new ModelAndView();
 			model.addObject("createAd", true);
-	    }
-	    model = addMapsToAdView(model);
-		return model;
+		    //adding maps for rendering variants languages or currencies
+			model = addMapsToAdView(model);
+			if(TranslateType.ORAL.equals(chosenTranslateTypeBean.getTranslateType())){
+		    	Ad ad = new Ad();
+		    	ad.setTranslateType(TranslateType.ORAL);
+				model.addObject("ad",ad);
+			    model.setViewName("/client/adbuilderoral");
+				return model;
+			}else if(TranslateType.WRITTEN.equals(chosenTranslateTypeBean.getTranslateType())){
+			    Ad ad = new Ad();
+			    ad.setTranslateType(TranslateType.WRITTEN);
+				model.addObject("ad",ad);
+			    model.setViewName("/client/adbuilderwritten");
+				return model;				
+			}else{
+				//redirecting to adbuilder without page requestparam
+				return new ModelAndView("redirect:/client/adbuilder");
+			}
+		}
+		
+		return new ModelAndView("redirect:/client/adbuilder");
 	}
 	
 	/**
-	 * If some errors exist, returns {@code ModelAndView} page for creating advertisement again,
-	 * otherwise saves {@code Ad} in db, returns {@code ModelAndView} page
+	 * If some errors exist, redirects to {@link #adbuilder(int, ChooseTranslateTypeBean, BindingResult, Principal, HttpServletRequest)}
+	 * otherwise saves {@code Ad} of ORAL type in db, returns {@code ModelAndView} page
 	 * @param ad - {@code Ad} object with inputted parameters
 	 * @param result - {@code BindingResult} for checking errors
 	 * @param user - {@code Principal} object for retrieving client from db
-	 * @see #addMapsToAdView(ModelAndView)
 	 */
-	@RequestMapping(value = "/saveAd", method = RequestMethod.POST)
-	public ModelAndView saveAd(@Valid @ModelAttribute("ad") Ad ad,
+	@RequestMapping(value = "/saveOralAd", method = RequestMethod.POST)
+	public ModelAndView saveOralAd(@Valid @ModelAttribute("ad") Ad ad,
 								BindingResult result,
 								Principal user,
 								RedirectAttributes attr){
 		if(result.hasErrors()){
 			attr.addFlashAttribute("org.springframework.validation.BindingResult.ad", 
 					result);
+			attr.addFlashAttribute("translateType",ad.getTranslateType());
 			attr.addFlashAttribute("ad",ad);
-			return new ModelAndView("redirect:/client/adbuilder");
+			return new ModelAndView("redirect:/client/adbuilder?page=2&translateType="+ad.getTranslateType());
 		}
 		Long adId = adService.saveAd(ad, user.getName());
 
@@ -470,6 +539,60 @@ public class ClientController extends UserController{
 		attr.addFlashAttribute("adId",adId);
 		return new ModelAndView("redirect:/client/success");
 	}
+	
+	/**
+	 * If some errors exist, redirects to {@link #adbuilder(int, ChooseTranslateTypeBean, BindingResult, Principal, HttpServletRequest)}
+	 * otherwise saves {@code Ad} of WRITTEN type in db, returns {@code ModelAndView} page
+	 * @param ad - {@code Ad} object with inputted parameters
+	 * @param result - {@code BindingResult} for checking errors
+	 * @param user - {@code Principal} object for retrieving client from db
+	 */
+	@RequestMapping(value = "/saveWrittenAd", method = RequestMethod.POST)
+	public ModelAndView saveWrittenAd(@Valid @ModelAttribute("ad") Ad ad,
+								BindingResult result,
+								@RequestParam(name="multipartFile",required=false)
+										MultipartFile file,
+								Principal user,
+								RedirectAttributes attr){
+		if(result.hasErrors()){
+			attr.addFlashAttribute("org.springframework.validation.BindingResult.ad", 
+					result);
+			attr.addFlashAttribute("translateType",ad.getTranslateType());
+			attr.addFlashAttribute("ad",ad);
+			attr.addFlashAttribute("multipartFile",file);
+			return new ModelAndView("redirect:/client/adbuilder?page=2&translateType="+ad.getTranslateType());
+		}
+		if(!file.isEmpty()){
+			if(!isfileContentTypeAllowed(file)){
+				attr.addFlashAttribute("error", "Please choose file with .pdf or .doc(.docx) extension");
+				attr.addFlashAttribute("translateType",ad.getTranslateType());
+				attr.addFlashAttribute("ad",ad);
+				return new ModelAndView("redirect:/client/adbuilder?page=2&translateType="+TranslateType.WRITTEN);
+			}
+			try {
+				byte[] fileWithText = file.getBytes();
+				ad.setDocument(
+						new Document(ad,fileWithText,file.getOriginalFilename(),file.getContentType()));
+			} catch (IOException e) {
+				attr.addFlashAttribute("error", "Some problem with your file, please repeat action");
+				attr.addFlashAttribute("translateType",ad.getTranslateType());
+				attr.addFlashAttribute("ad",ad);
+				return new ModelAndView("redirect:/client/adbuilder?page=2&translateType="+TranslateType.WRITTEN);
+			}
+		}else{
+			attr.addFlashAttribute("error", "Please choose file");
+			attr.addFlashAttribute("ad",ad);
+			attr.addFlashAttribute("translateType",ad.getTranslateType());
+			return new ModelAndView("redirect:/client/adbuilder?page=2&translateType="+TranslateType.WRITTEN);
+		}
+		Long adId = adService.saveAd(ad, user.getName());
+
+		attr.addFlashAttribute("adUrl",webRootPath+"/ads/"+adId);
+		attr.addFlashAttribute("adId",adId);
+		return new ModelAndView("redirect:/client/success");
+	}
+	
+	
 	
 	/**
 	 * Deletes {@code Ad}, if such exists or it status is not accepted, 
@@ -511,8 +634,7 @@ public class ClientController extends UserController{
 	}
 	
 	/**
-	 * Redirects to page for editing existed advertisement,
-	 * and adds flashAttribute {@code createAd} with {@code false} value
+	 * Returns page for editing existed advertisement
 	 * 
 	 * <p>If Ad doesn't exist or his status doesn't allow to edit this Ad,
 	 * redirects to {@link #ads(Principal)} with added flash attribute {@code error}
@@ -522,15 +644,49 @@ public class ClientController extends UserController{
 	 */
 	@RequestMapping(value = "/ads/edit", method = RequestMethod.GET)
 	public ModelAndView editAd(@RequestParam("adId") long adId,Principal user,
-								RedirectAttributes attr){
+								RedirectAttributes attr,HttpServletRequest request){
 		
 		ModelAndView errorView= new ModelAndView("redirect:/client/ads");
 		
+		final Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
+	    if (inputFlashMap != null && inputFlashMap.containsKey("translateType") &&
+	    		inputFlashMap.containsKey("ad")) {
+	    	//if saving of edits failed or was successful
+	    	//get translate type and return appropriate
+	    	//page for editing
+	    	TranslateType translateType = 
+	    				(TranslateType)inputFlashMap.get("translateType");
+	    	if(translateType.equals(TranslateType.ORAL)){
+	    		ModelAndView model = new ModelAndView("/client/adbuilderoral");
+	    		model=addMapsToAdView(model);
+	    		model.addObject("createAd", false);
+	    		return model;
+	    	}else if(translateType.equals(TranslateType.WRITTEN)){
+	    		ModelAndView model = new ModelAndView("/client/adbuilderwritten");
+	    		model=addMapsToAdView(model);
+	    		model.addObject("createAd", false);
+	    		return model;
+	    	}else{
+	    		//unacceptable situation
+	    		logger.error("'translateType' variable exists in flash attributes,"
+	    				+ " but doesn't equal to ORAL or WRITTEN");
+	    	}
+	    }
 		try {
+			ModelAndView model = null;
 			Ad ad = adService.getForUpdating(user.getName(),adId);
-			attr.addFlashAttribute("ad", ad);
-			attr.addFlashAttribute("createAd", false);
-			ModelAndView model = new ModelAndView("redirect:/client/adbuilder");
+			if(ad.getTranslateType().equals(TranslateType.WRITTEN)){
+				model = new ModelAndView("/client/adbuilderwritten");
+			}else if(ad.getTranslateType().equals(TranslateType.ORAL)){
+				model = new ModelAndView("/client/adbuilderoral");
+			}else{
+				//unacceptable situation
+				logger.error("field 'translateType' of retrieved ad "
+	    				+ " doesn't equal to ORAL or WRITTEN");
+			}
+			model.addObject("ad", ad);
+			model.addObject("createAd", false);
+			model=addMapsToAdView(model);
 			return model;
 		}  catch (NonExistedAdException e) {
 			attr.addFlashAttribute("error","You can't edit non existed advertisement");
@@ -545,11 +701,11 @@ public class ClientController extends UserController{
 	
 	/**
 	 * Checks {@code BindingResult} for errors, if such exists, 
-	 * redirects to page for editing advertisement(for entering valid data)
-	 * with added flash attributes {@code ad} and {@code result}
+	 * redirects to {@link #editAd(long, Principal, RedirectAttributes, HttpServletRequest)}(for entering valid data)
+	 * with added flash attributes {@code ad}, {@code result} and {@code translateType}
 	 * 
 	 * <p>If data is valid updates old ad and returns page for editing with message 
-	 * about successful saving
+	 * about successful updating
 	 * 
 	 * If Ad doesn't exist or his status doesn't allow to edit this Ad,
 	 * redirects to {@link #ads(Principal)} with added flash attribute {@code error}
@@ -558,8 +714,8 @@ public class ClientController extends UserController{
 	 * @param result
 	 * @param user
 	 */
-	@RequestMapping(value = "/saveAdEdits",method = RequestMethod.POST)
-	public ModelAndView saveAdEdits(
+	@RequestMapping(value = "/saveOralAdEdits",method = RequestMethod.POST)
+	public ModelAndView saveOralAdEdits(
 							@Valid @ModelAttribute("ad") Ad editedAd,
 							BindingResult result,
 							Principal user,
@@ -568,15 +724,80 @@ public class ClientController extends UserController{
 			attr.addFlashAttribute("org.springframework.validation.BindingResult.ad", 
 					result);
 			attr.addFlashAttribute("ad",editedAd);
-			return new ModelAndView("redirect:/client/adbuilder");
+			attr.addFlashAttribute("translateType",editedAd.getTranslateType());
+			return new ModelAndView("redirect:/client/ads/edit?adId="+editedAd.getId());
 		}
 		ModelAndView errorView= new ModelAndView("redirect:/client/ads");
 		
 		try {
 			Ad updatedAd = adService.updateAd(user.getName(),editedAd.getId(),editedAd);
-			attr.addFlashAttribute("ad", updatedAd);
 			attr.addFlashAttribute("Editmsg", "Advertisement is edited successfully");
-			return new ModelAndView("redirect:/client/adbuilder");
+			attr.addFlashAttribute("ad",updatedAd);
+			attr.addFlashAttribute("translateType",editedAd.getTranslateType());
+			return new ModelAndView("redirect:/client/ads/edit?adId="+updatedAd.getId());
+		} catch (NonExistedAdException e) {
+			attr.addFlashAttribute("error","You can't edit non existed advertisement");
+		} catch (IllegalActionForAcceptedAd e) {
+			attr.addFlashAttribute("error","You can't edit advertisement, which has Accepted status");
+		} catch (IllegalActionForAd e) {
+			attr.addFlashAttribute("error","For editing advertisement, you must reject responses to it");
+		}
+			
+		return errorView;
+		
+	}
+	/**
+	 * This method is similar to {@link #saveOralAdEdits(Ad, BindingResult, Principal, RedirectAttributes)},
+	 * <br>difference is that this method checks if {@code file} is empty or it is invalid file,
+	 * in this case redirects to {@link #editAd(long, Principal, RedirectAttributes, HttpServletRequest)}
+	 * @param editedAd
+	 * @param result
+	 * @param user
+	 * @param attr
+	 */
+	@RequestMapping(value = "/saveWrittenAdEdits",method = RequestMethod.POST)
+	public ModelAndView saveWrittenAdEdits(
+							@Valid @ModelAttribute("ad") Ad editedAd,
+							BindingResult result,
+							@RequestParam(name="multipartFile",required=false)
+							MultipartFile file,
+							Principal user,
+							RedirectAttributes attr){
+		if(result.hasErrors()){
+			attr.addFlashAttribute("org.springframework.validation.BindingResult.ad", 
+					result);
+			attr.addFlashAttribute("ad",editedAd);
+			attr.addFlashAttribute("translateType",editedAd.getTranslateType());
+			return new ModelAndView("redirect:/client/ads/edit?adId="+editedAd.getId());
+		}
+		ModelAndView errorView= new ModelAndView("redirect:/client/ads");
+		
+		if(!file.isEmpty()){
+			if(!isfileContentTypeAllowed(file)){
+				attr.addFlashAttribute("error", "Please choose file with .pdf or .doc(.docx) extension");
+				attr.addFlashAttribute("translateType",editedAd.getTranslateType());
+				attr.addFlashAttribute("ad",editedAd);
+				return new ModelAndView("redirect:/client/ads/edit?adId="+editedAd.getId());
+			}
+			try {
+				byte[] fileWithText = file.getBytes();
+				editedAd.setDocument(
+						new Document(editedAd,fileWithText,file.getOriginalFilename(),file.getContentType()));
+			} catch (IOException e) {
+				attr.addFlashAttribute("ad",editedAd);
+				attr.addFlashAttribute("translateType",editedAd.getTranslateType());
+				attr.addFlashAttribute("error", "Some problem with your file, please repeat action");
+				return new ModelAndView("redirect:/client/ads/edit?adId="+editedAd.getId());
+			}
+		}
+		
+		//If all data is valid, attempt update Ad
+		try {
+			Ad updatedAd = adService.updateAd(user.getName(),editedAd.getId(),editedAd);
+			attr.addFlashAttribute("Editmsg", "Advertisement is edited successfully");
+			attr.addFlashAttribute("ad",updatedAd);
+			attr.addFlashAttribute("translateType",editedAd.getTranslateType());
+			return new ModelAndView("redirect:/client/ads/edit?adId="+updatedAd.getId());
 		} catch (NonExistedAdException e) {
 			attr.addFlashAttribute("error","You can't edit non existed advertisement");
 		} catch (IllegalActionForAcceptedAd e) {
@@ -602,16 +823,16 @@ public class ClientController extends UserController{
 		Set<RespondedAd> respondedAds = null;
 		try {
 			respondedAds = clientService
-					.getRespondedAds(user.getName(),page,RESPONSED_ADS_ON_PAGE);
+					.getRespondedAds(user.getName(),page,RESPONDED_ADS_ON_PAGE);
 		} catch (WrongPageNumber e) {
 			try {
 				respondedAds = clientService
-						.getRespondedAds(user.getName(),1,RESPONSED_ADS_ON_PAGE);
+						.getRespondedAds(user.getName(),1,RESPONDED_ADS_ON_PAGE);
 			} catch (WrongPageNumber unused) {}
 		}
 		
 		long nunmberOfPages = clientService
-				.getNumberOfPagesForRespondedAds(user.getName(), RESPONSED_ADS_ON_PAGE);
+				.getNumberOfPagesForRespondedAds(user.getName(), RESPONDED_ADS_ON_PAGE);
 		ModelAndView model = new ModelAndView("/client/responses");
 		model.addObject("respondedAds", respondedAds);
 		model.addObject("numberOfPages",nunmberOfPages);
@@ -692,8 +913,9 @@ public class ClientController extends UserController{
 	
 	
 	/**
-	 * Adds maps of {@link Language}, {@link TranslateType}, {@link Currency}
-	 * to model for rendering available variants to the client
+	 * Adds maps of {@link Language}, {@link Currency}
+	 * to model for rendering available variants to the client while
+	 * creating advertisement
 	 * @param model - initial {@code ModelAndView} object
 	 * @return {@code ModelAndView} object with added maps
 	 * @see #getCurrenciesForSelect()
@@ -702,56 +924,55 @@ public class ClientController extends UserController{
 	 */
   private ModelAndView addMapsToAdView(ModelAndView model){
   	model.addObject("languages", getLanguagesForSelect());
-		model.addObject("translateTypes", getTranslateTypesForSelect());
-		model.addObject("currencies", getCurrenciesForSelect());
-		return model;
+	model.addObject("currencies", getCurrenciesForSelect());
+	return model;
   }
   
   
+  
+  
   /**
-   * Returns {@code Map}, where keys - {@link Language} values,
-   * objects - user-friendly names of languages
+   * Returns {@code Map}, where keys and values - numbers from 1 to 31
    */
-  private Map<String,String> getLanguagesForSelect(){
-		Language[] languages = Language.values();
-		Map<String, String> languagesMap = new HashMap<String, String>();
-		for(Language language:languages){
-			//creating user-friendly name of language and adding to map
-			String renderedLanguage = language.name();
-			renderedLanguage = renderedLanguage.substring(0, 1) + 
-					renderedLanguage.substring(1, renderedLanguage.length()).toLowerCase();
-			languagesMap.put(language.name(), renderedLanguage);
-		}
-		return languagesMap;
+  private Map<String,String> getDays(){
+	  Map<String,String> days= new HashMap<>();
+	  for(int i=1;i<=31;i++){
+		  days.put(i+"", i+"");
+	  }
+	  return days;
   }
   
+  /**
+   * Returns {@code Map}, where keys - numbers from 1 to 12, values - months
+   * from {@link Month#January} to {@link Month#DECEMBER} 
+   */
+  private Map<String,String> getMonth(){
+	  Map<String,String> months= new HashMap<>();
+	  for(int i=1;i<=12;i++){
+		  months.put(i+"", Month.of(i)+"");
+	  }
+	  return months;
+  }
   
   /**
-   * Returns {@code Map}, where keys - {@link TranslateType} values,
-   * objects - user-friendly names of translate types
+   * Returns {@code Map}, where keys and value - numbers from 1900 to 2016
    */
-  private Map<String,String> getTranslateTypesForSelect(){
-		TranslateType[] types = TranslateType.values();
-		Map<String, String> typesMap = new HashMap<String, String>();
-		for(TranslateType type:types){
-			String renderedTranslateType = type.name();
-			renderedTranslateType = renderedTranslateType.substring(0, 1) + 
-					renderedTranslateType.substring(1, renderedTranslateType.length()).toLowerCase();
-			typesMap.put(type.name(), renderedTranslateType);
-		}
-		return typesMap;
-	}
+  private Map<String,String> getYears(){
+	  Map<String,String> months= new HashMap<>();
+	  for(int i=1900;i<=2016;i++){
+		  months.put(i+"", i+"");
+	  }
+	  return months;
+  }
   
   /**
-   * Returns {@code Map}, where keys - {@link Currency} values,
-   * objects - user-friendly names of currencies
+   * Checks if ContentType of {@code file} with text is allowed for uploading
+   * <br>Allowed content types are placed in {@link #ALLOWED_CONTENT_TYPES_FOR_TEXT}
+   * @param file
    */
-  private Map<String,String> getCurrenciesForSelect(){
-  	Currency[] currencies = Currency.values();
-		Map<String,String> currenciesMap = new HashMap<>();
-		for(Currency currency: currencies){
-			currenciesMap.put(currency.name(),"(" +currency.name()+")");
-		}
-		return currenciesMap;
+  private boolean isfileContentTypeAllowed(MultipartFile file){
+	  logger.debug("Content type of text file is: " + file.getContentType());
+	  return Arrays.asList(ALLOWED_CONTENT_TYPES_FOR_TEXT)
+			  	   .contains(file.getContentType());
   }
 } 

@@ -1,8 +1,10 @@
 package ua.translate.controller;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,8 +12,10 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +26,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,10 +43,13 @@ import ua.translate.model.Client;
 import ua.translate.model.Language;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.Document;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.viewbean.ChangeEmailBean;
 import ua.translate.model.viewbean.ChangePasswordBean;
+import ua.translate.service.AdService;
 import ua.translate.service.TranslatorService;
+import ua.translate.service.exception.DownloadFileAccessDenied;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
 import ua.translate.service.exception.InvalidConfirmationUrl;
@@ -60,6 +68,10 @@ public class TranslatorController extends UserController{
 	private TranslatorService translatorService;
 	
 	@Autowired
+	private AdService adService;
+	
+	
+	@Autowired
 	private ControllerHelper controllerHelper;
 	
 	@Value("${webRootPath}")
@@ -67,8 +79,8 @@ public class TranslatorController extends UserController{
 	
 	Logger logger = LoggerFactory.getLogger(TranslatorController.class);
 	
-	private static final int RESPONSED_ADS_ON_PAGE=3;
-	private static final int MAX_NUMBER_OF_SENDED_RESPONSED_ADS = 3;
+	private static final int RESPONDED_ADS_ON_PAGE=3;
+	private static final int MAX_NUMBER_OF_SENDED_RESPONDED_ADS = 3;
 	
 	/**
 	 * Returns initial(welcome) page for translators
@@ -463,11 +475,11 @@ public class TranslatorController extends UserController{
 		logger.info("ad.id={}",adId);
 		try {
 			translatorService.saveRespondedAd(
-					user.getName(),adId,MAX_NUMBER_OF_SENDED_RESPONSED_ADS);
+					user.getName(),adId,MAX_NUMBER_OF_SENDED_RESPONDED_ADS);
 			return new ModelAndView("redirect:/translator/successResponding");
 		} catch (NonExistedAdException e) {
 			attr.addFlashAttribute("errorUrl", webRootPath+"/ads/"+adId);
-			return new ModelAndView("redirect:/translator/error/invalidAdId");
+			return new ModelAndView("redirect:/exception/invalidAdId");
 		} catch (NumberExceedsException e) {
 			return new ModelAndView("redirect:/translator/error/exceeding");
 		} catch (TranslatorDistraction e) {
@@ -476,6 +488,46 @@ public class TranslatorController extends UserController{
 		}
 	}
 	
+	
+	/**
+	 * Creates output stream with text file of {@link Ad} object with id={@code adId}
+	 * <br>If {@code ad} with {@code adId} doesn't exist, or user don't have access to download it,
+	 * returns 404 error page
+	 * @param adId
+	 * @param response
+	 * @param user
+	 */
+	@RequestMapping("/download/{adId}")
+	public ModelAndView downloadFile(@PathVariable("adId")
+			Long adId, HttpServletResponse response,Principal user) {
+		if(user==null){
+			return new ModelAndView("/exception/404");
+		}
+		Document textFile;
+		try {
+			textFile = adService.getDocumentForDownloading(adId, user.getName());
+			try {
+				response.setHeader("Content-Disposition", "inline;filename=\"" +textFile.getFileName()+ "\"");
+				OutputStream out = response.getOutputStream();
+				response.setContentType(textFile.getContentType());
+				out.write(textFile.getFile());
+				out.flush();
+				out.close();
+			
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (NonExistedAdException eq) {
+			logger.debug("User want to load file of ad, with id={}, which doesn't exist",adId);
+			return new ModelAndView("/exception/404");
+		} catch(DownloadFileAccessDenied  e1){
+			logger.debug("User with email = {} hasn't access to load file of ad",user.getName());
+			return new ModelAndView("/exception/404");
+		}
+		
+		return null;
+	}
+
 	/**
 	 * Returns page with message about successfull sending response to the client 
 	 */
@@ -498,12 +550,12 @@ public class TranslatorController extends UserController{
 	    if (inputFlashMap == null || !inputFlashMap.containsKey("errorUrl")) {
 	    	return new ModelAndView("redirect:/translator/profile");
 	    }
-	    ModelAndView model = new ModelAndView("/translator/error/invalidAdId");
+	    ModelAndView model = new ModelAndView("/exception/invalidAdId");
 		return model;
 	}
 	
 	/**
-	 * Returns page with message about successfull sending response to the client 
+	 * Returns page with message about having maximum number of sended ads 
 	 */
 	@RequestMapping(value="/error/exceeding",method=RequestMethod.GET)
 	public ModelAndView exceeding(){
@@ -523,16 +575,16 @@ public class TranslatorController extends UserController{
 		Set<RespondedAd> respondedAds = null;
 		try {
 			respondedAds = translatorService
-					.getRespondedAds(user.getName(),page,RESPONSED_ADS_ON_PAGE);
+					.getRespondedAds(user.getName(),page,RESPONDED_ADS_ON_PAGE);
 		} catch (WrongPageNumber e) {
 			try {
 				respondedAds = translatorService
-						.getRespondedAds(user.getName(),1,RESPONSED_ADS_ON_PAGE);
+						.getRespondedAds(user.getName(),1,RESPONDED_ADS_ON_PAGE);
 			} catch (WrongPageNumber unused) {}
 		}
 		
 		long nunmberOfPages = translatorService
-				.getNumberOfPagesForRespondedAds(user.getName(), RESPONSED_ADS_ON_PAGE);
+				.getNumberOfPagesForRespondedAds(user.getName(), RESPONDED_ADS_ON_PAGE);
 		ModelAndView model = new ModelAndView("/translator/responses");
 		model.addObject("respondedAds", respondedAds);
 		model.addObject("numberOfPages",nunmberOfPages);

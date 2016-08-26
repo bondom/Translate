@@ -13,9 +13,9 @@
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
 				<#if createAd==true>
-					<#assign formUrl = "/client/saveAd"/>
+					<#assign formUrl = "/client/saveOralAd"/>
 				<#else>
-					<#assign formUrl = "/client/saveAdEdits"/>
+					<#assign formUrl = "/client/saveOralAdEdits"/>
 				</#if>
 				<#if Editmsg??>
 					<div class="alert alert-success">${Editmsg}</div>
@@ -50,13 +50,6 @@
 										<@spring.formSingleSelect "ad.resultLanguage" languages/>
 										<@spring.showErrors "</br>" "alert alert-warning"/>
 					</td></tr>
-					<tr><td>Type of translation: </td><td>
-										<@spring.formSingleSelect "ad.translateType" translateTypes/>
-										</br>
-										<#list spring.status.errorMessages as error>
-											<div class="alert alert-warning">${error}</div>
-										</#list>
-					</td></tr>
 					<tr><td>Country: </td><td>
 										<@spring.bind "ad.country"/>
 										<input type = "text" id = "country" name = "${(spring.status.expression)!"country"}" 
@@ -72,36 +65,49 @@
 											<div class="alert alert-warning">${error}</div>
 										</#list>
 					</td></tr>
-					<tr><td>End Date: </td><td>
-											<@spring.bind "ad.endDate"/>
-											<input type = "text" id = "endDate" name = "${(spring.status.expression)!"endDate"}" 
-											value = "${spring.status.value!""}" class="form-control" placeholder = "End Date"/>
-											</br>
-											<#list spring.status.errorMessages as error>
-												<div class="alert alert-warning">${error}</div>
-											</#list>
+					<tr><td>From: </td><td>
+										<@spring.bind "ad.initialDateTime"/>
+										<input type = "text" id = "initialDateTime" name = "${spring.status.expression}" 
+										value = "${spring.status.value!""}" class="form-control" placeholder = "From"/>
+										</br>
+										<#list spring.status.errorMessages as error>
+											<div class="alert alert-warning">${error}</div>
+										</#list>
+					</td></tr>
+					<tr><td>To: </td><td>
+										<@spring.bind "ad.finishDateTime"/>
+										<input type = "text" id = "finishDateTime" name = "${spring.status.expression}" 
+										value = "${spring.status.value!""}" class="form-control" placeholder = "To"/>
+										</br>
+										<#list spring.status.errorMessages as error>
+											<div class="alert alert-warning">${error}</div>
+										</#list>
 					</td></tr>
 					<tr><td>Cost: </td><td>
-											<@spring.bind "ad.cost"/>
-											<input type = "text" id = "cost" name = "${(spring.status.expression)!"cost"}" 
-											value = "${spring.status.value!""}" class="form-control" placeholder = "Cost"/>
-											</br>
-											<#list spring.status.errorMessages as error>
-												<div class="alert alert-warning">${error}</div>
-											</#list>
+										<@spring.bind "ad.cost"/>
+										<input type = "text" id = "cost" name = "${spring.status.expression}" 
+										value = "${spring.status.value!""}" class="form-control" placeholder = "Cost"/>
+										</br>
+										<#list spring.status.errorMessages as error>
+											<div class="alert alert-warning">${error}</div>
+										</#list>
 					</td></tr>
 					<tr><td>Currency: </td><td>
-											<@spring.formSingleSelect "ad.currency" currencies/>
-											</br>
-											<#list spring.status.errorMessages as error>
-												<div class="alert alert-warning">${error}</div>
-											</#list>
+										<@spring.formSingleSelect "ad.currency" currencies/>
+										</br>
+										<#list spring.status.errorMessages as error>
+											<div class="alert alert-warning">${error}</div>
+										</#list>
 					</td></tr>
 					<tr><td></td><td></td><@spring.bind "ad.id"/>
 										 <input type = "hidden" name = "${spring.status.expression}" 
 										 value = "${spring.status.value}" />
 					</tr>
-					<tr><td><input type="submit"/></td>
+					<tr><td></td><td></td><@spring.bind "ad.translateType"/>
+										 <input type = "hidden" name = "${spring.status.expression}" 
+										 value = "${spring.status.value}" />
+					</tr>
+					<tr><td><button type="submit" class="btn btn-info"/>Save</button></td>
 						<td><input type="hidden"
 								name="${_csrf.parameterName}"
 								value="${_csrf.token}"/>

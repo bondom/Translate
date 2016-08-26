@@ -17,10 +17,20 @@
 					<#assign ad = respondedAd.ad>
 					<p><a href = "<@spring.url "/ads/${ad.getId()}"/>">${ad.getName()}</a>
 					${respondedAd.getDateTimeOfResponse()}
-					<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
 					<p>Init Language: ${ad.getInitLanguage()}
-					<p>Result Language: ${ad.getResultLanguage()}
-					<p>End Date: ${ad.getEndDate()}
+					<p>Result Language${ad.getResultLanguage()}
+					<p>TranslateType: ${ad.getTranslateType()}
+					<#if ad.translateType.name()=="ORAL">
+						<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
+						<p>From: ${ad.getInitialDateTime()} To: ${ad.getFinishDateTime()}
+					</#if>
+					<#if ad.translateType.name()=="WRITTEN">
+						<p>End Date: ${ad.getEndDate()} 
+						<p>File:
+						<a href="<@spring.url "/translator/download/${ad.id}"/>" target="_blank" >
+							${ad.document.fileName}
+						</a>
+					</#if>
 					<#assign adstatus = respondedAd.status>
 					<p>Status:${adstatus}
 				</#list>

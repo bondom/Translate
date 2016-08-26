@@ -8,6 +8,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.AdStatus;
+import ua.translate.model.viewbean.SearchFilterForAds;
 
 @Aspect
 @Component
@@ -69,10 +71,35 @@ public class AdServiceAspect {
 		String methodName = thisJoinPoint.getSignature().getName();
 		if(ads.size()>0){
 			ads.stream().forEach(ad ->{
-				logger.info("{}.{}:ad id = {}, ad name='{}', ad status= '{}', ad end date = '{}'",className,methodName,
-						ad.getId(),ad.getName(),ad.getStatus(),ad.getEndDate());
+				logger.info("{}.{}:Ad=[id = {},name='{}',status= '{}',cost='{}',"
+						+ "initLanguage={},resultLanguage={},translateType={},"
+						,className,methodName, ad.getId(),
+						ad.getName(),ad.getStatus(),ad.getCost(),ad.getInitLanguage(),
+						ad.getResultLanguage(),ad.getTranslateType());
 			});
 		}else logger.info("{}.{}: 0 ads exists",className,methodName);
+	}
+	
+	@Before("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public * getAdsForShowingByFilter(..)) "
+			 + "&& args(page,numberAdsOnPage,searchFilter,valueWithoutFilter)")
+	public void getAdsForShowingByFilter(JoinPoint thisJoinPoint,
+										int page, int numberAdsOnPage,
+										SearchFilterForAds searchFilter,
+										String valueWithoutFilter) throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		logger.debug("{}.{}: input parameters: page={},numberAdsOnPage={},"
+				+ "searchFilter=[country={},city={},currency={},"
+				+ "translateType={},initLanguage={},resultLanguage={},"
+				+ "maxCost={},minCost={}],valueWithoutFilter='{}'",
+				className,methodName,page,numberAdsOnPage,
+				searchFilter.getCountry(),searchFilter.getCity(),
+				searchFilter.getCurrency(),searchFilter.getTranslateType(),
+				searchFilter.getInitLanguage(),searchFilter.getResultLanguage(),
+				searchFilter.getMaxCost(), searchFilter.getMinCost(),
+				valueWithoutFilter);
+		
 	}
 	
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
@@ -85,12 +112,49 @@ public class AdServiceAspect {
 		try {
 			numberOfPages = (Long)thisJoinPoint.proceed();
 		} catch (Throwable e) {
-			logger.error("{}.{}:{}:{}",className,methodName,e.getClass());
+			logger.error("{}.{}(numberOfAdsOnPage={},status={}):{}:{}",
+					className,methodName,numberOfAds,adStatus,e.getClass());
 			throw e;
 		}
 		
 		logger.debug("{}.{}(numberOfAdsOnPage={},status={}): number of pages={}",
 				className,methodName,numberOfAds,adStatus,numberOfPages);
+
+		return numberOfPages;
+	}
+	
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public long getNumberOfPagesForAdsByStatusAndFilter(..)) "
+			 + "&& args(adStatus,numberOfAds,searchFilter,valueWithoutFilter)")
+	public Long getNumberOfPagesForAdsByStatusAndFilter(ProceedingJoinPoint thisJoinPoint,
+														AdStatus adStatus, 
+														int numberOfAds, 
+														SearchFilterForAds searchFilter,
+														String valueWithoutFilter)
+														throws Throwable{
+														
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		logger.debug("{}.{}: input parameters:numberOfAds={},"
+				+ "searchFilter=[country={},city={},currency={},"
+				+ "translateType={},initLanguage={},resultLanguage={},"
+				+ "maxCost={},minCost={}],valueWithoutFilter='{}'",
+				className,methodName,numberOfAds,
+				searchFilter.getCountry(),searchFilter.getCity(),
+				searchFilter.getCurrency(),searchFilter.getTranslateType(),
+				searchFilter.getInitLanguage(),searchFilter.getResultLanguage(),
+				searchFilter.getMaxCost(), searchFilter.getMinCost(),
+				valueWithoutFilter);
+		Long numberOfPages= 0L;
+		try {
+			numberOfPages = (Long)thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}:{}:{}",className,methodName,e.getClass());
+			throw e;
+		}
+		
+		logger.debug("{}.{}: number of pages={}",
+				className,methodName,numberOfPages);
 
 		return numberOfPages;
 	}
