@@ -1,6 +1,7 @@
 package ua.translate.service.impl;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -29,6 +30,8 @@ import ua.translate.model.viewbean.SearchFilterForAds;
 import ua.translate.service.AdService;
 import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.NonExistedAdException;
+import ua.translate.service.exception.TooManyAds;
+import ua.translate.service.exception.TooManyRefreshings;
 import ua.translate.service.exception.DownloadFileAccessDenied;
 import ua.translate.service.exception.IllegalActionForAcceptedAd;
 import ua.translate.service.exception.WrongPageNumber;
@@ -85,8 +88,13 @@ public class AdServiceImpl implements AdService {
 		client.removeAd(ad);
 	}
 	@Override
-	public long saveAd(Ad ad, String email){
+	public long saveAd(Ad ad, String email,long maxNumberOfAds)
+								throws TooManyAds{
 		Client client = clientDao.getClientByEmail(email);
+		long numberOfAds = client.getAds().size();
+		if(numberOfAds>=maxNumberOfAds){
+			throw new TooManyAds();
+		}
 		ad.setPublicationDateTime(LocalDateTime.now());
 		ad.setStatus(AdStatus.SHOWED);
 		client.addAd(ad);
@@ -96,10 +104,10 @@ public class AdServiceImpl implements AdService {
 	
 	@Override
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public Ad updateAd(String email, long adId, Ad updatedAd) throws NonExistedAdException, 
+	public Ad updateAd(String email, Ad updatedAd) throws NonExistedAdException, 
 													   IllegalActionForAcceptedAd, 
 													   IllegalActionForAd {
-		Ad adFromDb= get(adId);
+		Ad adFromDb= get(updatedAd.getId());
 		if(adFromDb==null){
 			throw new NonExistedAdException();
 		}
@@ -128,6 +136,29 @@ public class AdServiceImpl implements AdService {
 		return persistedAd;
 	}
 
+	@Override
+	public void refreshPubDate(String email, long adId,long hoursBetweenRefreshing) throws 
+							NonExistedAdException, IllegalActionForAcceptedAd, TooManyRefreshings {
+		Ad adFromDb= get(adId);
+		if(adFromDb==null){
+			throw new NonExistedAdException();
+		}
+		Client authClient = clientDao.getClientByEmail(email);
+		if(!adFromDb.getClient().equals(authClient)){
+			throw new NonExistedAdException();
+		}
+		if(adFromDb.getStatus().equals(AdStatus.ACCEPTED)){
+			throw new IllegalActionForAcceptedAd();
+		}
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime lastRefreshing = adFromDb.getPublicationDateTime();
+		long hours = ChronoUnit.HOURS.between(lastRefreshing, now);
+		if(hours<hoursBetweenRefreshing){
+			throw new TooManyRefreshings();
+		}
+		adFromDb.setPublicationDateTime(LocalDateTime.now());
+	}
+	
 	@Override
 	public Set<Ad> getAdsForShowing(int page,int numberAdsOnPage) throws WrongPageNumber{
 		if(page<1){
@@ -365,6 +396,9 @@ public class AdServiceImpl implements AdService {
 		}
 		throw new DownloadFileAccessDenied();
 	}
+
+
+	
 
 
 

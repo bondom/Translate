@@ -9,7 +9,7 @@ import javax.persistence.Table;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
-
+/*!!!!This class is leaved, because creation of ad can be changed!!!!*/
 /*@Entity
 @Table(name="ORAL_AD")
 @PrimaryKeyJoinColumn(name= "oral_ad_id")*/

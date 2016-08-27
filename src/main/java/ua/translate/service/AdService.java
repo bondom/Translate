@@ -1,6 +1,7 @@
 package ua.translate.service;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +19,8 @@ import ua.translate.model.viewbean.AdView;
 import ua.translate.model.viewbean.SearchFilterForAds;
 import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.NonExistedAdException;
+import ua.translate.service.exception.TooManyAds;
+import ua.translate.service.exception.TooManyRefreshings;
 import ua.translate.service.exception.DownloadFileAccessDenied;
 import ua.translate.service.exception.IllegalActionForAcceptedAd;
 import ua.translate.service.exception.WrongPageNumber;
@@ -30,28 +33,66 @@ import ua.translate.service.exception.WrongPageNumber;
 public interface AdService {
 	
 	/**
-	 * Gets {@code Client} client from data storage by email,
-	 * then does associations between {@code ad} and {@code client} and saves in data storage
+	 * Gets {@link Client} client from data storage by email,
+	 * then does associations between {@link Ad} {@code ad} and {@code client} and saves in data storage
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param ad {@link Ad} object
 	 * @param email - client's email, must be retrieved from {@code Principal} object
+	 * @param maxNumberOfAds - maximum number of ads, that can have 1 client
+	 * @throws TooManyAds - if client already has {@code maxNumberOfAds} ads
 	 * @return generated id of this advertisement
 	 */
-	public long saveAd(Ad ad, String email);
+	public long saveAd(Ad ad, String email,long maxNumberOfAds) throws TooManyAds;
 	
 	/**
-	 * Attempts to retrieve advertisement by id from data storage, and to update it
+	 * Attempts to update {@link Ad} 
+	 * <p>First method gets {@code Ad} {@code adFromDb} by id(is retrieved from {@code updatedAd}) 
+	 * from data storage, if updating is allowed,
+	 * he copies all properties, that can't be setted by client while 
+	 * updating Ad(see below), from {@code adFromDb} to {@code updatedAd}. 
+	 * If {@link Ad#getDocument()} of {@code updatedAd} equals to 
+	 * {@code null}, copies document from {@code adFromDb} to {@code updatedAd} too.
+	 * Then method saves {@code updatedAd} in data storage, to be precise replaces 
+	 * {@code adFromDb} with {@code updatedAd}(merging).
+	 * <p> Properties, that can't be setted by client while updating {@code Ad} are:
+     * 		<ul>
+     * 			<li>{@link Ad#getClient()}</li>
+     * 			<li>{@link Ad#getPublicationDateTime()}</li>
+     * 			<li>{@link Ad#getStatus()}</li>
+     * 			<li>{@link Ad#getRespondedAds()}</li>
+     * 		</ul>
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated client, <b>must</b> be retrieved from Principal object
+	 * @param updatedAd - {@code Ad} with setted all properties except properties, 
+	 * that can't be setted by client while updating {@code Ad}(see above) and setted id
 	 * @return  {@code Ad} ad object, never {@code null}
 	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist,
 	 * or it doesn't belong to {@code client}
 	 * @throws IllegalActionForAcceptedAd if {@code Ad} with such id exists, but status is ACCEPTED
-	 * @throws IllegalActionForAd if {@code Ad} has responses with {@code ResponsedAdStatus#SENDED} status
+	 * @throws IllegalActionForAd if {@code Ad} has {@link RespondedAd} with SENDED status
 	 */
-	public Ad updateAd(String email,long adId, Ad updatedAd) throws NonExistedAdException, 
+	public Ad updateAd(String email, Ad updatedAd) throws NonExistedAdException, 
 													   IllegalActionForAcceptedAd,
 													   IllegalActionForAd;
+	
+	/**
+	 * Attempts to update {@link Ad#getPublicationDateTime()} of {@code Ad} 
+	 * <p>Method gets {@code Ad} by id and if updating of 
+	 * publication dateTime is allowed, sets {@link LocalDateTime#now()},
+	 * otherwise appropriate exception is thrown
+	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
+	 * @param email - email of authenticated client, <b>must</b> be retrieved from Principal object
+	 * @param adId -id of {@code Ad}  
+	 * @param hoursBetweenRefreshing - minimum number of hours, which must pass for next
+	 * refreshing
+	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist,
+	 * or it doesn't belong to {@link Client} with email={@code email}
+	 * @throws IllegalActionForAcceptedAd if {@code Ad} with such id exists, but status is ACCEPTED
+	 * @throws TooManyRefreshings if required time for refreshing has not yet passed
+	 */
+	public void refreshPubDate(String email, long adId, long hoursBetweenRefreshing) throws NonExistedAdException, 
+													   IllegalActionForAcceptedAd,
+													   TooManyRefreshings;
 	
 	/**
 	 * Gets advertisement from data storage by Id

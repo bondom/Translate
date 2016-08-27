@@ -38,10 +38,27 @@
 						</a>
 						</#if>
 						<p>Status: ${ad.getStatus()}
-						<p>Publication Date: ${ad.getPublicationDateTime()}
 						<#if ad.status.name()=="SHOWED">
-						<p><a href = "<@spring.url "/client/ads/delete?adId=${ad.getId()}"/>">DELETE</a>
-						<p><a href = "<@spring.url "/client/ads/edit?adId=${ad.getId()}"/>">EDIT</a>
+						<form action = "<@spring.url "/client/ads/delete"/>" method = "Post" role = "form">
+							<input name="adId" type="hidden" value="${ad.getId()}"/>
+							<button type = "submit" class="btn btn-info">
+								Delete
+							</button>
+							<input type="hidden"
+									name="${_csrf.parameterName}"
+									value="${_csrf.token}"/>
+						</form>
+						<p>Refreshed:${ad.getPublicationDateTime()}
+						<form action = "<@spring.url "/client/ads/refresh"/>" method = "Post" role = "form">
+							<input name="adId" type="hidden" value="${ad.getId()}"/>
+							<button type = "submit" class="btn btn-info">
+								Refresh Date
+							</button>
+							<input type="hidden"
+									name="${_csrf.parameterName}"
+									value="${_csrf.token}"/>
+						</form>
+						<a href = "<@spring.url "/client/ads/edit?adId=${ad.getId()}"/>">EDIT</a>
 						</#if>
 					</div>
 					</br>

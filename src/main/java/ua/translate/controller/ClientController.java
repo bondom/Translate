@@ -3,15 +3,12 @@ package ua.translate.controller;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.Month;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.mail.internet.ContentType;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -34,7 +31,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
 import ua.translate.controller.editor.CommentTextEditor;
-import ua.translate.controller.editor.IdEditor;
 import ua.translate.controller.support.ControllerHelper;
 import ua.translate.model.Client;
 import ua.translate.model.Comment;
@@ -42,10 +38,8 @@ import ua.translate.model.Language;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Currency;
 import ua.translate.model.ad.Document;
-import ua.translate.model.ad.OralAd;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.ad.TranslateType;
-import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.viewbean.ChangeEmailBean;
 import ua.translate.model.viewbean.ChangePasswordBean;
 import ua.translate.model.viewbean.ChooseTranslateTypeBean;
@@ -59,6 +53,8 @@ import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.IllegalActionForRejectedAd;
 import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.NonExistedRespondedAdException;
+import ua.translate.service.exception.TooManyAds;
+import ua.translate.service.exception.TooManyRefreshings;
 import ua.translate.service.exception.TranslatorDistraction;
 import ua.translate.service.exception.IllegalActionForAcceptedAd;
 import ua.translate.service.exception.WrongPageNumber;
@@ -91,8 +87,21 @@ public class ClientController extends UserController{
 	
 	private static final int RESPONDED_ADS_ON_PAGE=3;
 	
+	/**
+	 * This variable contains minimum number of hours, that must elapse from
+	 * last refreshing for allowing next one {@link Ad}
+	 */
+	private static final long HOURS_BETWEEN_REFRESHING = 12;
+	
+	/**
+	 * This variable contains maximum number of {@link Ad}s, that can have
+	 * one client
+	 */
+	private static final long MAX_NUMBER_OF_ADS = 3;
+	
 	private static final String[] ALLOWED_CONTENT_TYPES_FOR_TEXT=
 		{"application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document"};
+	
 	
 	
 	@InitBinder
@@ -466,17 +475,17 @@ public class ClientController extends UserController{
 	    		inputFlashMap.containsKey("ad")) {
 	    	//if saving of ad failed
 	    	//get translate type and return appropriate
-	    	//page for editing
+	    	//page for editing entered data
 	    	TranslateType translateType = 
 	    				(TranslateType)inputFlashMap.get("translateType");
 	    	if(translateType.equals(TranslateType.ORAL)){
 	    		ModelAndView model = new ModelAndView("/client/adbuilderoral");
-	    		model=addMapsToAdView(model);
+	    		addMapsToAdView(model);
 	    		model.addObject("createAd", true);
 	    		return model;
 	    	}else if(translateType.equals(TranslateType.WRITTEN)){
 	    		ModelAndView model = new ModelAndView("/client/adbuilderwritten");
-	    		model=addMapsToAdView(model);
+	    		addMapsToAdView(model);
 	    		model.addObject("createAd", true);
 	    		return model;
 	    	}else{
@@ -487,12 +496,13 @@ public class ClientController extends UserController{
 	    }
 	    
 		
-		if((page==2) && (chosenTranslateTypeBean!=null)){
+		if(page==2){
 			//if it is first call of method(without redirecting)
+			//with instantiated chosenTranslateTypeBean
 			ModelAndView model = new ModelAndView();
 			model.addObject("createAd", true);
 		    //adding maps for rendering variants languages or currencies
-			model = addMapsToAdView(model);
+			addMapsToAdView(model);
 			if(TranslateType.ORAL.equals(chosenTranslateTypeBean.getTranslateType())){
 		    	Ad ad = new Ad();
 		    	ad.setTranslateType(TranslateType.ORAL);
@@ -533,11 +543,18 @@ public class ClientController extends UserController{
 			attr.addFlashAttribute("ad",ad);
 			return new ModelAndView("redirect:/client/adbuilder?page=2&translateType="+ad.getTranslateType());
 		}
-		Long adId = adService.saveAd(ad, user.getName());
+		Long adId;
+		try {
+			adId = adService.saveAd(ad, user.getName(),MAX_NUMBER_OF_ADS);
+			attr.addFlashAttribute("adUrl",webRootPath+"/ads/"+adId);
+			attr.addFlashAttribute("adId",adId);
+			return new ModelAndView("redirect:/client/success");
+		} catch (TooManyAds e) {
+			attr.addFlashAttribute("error","Simultaneously you can have only 3 advertisements");
+			return new ModelAndView("redirect:/client/ads");
+		}
 
-		attr.addFlashAttribute("adUrl",webRootPath+"/ads/"+adId);
-		attr.addFlashAttribute("adId",adId);
-		return new ModelAndView("redirect:/client/success");
+		
 	}
 	
 	/**
@@ -585,21 +602,28 @@ public class ClientController extends UserController{
 			attr.addFlashAttribute("translateType",ad.getTranslateType());
 			return new ModelAndView("redirect:/client/adbuilder?page=2&translateType="+TranslateType.WRITTEN);
 		}
-		Long adId = adService.saveAd(ad, user.getName());
+		Long adId;
+		try {
+			adId = adService.saveAd(ad, user.getName(),MAX_NUMBER_OF_ADS);
+			attr.addFlashAttribute("adUrl",webRootPath+"/ads/"+adId);
+			attr.addFlashAttribute("adId",adId);
+			return new ModelAndView("redirect:/client/success");
+		} catch (TooManyAds e) {
+			attr.addFlashAttribute("error","Simultaneously you can have only 3 advertisements");
+			return new ModelAndView("redirect:/client/ads");
+		}
 
-		attr.addFlashAttribute("adUrl",webRootPath+"/ads/"+adId);
-		attr.addFlashAttribute("adId",adId);
-		return new ModelAndView("redirect:/client/success");
+		
 	}
 	
 	
 	
 	/**
-	 * Deletes {@code Ad}, if such exists or it status is not accepted, 
+	 * Deletes {@code Ad}, if such exists and it status is not accepted, 
 	 * and redirects to {@link #ads(Principal)}
 	 * @param adId - id of {@code Ad} object
 	 */
-	@RequestMapping(value = "/ads/delete", method = RequestMethod.GET)
+	@RequestMapping(value = "/ads/delete", method = RequestMethod.POST)
 	public ModelAndView deleteAd(@RequestParam("adId") long adId,Principal user,
 								  RedirectAttributes attr){
 		ModelAndView model = new ModelAndView("redirect:/client/ads");
@@ -612,6 +636,32 @@ public class ClientController extends UserController{
 		} catch (IllegalActionForAcceptedAd e) {
 			attr.addFlashAttribute("error", "Sorry, but you can't delete advertisement, "
 					+ "which has Accepted status");
+		}
+		
+		return model;
+	}
+	
+	/**
+	 * Refreshes {@link Ad#getPublicationDateTime()}, if such exists and it status is not accepted, 
+	 * and redirects to {@link #ads(Principal)}
+	 * @param adId - id of {@code Ad} object
+	 */
+	@RequestMapping(value = "/ads/refresh", method = RequestMethod.POST)
+	public ModelAndView refreshPubDateOfAd(@RequestParam("adId") long adId,Principal user,
+								  RedirectAttributes attr){
+		ModelAndView model = new ModelAndView("redirect:/client/ads");
+		
+		try {
+			adService.refreshPubDate(user.getName(), adId, HOURS_BETWEEN_REFRESHING);
+			attr.addFlashAttribute("msg", "Date is successfully refreshed");
+		} catch (NonExistedAdException e) {
+			attr.addFlashAttribute("error", "You can't delete non existed ad");
+		} catch (IllegalActionForAcceptedAd e) {
+			attr.addFlashAttribute("error", "Sorry, but you can't delete advertisement, "
+					+ "which has Accepted status");
+		} catch (TooManyRefreshings e) {
+			attr.addFlashAttribute("error", "Sorry, but you can refresh advertisement only "
+					+ "one time in " + HOURS_BETWEEN_REFRESHING + " hours");
 		}
 		
 		return model;
@@ -658,12 +708,12 @@ public class ClientController extends UserController{
 	    				(TranslateType)inputFlashMap.get("translateType");
 	    	if(translateType.equals(TranslateType.ORAL)){
 	    		ModelAndView model = new ModelAndView("/client/adbuilderoral");
-	    		model=addMapsToAdView(model);
+	    		addMapsToAdView(model);
 	    		model.addObject("createAd", false);
 	    		return model;
 	    	}else if(translateType.equals(TranslateType.WRITTEN)){
 	    		ModelAndView model = new ModelAndView("/client/adbuilderwritten");
-	    		model=addMapsToAdView(model);
+	    		addMapsToAdView(model);
 	    		model.addObject("createAd", false);
 	    		return model;
 	    	}else{
@@ -686,7 +736,7 @@ public class ClientController extends UserController{
 			}
 			model.addObject("ad", ad);
 			model.addObject("createAd", false);
-			model=addMapsToAdView(model);
+			addMapsToAdView(model);
 			return model;
 		}  catch (NonExistedAdException e) {
 			attr.addFlashAttribute("error","You can't edit non existed advertisement");
@@ -730,7 +780,7 @@ public class ClientController extends UserController{
 		ModelAndView errorView= new ModelAndView("redirect:/client/ads");
 		
 		try {
-			Ad updatedAd = adService.updateAd(user.getName(),editedAd.getId(),editedAd);
+			Ad updatedAd = adService.updateAd(user.getName(),editedAd);
 			attr.addFlashAttribute("Editmsg", "Advertisement is edited successfully");
 			attr.addFlashAttribute("ad",updatedAd);
 			attr.addFlashAttribute("translateType",editedAd.getTranslateType());
@@ -793,7 +843,7 @@ public class ClientController extends UserController{
 		
 		//If all data is valid, attempt update Ad
 		try {
-			Ad updatedAd = adService.updateAd(user.getName(),editedAd.getId(),editedAd);
+			Ad updatedAd = adService.updateAd(user.getName(),editedAd);
 			attr.addFlashAttribute("Editmsg", "Advertisement is edited successfully");
 			attr.addFlashAttribute("ad",updatedAd);
 			attr.addFlashAttribute("translateType",editedAd.getTranslateType());
@@ -914,18 +964,14 @@ public class ClientController extends UserController{
 	
 	/**
 	 * Adds maps of {@link Language}, {@link Currency}
-	 * to model for rendering available variants to the client while
+	 * to {@code model} for rendering available variants to the client while
 	 * creating advertisement
-	 * @param model - initial {@code ModelAndView} object
-	 * @return {@code ModelAndView} object with added maps
 	 * @see #getCurrenciesForSelect()
 	 * @see #getLanguagesForSelect()
-	 * @see #getTranslateTypesForSelect()
 	 */
-  private ModelAndView addMapsToAdView(ModelAndView model){
+  private void addMapsToAdView(ModelAndView model){
   	model.addObject("languages", getLanguagesForSelect());
 	model.addObject("currencies", getCurrenciesForSelect());
-	return model;
   }
   
   

@@ -25,20 +25,23 @@ public class AdServiceAspect {
 	Logger logger = LoggerFactory.getLogger(AdServiceAspect.class);
 	
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
-			 + " execution(public long saveAd(..)) && args(ad,email)")
-	public long saveAd(ProceedingJoinPoint thisJoinPoint,Ad ad,String email) throws Throwable {
+			 + " execution(public long saveAd(..)) && args(ad,email,maxNumberOfAds)")
+	public long saveAd(ProceedingJoinPoint thisJoinPoint,
+						Ad ad,String email,long maxNumberOfAds) throws Throwable {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		long adId= 0L;
 		try {
 			adId = (long)thisJoinPoint.proceed();
 		} catch (Throwable e) {
-			logger.error("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
+			logger.error("{}.{}(email={},maxNumberOfAds={}):{}:{}",
+					className,methodName,email,maxNumberOfAds,e.getClass(),e.getMessage());
 			throw e;
 		}
 		
-		logger.info("{}.{}(email={}): Ad is successfully saved:name='{}',status='{}',clientId='{}'",
-				className,methodName,email,ad.getName(),ad.getStatus(),ad.getClient().getId());
+		logger.info("{}.{}(email={},maxNumberOfAds={}): "
+				+ "Ad is successfully saved:name='{}',status='{}',clientId='{}'",
+				className,methodName,email,maxNumberOfAds,ad.getName(),ad.getStatus(),ad.getClient().getId());
 
 		return adId;
 	}
@@ -62,6 +65,28 @@ public class AdServiceAspect {
 				className,methodName,email,adId,savedAd.getName());
 
 		return savedAd;
+	}
+	
+	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
+			 + " execution(public void refreshPubDate(..)) && "
+			 + "args(email,adId,hoursBetweenRefreshing)")
+	public void refreshPubDate(ProceedingJoinPoint thisJoinPoint,
+			String email,long adId,long hoursBetweenRefreshing) throws Throwable {
+		String className = thisJoinPoint.getTarget().getClass().getName();
+		String methodName = thisJoinPoint.getSignature().getName();
+		try {
+			thisJoinPoint.proceed();
+		} catch (Throwable e) {
+			logger.error("{}.{}(email={},adId={},required hours={}):{}:{}",
+					className,methodName,email,adId,hoursBetweenRefreshing,
+					e.getClass(),e.getMessage());
+			throw e;
+		}
+		
+		logger.debug("{}.{}(email={},adId={},required hours={}): "
+				+ "Publication DateTime of Ad is successfully refreshed ",
+				className,methodName,email,adId,hoursBetweenRefreshing);
+
 	}
 	
 	@AfterReturning(pointcut = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"

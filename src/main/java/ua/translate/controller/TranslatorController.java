@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,13 +30,9 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
-import ua.translate.controller.editor.CommentTextEditor;
-import ua.translate.controller.editor.IdEditor;
 import ua.translate.controller.support.ControllerHelper;
 import ua.translate.model.Translator;
-import ua.translate.model.Client;
 import ua.translate.model.Language;
-import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Document;
 import ua.translate.model.ad.RespondedAd;
@@ -58,7 +49,6 @@ import ua.translate.service.exception.NonExistedAdException;
 import ua.translate.service.exception.NumberExceedsException;
 import ua.translate.service.exception.TranslatorDistraction;
 import ua.translate.service.exception.WrongPageNumber;
-import ua.translate.service.impl.AdServiceImpl;
 
 @Controller
 @RequestMapping("/translator")
