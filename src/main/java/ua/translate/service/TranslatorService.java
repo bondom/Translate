@@ -78,9 +78,13 @@ public abstract class TranslatorService extends UserService<Translator>{
 	public abstract RespondedAd getCurrentOrder(String email);
 	
 	/**
-	 * Gets {@link Ad} {@code ad} from data storage by id, if translator with email owns {@code ad},
-	 * and {@code ad} have ACCEPTED status, changes status to NOTCHECKED.
-	 * <p>RespondedAd which is related to this Ad and Translator, still has ACCEPTED status,
+	 * Gets {@link Ad} {@code ad} from data storage by id, if 
+	 * {@code ad} have ACCEPTED status and {@link Translator} 
+	 * {@code translator} with email={@code email} 
+	 * responded on {@code ad}(that {@code translator} and {@code ad}
+	 * have the same {@link RespondedAd} object with ACCEPTED status),
+	 * changes status to NOTCHECKED.
+	 * <p>RespondedAd which is related to these Ad and Translator, still has ACCEPTED status,
 	 * for avoiding situation when translator Ad needs to be completed or edited, and translator
 	 * have already taken one more Ad.
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present

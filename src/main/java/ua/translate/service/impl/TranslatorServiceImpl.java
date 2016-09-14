@@ -1,26 +1,23 @@
 package ua.translate.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.hibernate.exception.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.AdDao;
-import ua.translate.dao.ClientDao;
 import ua.translate.dao.RespondedAdDao;
 import ua.translate.dao.TranslatorDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.User;
 import ua.translate.model.UserRole;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
@@ -30,14 +27,13 @@ import ua.translate.model.status.RespondedAdStatus;
 import ua.translate.model.status.UserStatus;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.DuplicateEmailException;
-import ua.translate.service.exception.EmailIsConfirmedException;
-import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.NonExistedAdException;
 import ua.translate.service.exception.NonExistedTranslatorException;
 import ua.translate.service.exception.NumberExceedsException;
 import ua.translate.service.exception.TranslatorDistraction;
 import ua.translate.service.exception.WrongPageNumber;
+import ua.translate.test.service.RespondedAdServiceTest;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED,
@@ -58,6 +54,8 @@ public class TranslatorServiceImpl extends TranslatorService {
 	 * It is default number of responded ads on one page
 	 */
 	private static final int DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE=3;
+	
+	Logger logger = LoggerFactory.getLogger(TranslatorServiceImpl.class);
 	
 	@Override
 	public Translator getTranslatorByEmail(String email) {
@@ -246,10 +244,10 @@ public class TranslatorServiceImpl extends TranslatorService {
 		if(ad==null){
 			return false;
 		}
-		if(!ad.getStatus().equals(AdStatus.ACCEPTED)){
+		if(!AdStatus.ACCEPTED.equals(ad.getStatus())){
 			return false;
 		}
-		if(translatorOwnsAd(email, adId)){
+		if(translatorInteractsWithAd(email, adId)){
 			ad.setStatus(AdStatus.NOTCHECKED);
 			return true;
 		}
@@ -297,19 +295,48 @@ public class TranslatorServiceImpl extends TranslatorService {
 	
 	
 	/**
-	 * Checks if {@link Ad} with id={@code adId} belongs to translator with {@code email}
-	 * @param email - email of authenticated translator, <b>must</b> be retrieved from Principal object
+	 * Checks if {@link Ad} {@code ad} with id={@code adId} and {@link Translator}
+	 * {@code translator} with email={@code email} 
+	 * have the same {@link RespondedAd} {@code respondedAd} with ACCEPTED status
+	 * <p>If {@code translator} has more then 1 {@code RespondedAd}, exception is thrown - 
+	 * such situation is unacceptable and is concurrency issue
+	 * @param email - email of authenticated {@code Translator}, <b>must</b> be retrieved from Principal object
 	 * @param adId - id of {@code Ad}
-	 * @return true if translator owns Ad with id={@code adId}, else false
+	 * @return true if {@code translator} and {@code ad} have the same {@code RespondedAd} object
+	 * with ACCEPTED status
 	 */
-	private boolean translatorOwnsAd(String email,long adId){
-		Translator translator = translatorDao.getTranslatorByEmail(email);
-		Set<RespondedAd> respondedAd = translator.getRespondedAds();
-		boolean translatorOwns = respondedAd.stream()
-										    .map(rad -> rad.getAd())
-										    .anyMatch(ad -> 
-										    	(new Long(ad.getId())).equals(adId));
-		return translatorOwns;
+	private boolean translatorInteractsWithAd(String email,long adId){
+		final Translator translator = translatorDao.getTranslatorByEmail(email);
+		final Ad ad = adDao.get(adId);
+		Set<RespondedAd> respondedAds = translator.getRespondedAds();
+		Set<RespondedAd> acceptedRespondedAds = 
+							respondedAds.stream()
+			    						.filter(rad -> rad.getStatus()
+			    											.equals(RespondedAdStatus.ACCEPTED))
+			    						.collect(Collectors.toSet());
+				  
+		long numberOfAcceptedRespondedAd= acceptedRespondedAds.size();
+		if(numberOfAcceptedRespondedAd==1){
+			RespondedAd respondedAd = acceptedRespondedAds.iterator().next();
+			if(respondedAd.getAd().equals(ad)){
+				return true;
+			}else{
+				logger.debug("Translator has one ACCCEPTED RespondedAd, but "
+						+ "he wants to mark as NOTCHECKED another Ad");
+				return false;
+			}
+		}
+
+		if(numberOfAcceptedRespondedAd>1){
+			//such situation is very serious and unacceptable error
+			logger.error("Translator with email={} has {} ACCEPTED"
+					+ " RespondedAd",email,numberOfAcceptedRespondedAd);
+			/*!!!!Throwing error, must be created and handled!!!! */
+			
+		}
+		
+		//this Translator has no ACCEPTED RespondedAd
+		return false;
 	}
 
 	

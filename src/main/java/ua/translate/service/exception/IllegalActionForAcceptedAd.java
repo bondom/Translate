@@ -3,7 +3,9 @@ package ua.translate.service.exception;
 import ua.translate.model.ad.Ad;
 
 /**
- * Thrown if {@code ad.status==ACCEPTED} and {@link User} want to get {@link Ad} to view, or
+ * Thrown if status of {@link Ad} {@code ad} is ACCEPTED 
+ * and {@link User} want to get {@code ad} to view, or
+ * to accept it or
  * {@link Client} want to delete,update this {@code Ad}
  * 
  * @author Yuriy Phediv

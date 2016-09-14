@@ -1,6 +1,5 @@
 package ua.translate.service.impl;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -28,17 +27,17 @@ import ua.translate.service.exception.TranslatorDistraction;
 public class RespondedAdServiceImpl implements RespondedAdService {
 
 	@Autowired
-	private RespondedAdDao responsedAdDao;
+	private RespondedAdDao respondedAdDao;
 	
 	@Autowired
 	private ClientDao clientDao;
 
 	public RespondedAd get(long id) throws NonExistedRespondedAdException{
-		RespondedAd responsedAd = responsedAdDao.get(id);
-		if(responsedAd==null){
+		RespondedAd respondedAd = respondedAdDao.get(id);
+		if(respondedAd==null){
 			throw new NonExistedRespondedAdException();
 		}
-		return responsedAd;
+		return respondedAd;
 	}
 	
 	public void accept(String email,long id) throws NonExistedRespondedAdException,
@@ -48,34 +47,34 @@ public class RespondedAdServiceImpl implements RespondedAdService {
 		final ReentrantLock lock = new ReentrantLock();
 		lock.lock();
 		try{
-			RespondedAd responsedAd = get(id);
-			if(responsedAd == null || !clientOwnsRespondedAd(email, id)){
+			RespondedAd respondedAd = get(id);
+			if(!clientOwnsRespondedAd(email, id)){
 				throw new NonExistedRespondedAdException();
 			}
-			if(responsedAd.getStatus().equals(RespondedAdStatus.ACCEPTED)){
+			if(respondedAd.getStatus().equals(RespondedAdStatus.ACCEPTED)){
 				throw new IllegalActionForAcceptedAd();
 			}
 			
-			if(responsedAd.getStatus().equals(RespondedAdStatus.REJECTED)){
-				throw new IllegalActionForAcceptedAd();
+			if(respondedAd.getStatus().equals(RespondedAdStatus.REJECTED)){
+				throw new IllegalActionForRejectedAd();
 			}
-			Translator translator = responsedAd.getTranslator();
+			Translator translator = respondedAd.getTranslator();
 			if(hasAcceptedAd(translator)){
 				throw new TranslatorDistraction();
 			}
 			
-			Ad mainAd = responsedAd.getAd();
+			Ad mainAd = respondedAd.getAd();
 			mainAd.setStatus(AdStatus.ACCEPTED);
-			Set<RespondedAd> responsedAds = mainAd.getRespondedAds();
-			responsedAds.forEach(rad->{
-				if(responsedAd.equals(rad)){
+			Set<RespondedAd> respondedAds = mainAd.getRespondedAds();
+			respondedAds.forEach(rad->{
+				if(respondedAd.equals(rad)){
 					rad.setStatus(RespondedAdStatus.ACCEPTED);
 				}else{
 					rad.setStatus(RespondedAdStatus.REJECTED);
 				}
 			});
 			
-			responsedAdDao.flush();
+			respondedAdDao.flush();
 		}finally{
 			lock.unlock();
 		}
@@ -83,16 +82,19 @@ public class RespondedAdServiceImpl implements RespondedAdService {
 	
 	public void reject(String email,long id) throws NonExistedRespondedAdException,
 									   IllegalActionForAcceptedAd{
-		RespondedAd responsedAd= get(id);
+		RespondedAd respondedAd= get(id);
+		if(respondedAd.getStatus().equals(RespondedAdStatus.REJECTED)){
+			return;
+		}
 		
-		if(responsedAd == null || !clientOwnsRespondedAd(email, id)){
+		if(!clientOwnsRespondedAd(email, id)){
 			throw new NonExistedRespondedAdException();
 		}
 		
-		if(responsedAd.getStatus().equals(RespondedAdStatus.ACCEPTED)){
+		if(respondedAd.getStatus().equals(RespondedAdStatus.ACCEPTED)){
 			throw new IllegalActionForAcceptedAd();
 		}
-		responsedAd.setStatus(RespondedAdStatus.REJECTED);
+		respondedAd.setStatus(RespondedAdStatus.REJECTED);
 	}
 	
 	/**
@@ -101,25 +103,25 @@ public class RespondedAdServiceImpl implements RespondedAdService {
 	 * @return true - if {@code translator} has ResponsedAd with ACCEPTED status, else false
 	 */
 	private boolean hasAcceptedAd(Translator translator) {
-		Set<RespondedAd> responsedAds = translator.getRespondedAds();
+		Set<RespondedAd> respondedAds = translator.getRespondedAds();
 		boolean acceptedAdExists = 
-				responsedAds.stream()
+				respondedAds.stream()
 							.anyMatch(rad -> 
 							 	rad.getStatus().equals(RespondedAdStatus.ACCEPTED));
 		return acceptedAdExists;
 	}
 	
 	/**
-	 * Checks if {@link RespondedAd} with id={@code radId} belongs to client with {@code email}
+	 * Checks if {@link RespondedAd} with id={@code radId} belongs to client with email={@code email}
 	 * @param email - email of authenticated client, <b>must</b> be retrieved from Principal object
-	 * @param radId - id of responsedAd
-	 * @return true if client owns responsedAd with id={@code radId}, else false
+	 * @param radId - id of respondedAd
+	 * @return true if client owns respondedAd with id={@code radId}, else false
 	 */
 	private boolean clientOwnsRespondedAd(String email,long radId){
 		Client client = clientDao.getClientByEmail(email);
-		Set<RespondedAd> responsedAd = client.getRespondedAds();
+		Set<RespondedAd> respondedAd = client.getRespondedAds();
 		boolean clientOwns = 
-				responsedAd.stream().anyMatch(rad -> (new Long(rad.getId())).equals(radId));
+				respondedAd.stream().anyMatch(rad -> (new Long(rad.getId())).equals(radId));
 		return clientOwns;
 	}
 	

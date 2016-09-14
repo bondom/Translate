@@ -36,7 +36,7 @@ public class ClientServiceImpl extends ClientService{
 	private ClientDao clientDao;
 	
 	@Autowired
-	private RespondedAdDao responsedAdDao;
+	private RespondedAdDao respondedAdDao;
 	
 	/**
 	 * It is default number of responded ads on one page
@@ -61,7 +61,7 @@ public class ClientServiceImpl extends ClientService{
 			numberOfRespondedAdsOnPage = DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE;
 		}
 		Client client = getClientByEmail(email);
-		Set<RespondedAd> responsedAds = responsedAdDao
+		Set<RespondedAd> responsedAds = respondedAdDao
 				.getRespondedAdsByClient(client, page, numberOfRespondedAdsOnPage);
 		return responsedAds;
 	}
@@ -69,7 +69,7 @@ public class ClientServiceImpl extends ClientService{
 	@Override
 	public long getNumberOfPagesForRespondedAds(String email, int numberOfRespondedAdsOnPage) {
 		Client client = getClientByEmail(email);
-		long numberOfRespondedAds = responsedAdDao.getNumberOfRespondedAdsByClient(client);
+		long numberOfRespondedAds = respondedAdDao.getNumberOfRespondedAdsByClient(client);
 		long numberOfPages = (long) Math
 				.ceil(((double)numberOfRespondedAds)/numberOfRespondedAdsOnPage);
 		return numberOfPages;
@@ -159,22 +159,5 @@ public class ClientServiceImpl extends ClientService{
 		Client client = getClientByEmail(email);
 		client.setAvatar(avatar);
 	}
-
-
-	/*@Override
-	public String saveConfirmationUrl(String email) throws EmailIsConfirmedException {
-		Client client = clientDao.getClientByEmail(email);
-		if(client.getEmailStatus().equals(EmailStatus.CONFIRMED)){
-			throw new EmailIsConfirmedException();
-		}
-		String url = client.getId() + UUID.randomUUID().toString();
-		client.setConfirmationUrl(url);
-		return url;
-	}
-*/
-	
-
-	
-	
 
 }

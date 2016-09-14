@@ -1,20 +1,13 @@
 package ua.translate.controller;
 
-import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
@@ -29,10 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.support.RequestContextUtils;
 
-import ua.translate.controller.support.AdComparatorByDate;
 import ua.translate.controller.support.RespondedAdComparatorByDate;
 import ua.translate.controller.support.ControllerHelper;
 import ua.translate.model.Translator;
@@ -41,7 +31,6 @@ import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.viewbean.AdView;
-import ua.translate.model.viewbean.ChangeEmailBean;
 import ua.translate.model.viewbean.SearchFilterForAds;
 import ua.translate.service.AdService;
 import ua.translate.service.TranslatorService;

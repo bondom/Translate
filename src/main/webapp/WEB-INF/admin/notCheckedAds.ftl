@@ -15,11 +15,29 @@
 			
 			<#list notCheckedAds as ad>
 				<div>
-					<p>Name:${ad.getName()}
-					<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
+					<p>Name: ${ad.getName()}
+					<p>Publication Date: ${ad.publicationDateTime.toLocalDate()}
+					<p>Description: ${ad.getDescription()}
 					<p>Init Language: ${ad.getInitLanguage()}
-					<p>Result Language: ${ad.getResultLanguage()}
-					<p>End Date: ${ad.getEndDate()}
+					<p>Result Language${ad.getResultLanguage()}
+					<p>TranslateType: ${ad.getTranslateType()}
+					<#if ad.translateType.name()=="ORAL">
+						<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
+						<p>From: ${ad.getInitialDateTime()} To: ${ad.getFinishDateTime()}
+					</#if>
+					<#if ad.translateType.name()=="WRITTEN">
+						<p>End Date: ${ad.getEndDate()} 
+						<p>File:
+						 <@security.authorize access="hasRole('ROLE_TRANSLATOR') or hasRole('ROLE_ADMIN')">
+							<a href="<@spring.url "/translator/download/${ad.id}"/>" target="_blank" >
+								${ad.document.fileName}
+							</a>
+						 </@security.authorize>
+						 <@security.authorize access="hasRole('ROLE_CLIENT') or ! isAuthenticated()">
+								${ad.document.fileName}
+						 </@security.authorize>
+					</#if>
+					<p>Cost: ${ad.getCost()} ${ad.getCurrency()}
 				</div>
 				</br>
 			</#list>

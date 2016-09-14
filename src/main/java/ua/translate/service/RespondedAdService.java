@@ -15,10 +15,11 @@ import ua.translate.service.exception.TranslatorDistraction;
 public interface RespondedAdService {
 	
 	/**
-	 * Gets {@code RespondedAd} from data storage by id
+	 * Gets {@link RespondedAd} {@code respondedAd} from data storage by id
 	 * @param id
 	 * @throws NonExistedRespondedAdException if {@code ResponseAd} with such {@code id}
 	 * doesn't exist
+	 * @return {@code respondedAd}, never {@code null}
 	 */
 	public RespondedAd get(long id) throws NonExistedRespondedAdException;
 	
@@ -26,11 +27,11 @@ public interface RespondedAdService {
 	 * Gets {@link RespondedAd } {@code respondedAd} from data storage by id
 	 * and changes status from SENDED to ACCEPTED. Changes status of other 
 	 * {@code RespondedAd}s, related to the same {@code Ad} that {@code respondedAd} 
-	 * to REJECTED
+	 * to REJECTED. And changes status of {@link Ad}, related to {@code respondedAd}, to ACCEPTED
 	 * <p>Checks if translator, responded to Ad, doesn't have ACCEPTED RespondedAd,
 	 * if he has one, exception is thrown.
 	 * <p>This method is owned by only one thread for avoiding situation,
-	 * when two clients simultaneously accept RespondedAds which have common translator and Ad,
+	 * when two clients simultaneously accept RespondedAds which have common translator,
 	 * because translator will have two Accepted RespondedAd - it is unacceptable
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated client, <b>must</b> be retrieved from Principal object

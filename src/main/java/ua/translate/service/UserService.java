@@ -70,7 +70,8 @@ public abstract class UserService<T extends User> {
 	
 	/**
 	 * Saves {@code newUser} in data storage.
-	 * <p>Sets appropriate statuses of email and user; sets {@link UserRole},encoded password
+	 * <p>Sets status of email to NOTCONFIRMED and user's status to ACTIVE;
+	 * sets {@link UserRole},encoded password
 	 * and registration time
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @throws DuplicateEmailException  if email of user is registered already 

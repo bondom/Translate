@@ -10,11 +10,11 @@ public enum AdStatus {
 	SHOWED,
 	/**
 	 * It is status, when client accepted response of translator, 
-	 * and translator begin to execute his 
+	 * and translator begin to execute it 
 	 */
 	ACCEPTED,
 	/**
-	 * It is status, when translator finish to execute {@code Ad}
+	 * It is status, when translator have finished to execute {@link Ad}
 	 */
 	NOTCHECKED,
 	EXECUTED

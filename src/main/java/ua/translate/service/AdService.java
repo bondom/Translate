@@ -34,7 +34,8 @@ public interface AdService {
 	
 	/**
 	 * Gets {@link Client} client from data storage by email,
-	 * then does associations between {@link Ad} {@code ad} and {@code client} and saves in data storage
+	 * then does associations between {@link Ad} {@code ad} and {@code client},saves in data storage.
+	 * <br>Sets status of {@code ad} to SHOWED and invokes {@code ad.setPublicationDateTime(LocalDateTime.now())}
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param ad {@link Ad} object
 	 * @param email - client's email, must be retrieved from {@code Principal} object

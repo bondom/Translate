@@ -116,7 +116,6 @@
 		    </dependency>
 		    
 		    <!-- Spring Security  -->
-		    
 		    <dependency>
 				<groupId>org.springframework.security</groupId>
 				<artifactId>spring-security-core</artifactId>
@@ -161,13 +160,6 @@
 				<version>1.6.11</version>
 			</dependency>
 
-	     	<!--Proxy objects for target class - not needed after spring 3.2-->
-	     	<!-- <dependency>
-				<groupId>cglib</groupId>
-				<artifactId>cglib</artifactId>
-				<version>${cglib.version}</version>
-			</dependency> -->
-			
 			<!--Tests    -->
 			<dependency>
 			    <groupId>junit</groupId>
@@ -175,6 +167,12 @@
 			    <version>4.12</version>
 			</dependency>
 	     	
+	     	<dependency>
+			    <groupId>org.mockito</groupId>
+			    <artifactId>mockito-all</artifactId>
+			    <version>1.10.19</version>
+			</dependency>
+			
 	     	<!--For Freemarker   -->
 	     	<dependency>
 			  <groupId>org.freemarker</groupId>
@@ -223,16 +221,6 @@
 				 <artifactId>slf4j-log4j12</artifactId>
 				 <version>${slf4j.version}</version>
 			 </dependency>
-			 <!-- <dependency>
-			    <groupId>org.apache.logging.log4j</groupId>
-			    <artifactId>log4j-api</artifactId>
-			    <version>2.6.2</version>
-			  </dependency>
-			  <dependency>
-			    <groupId>org.apache.logging.log4j</groupId>
-			    <artifactId>log4j-core</artifactId>
-			    <version>2.6.2</version>
-			  </dependency> -->
 		</dependencies>
 
 	<repositories>
