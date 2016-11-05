@@ -14,6 +14,7 @@
 			<@security.authentication property = "principal.username"/>
 		</kbd>
 		<a href = "<@spring.url "/client/profile"/>" class="btn btn-info" role="button">My Profile</a>
+		<a href = "<@spring.url "/client/balance"/>" class="btn btn-info" role="button">Balance</a>
 		<a href = "<@spring.url "/client/ads"/>" class="btn btn-info" role="button">My Advertisements</a>
 		<a href = "<@spring.url "/client/responses"/>" class="btn btn-info" role="button">Responses</a>
 		<a href = "<@spring.url "/translators"/>" class="btn btn-info" role="button">Find translators</a>

@@ -1,13 +1,10 @@
 package ua.translate.model;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
@@ -19,7 +16,9 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
+import ua.translate.model.UserEntity.UserRole;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ArchievedAd;
 import ua.translate.model.ad.RespondedAd;
 
 @Entity
@@ -36,17 +35,29 @@ public class Client extends User{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	@OneToMany(fetch = FetchType.LAZY,orphanRemoval = true,mappedBy = "client")
+	@OneToMany(fetch = FetchType.LAZY,mappedBy = "client")
 	@Fetch(FetchMode.SELECT)
 	@Cascade(CascadeType.ALL)
 	public Set<Ad> ads = new LinkedHashSet<>();
 	
-	@OneToMany(fetch = FetchType.LAZY,orphanRemoval = true,mappedBy = "client")
+	@OneToMany(fetch = FetchType.LAZY,mappedBy = "client")
+	@Fetch(FetchMode.SELECT)
+	@Cascade(CascadeType.ALL)
+	public Set<ArchievedAd> archievedAds = new LinkedHashSet<>();
+	
+	@OneToMany(fetch = FetchType.LAZY,mappedBy = "client")
 	@Fetch(FetchMode.SELECT)
 	@Cascade(CascadeType.ALL)
 	private Set<RespondedAd> respondedAds = new LinkedHashSet<>();
 
-	public Client(){}
+
+	/**
+	 * Sets {@link #role} to {@link UserRole#ROLE_CLIENT UserRole.ROLE_CLIENT}
+	 */
+	public Client(){
+		super();
+		role = UserRole.ROLE_CLIENT;
+	}
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
@@ -63,7 +74,6 @@ public class Client extends User{
 	
 	public void removeAd(Ad ad){
 		ads.remove(ad);
-		ad.setClient(null);
 	}
 
 	public Set<RespondedAd> getRespondedAds() {
@@ -77,5 +87,14 @@ public class Client extends User{
 	
 	public void removeRespondedAd(RespondedAd respondedAd){
 		respondedAds.remove(respondedAd);
+	}
+
+	public Set<ArchievedAd> getArchievedAds() {
+		return archievedAds;
+	}
+	
+	public void addArchievedAd(ArchievedAd archievedAd){
+		archievedAds.add(archievedAd);
+		archievedAd.setClient(this);
 	}
 }

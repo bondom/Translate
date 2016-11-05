@@ -6,21 +6,28 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.exception.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import ua.translate.dao.ArchievedAdDao;
 import ua.translate.dao.ClientDao;
 import ua.translate.dao.RespondedAdDao;
 import ua.translate.model.Client;
-import ua.translate.model.User;
-import ua.translate.model.UserRole;
+import ua.translate.model.Translator;
+import ua.translate.model.UserEntity;
+import ua.translate.model.UserEntity.UserRole;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ArchievedAd;
 import ua.translate.model.ad.RespondedAd;
+import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
+import ua.translate.service.AbstractAdService;
 import ua.translate.service.ClientService;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
@@ -32,8 +39,13 @@ import ua.translate.service.exception.WrongPageNumber;
 @Transactional(propagation = Propagation.REQUIRED,rollbackFor = DuplicateEmailException.class)
 public class ClientServiceImpl extends ClientService{
 
+	private static Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
+	
 	@Autowired
 	private ClientDao clientDao;
+	
+	@Autowired
+	private ArchievedAdDao archievedAdDao;
 	
 	@Autowired
 	private RespondedAdDao respondedAdDao;
@@ -57,7 +69,8 @@ public class ClientServiceImpl extends ClientService{
 			throw new WrongPageNumber();
 		}
 		if(numberOfRespondedAdsOnPage<1){
-			//default value is used
+			logger.debug("numberOfRespondedAdsOnPage = {}, default value={} is used",
+					numberOfRespondedAdsOnPage,DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE);
 			numberOfRespondedAdsOnPage = DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE;
 		}
 		Client client = getClientByEmail(email);
@@ -68,6 +81,11 @@ public class ClientServiceImpl extends ClientService{
 	
 	@Override
 	public long getNumberOfPagesForRespondedAds(String email, int numberOfRespondedAdsOnPage) {
+		if(numberOfRespondedAdsOnPage<1){
+			logger.debug("numberOfRespondedAdsOnPage = {}, default value={} is used",
+					numberOfRespondedAdsOnPage,DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE);
+			numberOfRespondedAdsOnPage = DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE;
+		}
 		Client client = getClientByEmail(email);
 		long numberOfRespondedAds = respondedAdDao.getNumberOfRespondedAdsByClient(client);
 		long numberOfPages = (long) Math
@@ -87,10 +105,6 @@ public class ClientServiceImpl extends ClientService{
 	public void registerUser(Client newUser) throws DuplicateEmailException{
 		
 		newUser.setPassword(encodePassword(newUser.getPassword()));
-		newUser.setRole(UserRole.ROLE_CLIENT);
-		newUser.setStatus(UserStatus.ACTIVE);
-		newUser.setEmailStatus(EmailStatus.NOTCONFIRMED);
-		newUser.setRegistrationTime(LocalDateTime.now());
 		
 		try{
 			clientDao.save(newUser);

@@ -9,6 +9,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,22 +19,19 @@ import ua.translate.dao.RespondedAdDao;
 import ua.translate.dao.TranslatorDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.UserRole;
+import ua.translate.model.UserEntity.UserRole;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.RespondedAdStatus;
 import ua.translate.model.status.UserStatus;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.InvalidPasswordException;
-import ua.translate.service.exception.NonExistedAdException;
-import ua.translate.service.exception.NonExistedTranslatorException;
+import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.NumberExceedsException;
 import ua.translate.service.exception.TranslatorDistraction;
 import ua.translate.service.exception.WrongPageNumber;
-import ua.translate.test.service.RespondedAdServiceTest;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED,
@@ -45,6 +43,7 @@ public class TranslatorServiceImpl extends TranslatorService {
 	private TranslatorDao translatorDao;
 	
 	@Autowired
+	@Qualifier("adDaoImpl")
 	private AdDao adDao;
 	
 	@Autowired
@@ -55,6 +54,17 @@ public class TranslatorServiceImpl extends TranslatorService {
 	 */
 	private static final int DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE=3;
 	
+	/**
+	 * It is default number of translators on one page
+	 */
+	private static final int DEFAULT_NUMBER_TRANSLATORS_ON_PAGE=5;
+	
+	/**
+	 * It is default max number of {@link RespondedAd}s with 
+	 * {@link RespondedAdStatus#SENDED SENDED} status, which may have 1 translator
+	 */
+	private static final int DEFAULT_MAX_NUMBER_SENDED_RADS=3;
+	
 	Logger logger = LoggerFactory.getLogger(TranslatorServiceImpl.class);
 	
 	@Override
@@ -64,10 +74,10 @@ public class TranslatorServiceImpl extends TranslatorService {
 	}
 
 	@Override
-	public Translator getTranslatorById(long id) throws NonExistedTranslatorException {
+	public Translator getTranslatorById(long id) throws InvalidIdentifier {
 		Translator translator = translatorDao.get(id);
 		if(translator==null){
-			throw new NonExistedTranslatorException();
+			throw new InvalidIdentifier();
 		}
 		return translator;
 	}
@@ -78,32 +88,48 @@ public class TranslatorServiceImpl extends TranslatorService {
 		if(page<1){
 			throw new WrongPageNumber();
 		}
+		if(numberTranslatorsOnPage<1){
+			logger.debug("numberTranslatorsOnPage = {}, default value={} is used",
+					numberTranslatorsOnPage,DEFAULT_NUMBER_TRANSLATORS_ON_PAGE);
+			numberTranslatorsOnPage = DEFAULT_NUMBER_TRANSLATORS_ON_PAGE;
+		}
 		return translatorDao.getTranslators(page,numberTranslatorsOnPage);
 	}
 	
 	@Override
-	public long getNumberOfPagesForTranslators(int numberOfTranslatorsOnPage) {
+	public long getNumberOfPagesForTranslators(int numberTranslatorsOnPage) {
+		if(numberTranslatorsOnPage<1){
+			logger.debug("numberTranslatorsOnPage = {}, default value={} is used",
+					numberTranslatorsOnPage,DEFAULT_NUMBER_TRANSLATORS_ON_PAGE);
+			numberTranslatorsOnPage = DEFAULT_NUMBER_TRANSLATORS_ON_PAGE;
+		}
 		long numberOfTranslators = translatorDao.getNumberOfTranslators();
 		long numberOfPages = 
-				(long) Math.ceil(((double)numberOfTranslators)/numberOfTranslatorsOnPage);
+				(long) Math.ceil(((double)numberOfTranslators)/numberTranslatorsOnPage);
 		return numberOfPages;
 	}
 	
 	@Override
-	public long saveRespondedAd(
+	public long createAndSaveRespondedAd(
 			String email,long adId, int maxNumberOfSendedRespondedAds) 
-									throws NonExistedAdException, 
+									throws InvalidIdentifier, 
 										   NumberExceedsException, 
 										   TranslatorDistraction{
 		Ad ad = adDao.get(adId);
 		if(ad == null){
-			throw new NonExistedAdException();
+			throw new InvalidIdentifier();
 		}
 		
 		Translator translator = translatorDao.getTranslatorByEmail(email);
 		
 		if(hasAcceptedAd(translator)){
 			throw new TranslatorDistraction();
+		}
+		
+		if(maxNumberOfSendedRespondedAds<1){
+			logger.debug("maxNumberOfSendedRespondedAds = {}, default value={} is used",
+					maxNumberOfSendedRespondedAds,DEFAULT_MAX_NUMBER_SENDED_RADS);
+			maxNumberOfSendedRespondedAds = DEFAULT_MAX_NUMBER_SENDED_RADS;
 		}
 		
 		if(!numberRespondedAdsInNormalRange(translator,maxNumberOfSendedRespondedAds)){
@@ -130,11 +156,6 @@ public class TranslatorServiceImpl extends TranslatorService {
 	public void registerUser(Translator newUser) throws DuplicateEmailException {
 		
 		newUser.setPassword(encodePassword(newUser.getPassword()));
-		newUser.setRole(UserRole.ROLE_TRANSLATOR);
-		newUser.setStatus(UserStatus.ACTIVE);
-		newUser.setEmailStatus(EmailStatus.NOTCONFIRMED);
-		newUser.setRegistrationTime(LocalDateTime.now());
-		newUser.setPublishingTime(LocalDateTime.now());
 		try{
 			translatorDao.save(newUser);
 			translatorDao.flush();
@@ -207,7 +228,8 @@ public class TranslatorServiceImpl extends TranslatorService {
 		}
 		
 		if(numberOfRespondedAdsOnPage<1){
-			//default value is used
+			logger.debug("numberOfRespondedAdsOnPage = {}, default value={} is used",
+					numberOfRespondedAdsOnPage,DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE);
 			numberOfRespondedAdsOnPage = DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE;
 		}
 		Translator translator = getTranslatorByEmail(email);
@@ -218,6 +240,11 @@ public class TranslatorServiceImpl extends TranslatorService {
 	
 	@Override
 	public long getNumberOfPagesForRespondedAds(String email, int numberOfRespondedAdsOnPage) {
+		if(numberOfRespondedAdsOnPage<1){
+			logger.debug("numberOfRespondedAdsOnPage = {}, default value={} is used",
+					numberOfRespondedAdsOnPage,DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE);
+			numberOfRespondedAdsOnPage = DEFAULT_NUMBER_RESPONDED_ADS_ON_PAGE;
+		}
 		Translator translator = getTranslatorByEmail(email);
 		long numberOfRespondedAds = respondedAdDao.getNumberOfRespondedAdsByTranslator(translator);
 		long numberOfPages = (long) Math
@@ -226,35 +253,6 @@ public class TranslatorServiceImpl extends TranslatorService {
 		
 	}
 	
-	@Override
-	public RespondedAd getCurrentOrder(String email) {
-		Translator translator = getTranslatorByEmail(email);
-		Set<RespondedAd> respondedAds = translator.getRespondedAds();
-		Optional<RespondedAd> wrapperRespondedAd = 
-				respondedAds.stream()
-					.filter(rad -> rad.getStatus().equals(RespondedAdStatus.ACCEPTED)).findFirst();
-		if(wrapperRespondedAd.isPresent()){
-			return wrapperRespondedAd.get();
-		}else return null;
-	}
-	
-	@Override
-	public boolean markAsNotChecked(String email, long adId) {
-		Ad ad = adDao.get(adId);
-		if(ad==null){
-			return false;
-		}
-		if(!AdStatus.ACCEPTED.equals(ad.getStatus())){
-			return false;
-		}
-		if(translatorInteractsWithAd(email, adId)){
-			ad.setStatus(AdStatus.NOTCHECKED);
-			return true;
-		}
-		
-		
-		return false;
-	}
 	
 	/**
 	 * Checks if {@link Translator} {@code translator} has RespondedAd with ACCEPTED status
@@ -291,57 +289,5 @@ public class TranslatorServiceImpl extends TranslatorService {
 		return true;
 			
 	}
-
-	
-	
-	/**
-	 * Checks if {@link Ad} {@code ad} with id={@code adId} and {@link Translator}
-	 * {@code translator} with email={@code email} 
-	 * have the same {@link RespondedAd} {@code respondedAd} with ACCEPTED status
-	 * <p>If {@code translator} has more then 1 {@code RespondedAd}, exception is thrown - 
-	 * such situation is unacceptable and is concurrency issue
-	 * @param email - email of authenticated {@code Translator}, <b>must</b> be retrieved from Principal object
-	 * @param adId - id of {@code Ad}
-	 * @return true if {@code translator} and {@code ad} have the same {@code RespondedAd} object
-	 * with ACCEPTED status
-	 */
-	private boolean translatorInteractsWithAd(String email,long adId){
-		final Translator translator = translatorDao.getTranslatorByEmail(email);
-		final Ad ad = adDao.get(adId);
-		Set<RespondedAd> respondedAds = translator.getRespondedAds();
-		Set<RespondedAd> acceptedRespondedAds = 
-							respondedAds.stream()
-			    						.filter(rad -> rad.getStatus()
-			    											.equals(RespondedAdStatus.ACCEPTED))
-			    						.collect(Collectors.toSet());
-				  
-		long numberOfAcceptedRespondedAd= acceptedRespondedAds.size();
-		if(numberOfAcceptedRespondedAd==1){
-			RespondedAd respondedAd = acceptedRespondedAds.iterator().next();
-			if(respondedAd.getAd().equals(ad)){
-				return true;
-			}else{
-				logger.debug("Translator has one ACCCEPTED RespondedAd, but "
-						+ "he wants to mark as NOTCHECKED another Ad");
-				return false;
-			}
-		}
-
-		if(numberOfAcceptedRespondedAd>1){
-			//such situation is very serious and unacceptable error
-			logger.error("Translator with email={} has {} ACCEPTED"
-					+ " RespondedAd",email,numberOfAcceptedRespondedAd);
-			/*!!!!Throwing error, must be created and handled!!!! */
-			
-		}
-		
-		//this Translator has no ACCEPTED RespondedAd
-		return false;
-	}
-
-	
-
-	
-
 
 }

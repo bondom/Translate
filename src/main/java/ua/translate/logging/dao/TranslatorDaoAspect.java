@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ua.translate.model.Translator;
-import ua.translate.model.User;
+import ua.translate.model.UserEntity;
 
 @Aspect
 @Component

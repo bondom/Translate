@@ -17,6 +17,9 @@
 			<@security.authorize access = "hasRole('ROLE_TRANSLATOR')">
 				<#include "/fragments/authtranslatorheader.ftl">
 			</@security.authorize>
+			<@security.authorize access = "hasRole('ROLE_ADMIN')">
+				<#include "/fragments/authadminheader.ftl">
+			</@security.authorize>
 			<@security.authorize access = "! isAuthenticated()">
 				<#include "/fragments/initclientheader.ftl">
 			</@security.authorize> 

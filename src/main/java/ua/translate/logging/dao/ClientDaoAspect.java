@@ -24,7 +24,8 @@ public class ClientDaoAspect {
 		try {
 			client = (Client)thisJoinPoint.proceed();
 		} catch (Throwable e) {
-			logger.error("{}.{}:{}",className,methodName,e.getStackTrace());
+			logger.error("{}.{}:{}",className,methodName,e.getClass());
+			e.printStackTrace();
 			return null;
 		}
 		

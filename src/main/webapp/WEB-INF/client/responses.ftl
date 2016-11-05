@@ -12,6 +12,11 @@
 	<div class="panel panel-default">
 		<#include "/fragments/authclientheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
+			<#if error??>
+				<div class = "alert alert-danger">
+					${error}
+				</div>
+			</#if>
 			<#if respondedAds?has_content>
 				<#list respondedAds as respondedAd>
 					<#assign translator = respondedAd.translator>
@@ -31,14 +36,19 @@
 									name="${_csrf.parameterName}"
 									value="${_csrf.token}"/>
 						</form>
-						<form action = "<@spring.url "/client/accept"/>" method = "Post" role = "form">
+						<#assign adTranslateType = ad.translateType>
+						<#if adTranslateType="WRITTEN">
+							<#assign confUrl = "confwritten">
+						</#if>
+						<#if adTranslateType="ORAL">
+							<#assign confUrl = "conforal">
+						</#if>	
+						<form action = "<@spring.url "/client/${confUrl}"/>" method = "Get" role = "form">
 							<input name="id" type="hidden" value="${respondedAd.getId()}"/>
+							<input name="cost" type="hidden" value="${ad.getCost()}"/>
 							<button type = "submit" class="btn btn-info">
 								Accept
 							</button>
-							<input type="hidden"
-									name="${_csrf.parameterName}"
-									value="${_csrf.token}"/>
 						</form>
 					</#if>
 				</#list>

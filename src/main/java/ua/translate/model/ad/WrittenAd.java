@@ -4,27 +4,44 @@ import java.time.LocalDate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Lob;
+import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 
-/*!!!!This class is leaved, because creation of ad can be changed!!!!*/
-/*@Entity
+import ua.translate.model.ad.Ad.TranslateType;
+
+
+@Entity
 @Table(name="WRITTEN_AD")
-@PrimaryKeyJoinColumn(name= "written_ad_id")*/
+@PrimaryKeyJoinColumn(name= "written_ad_id")
 public class WrittenAd extends Ad{
 	
 	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
 	@Column(name = "AD_END_DATE",nullable = false)
+	@NotNull
 	private LocalDate endDate;
 	
-	@Lob
-	@Column(name = "AD_FILE")
-	private byte[] file;
+	@OneToOne(mappedBy = "ad",fetch = FetchType.EAGER,orphanRemoval = true)
+	@Cascade(CascadeType.ALL)
+	private Document document;
+	
+	@OneToOne(mappedBy = "ad",fetch = FetchType.EAGER,orphanRemoval = true)
+	@Cascade(CascadeType.ALL)
+	private ResultDocument resultDocument;
 
+	public WrittenAd(){
+		super();
+		this.translateType = TranslateType.WRITTEN;
+	}
+	
 	public LocalDate getEndDate() {
 		return endDate;
 	}
@@ -33,12 +50,22 @@ public class WrittenAd extends Ad{
 		this.endDate = endDate;
 	}
 
-	public byte[] getFile() {
-		return file;
+	public Document getDocument() {
+		return document;
 	}
 
-	public void setFile(byte[] file) {
-		this.file = file;
+	public void setDocument(Document document) {
+		this.document = document;
 	}
+
+	public ResultDocument getResultDocument() {
+		return resultDocument;
+	}
+
+	public void setResultDocument(ResultDocument resultDocument) {
+		this.resultDocument = resultDocument;
+	}
+	
+	
 	
 }

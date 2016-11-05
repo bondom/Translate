@@ -42,6 +42,12 @@ public class CommentDaoImpl implements CommentDao{
 		session.update(t);
 		return t;
 	}
+	
+	@Override
+	public void clear() {
+		Session session = sessionFactory.getCurrentSession();
+		session.clear();
+	}
 
 	@Override
 	public void flush() throws ConstraintViolationException {

@@ -4,6 +4,20 @@ import java.time.LocalDateTime;
 
 import ua.translate.model.ad.Ad;
 
+/**
+ * This bean is used for rendering {@link Ad}s for all visitors of website.
+ * <p>Bean contains String field {@link AdView#messageWithPublishingTime AdView.messageWithPublishingTime},
+ * which contains user-friendly message when {@code Ad} was published.
+ * <br>Example:"4 hours ago"
+ * <p>If user, requested page with {@code Ad}s, is translator,
+ * String field {@link AdView#respondingTime AdView.respondingTime} contains
+ * {@link LocalDateTime} when that translator responded on that particular {@code Ad}, or
+ * {@code null} if that translator didn't respond on {@code Ad}
+ * 
+ * 
+ * @author Yuriy Phediv
+ *
+ */
 public class AdView {
 	
 	private Ad ad;

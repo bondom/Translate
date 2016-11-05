@@ -16,12 +16,6 @@ import ua.translate.model.validator.FieldNotMatch;
 public class SearchFilterForAds {
 	
 	@NotEmpty
-	private String translateType;
-	@NotEmpty
-	private String country;
-	@NotEmpty
-	private String city;
-	@NotEmpty
 	private String initLanguage;
 	@NotEmpty
 	private String resultLanguage;
@@ -36,35 +30,14 @@ public class SearchFilterForAds {
 	public SearchFilterForAds() {
 		super();
 	}
-	public SearchFilterForAds(String translateType, String country, String city, String initLanguage,
+	public SearchFilterForAds(String initLanguage,
 			String resultLanguage, String currency, int minCost, int maxCost) {
 		super();
-		this.translateType = translateType;
-		this.country = country;
-		this.city = city;
 		this.initLanguage = initLanguage;
 		this.resultLanguage = resultLanguage;
 		this.currency = currency;
 		this.minCost = minCost;
 		this.maxCost = maxCost;
-	}
-	public String getTranslateType() {
-		return translateType;
-	}
-	public void setTranslateType(String translateType) {
-		this.translateType = translateType;
-	}
-	public String getCountry() {
-		return country;
-	}
-	public void setCountry(String country) {
-		this.country = country;
-	}
-	public String getCity() {
-		return city;
-	}
-	public void setCity(String city) {
-		this.city = city;
 	}
 	public String getInitLanguage() {
 		return initLanguage;

@@ -4,6 +4,8 @@ package ua.translate;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
@@ -12,6 +14,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -24,6 +27,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -43,11 +49,13 @@ import freemarker.template.Version;
 
 @Configuration
 @EnableWebMvc
+@EnableScheduling
+//@EnableCaching
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @ComponentScan(basePackages = "ua.translate")
 @EnableTransactionManagement
 @PropertySource("classpath:application.properties")
-public class AppConfig extends WebMvcConfigurerAdapter{
+public class AppConfig extends WebMvcConfigurerAdapter implements SchedulingConfigurer{
 	
 	@Value("${db.driver}") private String dbDriver;
 	@Value("${db.url}") private String dbUrl;
@@ -183,4 +191,16 @@ public class AppConfig extends WebMvcConfigurerAdapter{
 	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
 		return new PropertySourcesPlaceholderConfigurer();
 	}
+
+	
+	@Override
+    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+        taskRegistrar.setScheduler(taskExecutor());
+    }
+
+    @Bean(destroyMethod="shutdown")
+    public Executor taskExecutor() {
+        return Executors.newScheduledThreadPool(100);
+    }
+
 }

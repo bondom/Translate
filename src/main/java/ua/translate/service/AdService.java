@@ -1,257 +1,154 @@
 package ua.translate.service;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
-import javax.persistence.ManyToOne;
-
 import ua.translate.model.Client;
-import ua.translate.model.Translator;
-import ua.translate.model.User;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.Document;
+import ua.translate.model.ad.ArchievedAd;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.searchbean.SearchAdBean;
 import ua.translate.model.status.AdStatus;
-import ua.translate.model.viewbean.AdView;
-import ua.translate.model.viewbean.SearchFilterForAds;
+import ua.translate.service.exception.DuplicateAdException;
 import ua.translate.service.exception.IllegalActionForAd;
-import ua.translate.service.exception.NonExistedAdException;
+import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.TooManyAds;
 import ua.translate.service.exception.TooManyRefreshings;
-import ua.translate.service.exception.DownloadFileAccessDenied;
-import ua.translate.service.exception.IllegalActionForAcceptedAd;
-import ua.translate.service.exception.WrongPageNumber;
 
-/**
- * This interface contains methods for interaction with {@link Ad}s 
- * @author Yuriy Phediv
- *
- */
 public interface AdService {
 	
 	/**
-	 * Gets {@link Client} client from data storage by email,
+	 * Gets {@link Client} client from data storage by email.
+	 * If {@link Ad} {@code ad} is not similar to another Ads of this client,
 	 * then does associations between {@link Ad} {@code ad} and {@code client},saves in data storage.
 	 * <br>Sets status of {@code ad} to SHOWED and invokes {@code ad.setPublicationDateTime(LocalDateTime.now())}
+	 * <p>If {@code maxNumberOfAds} is less than 1, default value is used, this variable
+	 * defines maximum number of {@code Ad}s. If number of {@code Ad}s of client equalas to
+	 * {@code maxNumberOfAds}, exception is thrown
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param ad {@link Ad} object
 	 * @param email - client's email, must be retrieved from {@code Principal} object
-	 * @param maxNumberOfAds - maximum number of ads, that can have 1 client
-	 * @throws TooManyAds - if client already has {@code maxNumberOfAds} ads
+	 * @param maxNumberOfAds - maximum number of ads, that can belong to client
+	 * @throws TooManyAds if client already has {@code maxNumberOfAds} ads
+	 * @throws DuplicateAdException  if {@link Client#getAds() Client.ads} contains
+	 * {@code Ad} which is similar to {@code ad}
 	 * @return generated id of this advertisement
 	 */
-	public long saveAd(Ad ad, String email,long maxNumberOfAds) throws TooManyAds;
+	public abstract long saveAd(Ad ad, String email,long maxNumberOfAds) 
+												throws TooManyAds,DuplicateAdException;
+	
+	
+	
+	
 	
 	/**
-	 * Attempts to update {@link Ad} 
-	 * <p>First method gets {@code Ad} {@code adFromDb} by id(is retrieved from {@code updatedAd}) 
-	 * from data storage, if updating is allowed,
-	 * he copies all properties, that can't be setted by client while 
-	 * updating Ad(see below), from {@code adFromDb} to {@code updatedAd}. 
-	 * If {@link Ad#getDocument()} of {@code updatedAd} equals to 
-	 * {@code null}, copies document from {@code adFromDb} to {@code updatedAd} too.
-	 * Then method saves {@code updatedAd} in data storage, to be precise replaces 
-	 * {@code adFromDb} with {@code updatedAd}(merging).
-	 * <p> Properties, that can't be setted by client while updating {@code Ad} are:
-     * 		<ul>
-     * 			<li>{@link Ad#getClient()}</li>
-     * 			<li>{@link Ad#getPublicationDateTime()}</li>
-     * 			<li>{@link Ad#getStatus()}</li>
-     * 			<li>{@link Ad#getRespondedAds()}</li>
-     * 		</ul>
-	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
-	 * @param email - email of authenticated client, <b>must</b> be retrieved from Principal object
-	 * @param updatedAd - {@code Ad} with setted all properties except properties, 
-	 * that can't be setted by client while updating {@code Ad}(see above) and setted id
-	 * @return  {@code Ad} ad object, never {@code null}
-	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist,
-	 * or it doesn't belong to {@code client}
-	 * @throws IllegalActionForAcceptedAd if {@code Ad} with such id exists, but status is ACCEPTED
-	 * @throws IllegalActionForAd if {@code Ad} has {@link RespondedAd} with SENDED status
-	 */
-	public Ad updateAd(String email, Ad updatedAd) throws NonExistedAdException, 
-													   IllegalActionForAcceptedAd,
-													   IllegalActionForAd;
-	
-	/**
-	 * Attempts to update {@link Ad#getPublicationDateTime()} of {@code Ad} 
+	 * Attempts to update {@link Ad#getPublicationDateTime() Ad.publicationDateTime} of {@code Ad} 
 	 * <p>Method gets {@code Ad} by id and if updating of 
 	 * publication dateTime is allowed, sets {@link LocalDateTime#now()},
 	 * otherwise appropriate exception is thrown
+	 * <p>If {@code hoursBetweenRefreshing} is less than 1, default value is used
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated client, <b>must</b> be retrieved from Principal object
 	 * @param adId -id of {@code Ad}  
 	 * @param hoursBetweenRefreshing - minimum number of hours, which must pass for next
 	 * refreshing
-	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist,
+	 * @throws InvalidIdentifier if {@code Ad} with such id doesn't exist,
 	 * or it doesn't belong to {@link Client} with email={@code email}
-	 * @throws IllegalActionForAcceptedAd if {@code Ad} with such id exists, but status is ACCEPTED
+	 * @throws IllegalActionForAd if {@code Ad} with such id exists, but status is not SHOWED
 	 * @throws TooManyRefreshings if required time for refreshing has not yet passed
 	 */
-	public void refreshPubDate(String email, long adId, long hoursBetweenRefreshing) throws NonExistedAdException, 
-													   IllegalActionForAcceptedAd,
+	public abstract void refreshPubDate(String email, long adId, int hoursBetweenRefreshing) throws InvalidIdentifier, 
+													   IllegalActionForAd,
 													   TooManyRefreshings;
 	
 	/**
 	 * Gets advertisement from data storage by Id
 	 * @param id
 	 * @return {@code Ad} object, never {@code null}
-	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist
+	 * @throws InvalidIdentifier if {@code Ad} with such id doesn't exist
 	 * @see AdService#getForShowing(long)
 	 * @see AdService#getForUpdating(long)
 	 */
-	public Ad get(long id) throws NonExistedAdException ;
+	public abstract Ad get(long id) throws InvalidIdentifier ;
 	
 	/**
-	 * Gets advertisement from data storage by Id with SHOWED status
+	 * Gets advertisement from data storage by id with SHOWED status
 	 * @param id
 	 * @return {@code Ad} object, never {@code null}  
-	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist
-	 * @throws IllegalActionForAcceptedAd if {@code Ad} with such id exists, but
+	 * @throws InvalidIdentifier if {@code Ad} with such id doesn't exist
+	 * @throws IllegalActionForAd if {@code Ad} with such id exists, but
 	 * status is not SHOWED
 	 * @see #getForUpdating(long)
 	 */
-	public Ad getForShowing(long id) throws NonExistedAdException, IllegalActionForAcceptedAd;
+	public abstract Ad getForShowing(long id) throws InvalidIdentifier, IllegalActionForAd;
 	
 	/**
-	 * Gets {@link Document} from data storage by its ad id
-	 * <p>Invoke this method if user attempts to download file, 
-	 * related to ad with id={@code adId}<br>
-	 * <p>File can be downloaded only by translators or owner of advertisement, 
-	 * to which the file is related. If another user attempts to get file, exception is thrown
-	 * @param adId - ad id
-	 * @param userEmail - email of user, who attempts to download file, related to ad
-	 * @return {@code Document} object, never {@code null}  
-	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist
-	 * @throws DownloadFileAccessDenied if user with email={@code userEmail} is not translator and
-	 * is not owner of this ad
-	 * @see #getForShowing(long)
-	 * @see #getForUpdating(long)
-	 */
-	public Document getDocumentForDownloading(long adId,String userEmail) throws NonExistedAdException,DownloadFileAccessDenied;
-	
-	/**
-	 * Gets {@link Ad } {@code ad} from data storage by id with SHOWED status,
+	 * Gets {@link Ad } {@code ad} from data storage by id with 
+	 * {@link AdStatus#SHOWED SHOWED} status,
 	 * checks if {@code ad} belongs to {@link Client} {@code client}, who has {@code email}
 	 * <p>Invoke this method if you want to return page for editing advertisiment
 	 * @param id - id of {@code Ad}, which should be retrieved for updating
 	 * @param email - email of authenticated client, <b>must</b> be retrieved from Principal object
 	 * @return {@code Ad} object, never {@code null}  
-	 * @throws NonExistedAdException if {@code ad} with such id doesn't exist, 
+	 * @throws InvalidIdentifier if {@code ad} with such id doesn't exist, 
 	 * or it doesn't belong to {@code client}
-	 * @throws IllegalActionForAcceptedAd if {@code ad} with such id exists, 
-	 * but status is ACCEPTED
-	 * @throws IllegalActionForAd if {@code ad} has responses with {@code ResponsedAdStatus#SENDED} status
+	 * @throws IllegalActionForAd if {@code ad} with such id exists, but its status 
+	 * isn't {@code SHOWED}
+	 *  or it  has responses with {@code ResponsedAdStatus#SENDED} status
 	 */
-	public Ad getForUpdating(String email,long id) throws NonExistedAdException, 
-														  IllegalActionForAcceptedAd,
+	public abstract Ad getForUpdating(String email,long id) throws InvalidIdentifier, 
 														  IllegalActionForAd;
 	
-	
 	/**
-	 * Gets {@code Set} of advertisements from data storage, 
-	 * which have SHOWED status, ordered by {@link Ad#getPublicationDateTime()} 
-	 * from latest to earliest.
-	 * <p>If {@code numberAdsOnPage} is less then 1, default
-	 * number is used. If {@code page} is less then 1, exception is thrown
-	 * <p>Size of result {@code Set} is not more than {@code numberAdsOnPage}
-	 * <p><b>NOTE:</b>AfterReturning Logging via Spring AOP is present
-	 * @param page -  page number, can't be less than 1
-	 * @param numberAdsOnPage - number {@link Ad}s, which can be displayed on 1 page
-	 * @return set of advertisements, never {@code null}
-	 * @throws WrongPageNumber if {@code page} is less than 1
-	 */
-	public Set<Ad> getAdsForShowing(int page,int numberAdsOnPage) throws WrongPageNumber;
-	
-	/**
-	 * Gets {@code Set} of {@code Ad}s from data storage,  
-	 * which have SHOWED status, ordered by {@link Ad#getPublicationDateTime()} 
-	 * from latest to earliest and filtered by user
-	 * <br><p>{@link SearchFilterForAds} {@code searchFilter} contains String 
-	 * representation of all properties, available to user for choosing 
-	 * <br><p>Method  creates {@link SearchAdBean} {@code searchAdBean}, and sets
-	 * its properties based on {@code searchFilter}. If some properties 
-	 * of {@code searchFilter} equal to {@code valueWithoutFilter}, appropriate 
-	 * properties of {@code searchAdBean} are assigned to {@code null}
-	 * (that is no filter for this properties won't be applied) 
-	 * <p>If {@code numberAdsOnPage} is less then 1, default
-	 * number is used. If {@code page} is less then 1, exception is thrown
-	 * <br><p>Size of result {@code Set} is not more than {@code numberAdsOnPage}
-	 * <p><b>NOTE:</b>AfterReturning and Before Logging via Spring AOP is present
-	 * @param page -  page number, can't be less than 1
-	 * @param numberAdsOnPage - number {@link Ad}s, which can be displayed on 1 page
-	 * @param searchFilter - object, which represents filters, chosen by user
-	 * @param valueWithoutFilter - value, which is setted for user's 
-	 * {@link SearchFilterForAds} String properties by default(without choosing),
-	 * and imposes no restrictions for appropriate String properties
-	 * @return set of advertisements, never {@code null}
-	 * @throws WrongPageNumber if {@code page} is less than 1
-	 */
-	public Set<Ad> getAdsForShowingByFilter(int page,int numberAdsOnPage,
-							SearchFilterForAds searchFilter,String valueWithoutFilter) throws WrongPageNumber;
-	
-	/**
-	 * <b>For ADMIN</b>
-	 * <p>Gets {@code Set} of advertisements from data storage, 
-	 * which have {@code status==NOTCHECKED}, ordered by {@link Ad#getPublicationDateTime()} 
-	 * from earliest to latest.
-	 * size of result {@code Set} is not more than {@code numberAdsOnPage}
-	 * <p>If {@code numberAdsOnPage} is less then 1, default
-	 * number is used. If {@code page} is less then 1, exception is thrown
-	 * <p><b>NOTE:</b>AfterReturning Logging via Spring AOP is present
-	 * @param page -  page number, can't be less than 1
-	 * @param numberAdsOnPage - number {@link Ad}s, which can be displayed on 1 page
-	 * @return set of advertisements, never {@code null}
-	 * @throws WrongPageNumber if {@code page} is less than 1
-	 */
-	public Set<Ad> getAdsForChecking(int page,int numberAdsOnPage) throws WrongPageNumber;
-	
-	/**
-	 * Returns number of pages for all existed {@link Ad}s with status={@code adStatus},
-	 * if on one page can be displayed only {@code numberOfAds} {@code Ad}s
-	 * <p>If {@code numberOfAds} is less then 1, default
-	 * number is used.
+	 * Gets {@link Ad} {@code ad} by id and delete it, if status is SHOWED or PAYED
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
-	 * @param numberOfAds - number of {@code Ad}s, which can be displayed on one page
+	 * @throws InvalidIdentifier if {@code Ad} with such id doesn't exist
+	 * @throws IllegalActionForAd if {@code Ad} with such id exists,
+	 * but its status isn't SHOWED or PAYED
 	 */
-	public long getNumberOfPagesForAdsByStatus(AdStatus adStatus,int numberOfAds);
+	public abstract void deleteById(long id) throws InvalidIdentifier, IllegalActionForAd;
 	
 	/**
-	 * Returns number of pages for all existed {@link Ad}s with status={@code adStatus}
-	 * and filtered by user.
-	 * <br><p>{@link SearchFilterForAds} {@code searchFilter} contains String 
-	 * representation of all properties, available to user for choosing 
-	 * <br><p>Method  creates {@link SearchAdBean} {@code searchAdBean}, and sets
-	 * its properties based on {@code searchFilter}. If some properties 
-	 * of {@code searchFilter} equal to {@code valueWithoutFilter}, appropriate 
-	 * properties of {@code searchAdBean} are assigned to {@code null}
-	 * (that is no filter for this properties won't be applied) 
-	 * <p>If {@code numberOfAds} is less then 1, default
-	 * number is used.
-	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
-	 * @param numberOfAds - number of {@code Ad}s, which can be displayed on one page
-	 * @param searchFilter - object, which represents filters, chosen by user
-	 * @param valueWithoutFilter - value, which is setted for user's 
-	 * {@link SearchFilterForAds} String properties by default(without choosing),
-	 * and imposes no restrictions for appropriate String properties
+	 * Gets {@link Ad} {@code ad} by id and {@link Client} {@code client}
+	 * by email from data storage.
+	 * If {@code ad} belongs to {@code client} and ad has {@link AdStatus#PAYED PAYED} status,
+	 * deletes relationships between {@code ad} and {@code client}. Deletes relationships
+	 * beetween all {@link RespondedAd}s, related to {@code ad} and {@code client} as well.
+	 * <p>If {@link ArchievedAd} {@code archievedAd}, related to ad, exists in data storage,
+	 * retieves it and sets {@code client} to it, if no one {@code ArchievedAd} object, related
+	 * to that {@code ad}, exists, creates new one ,sets {@code client} and
+	 * {@code ad} to it. Saves it in data storage. 
+	 *	<p>Implementation prodives, that all body of method is locked by {@code ReentrantLock} object,
+	 * the same lock is used in {@link #deleteFromAssociationsWithTranslatorAndArchieveAd(long, String)} for avoiding situation,
+	 * when client and translator simultaneously get {@code Ad} and update it, and check on existing {@code ArchievedAd}.
+	 * @param id - id of {@code Ad}
+	 * @param email - email of authenticated {@code Client}
+	 * @throws InvalidIdentifier if {@code ad} or {@code client} is {@code null}, 
+	 * or {@code ad} doesn't belong to {@code client}
 	 */
-	public long getNumberOfPagesForAdsByStatusAndFilter(AdStatus adStatus,int numberOfAds,
-												SearchFilterForAds searchFilter,
-												String valueWithoutFilter);
-	
+	public abstract void deleteFromAssociationsWithClientAndArchieveAd(long id,String email) 
+					throws InvalidIdentifier;
 	
 	/**
-	 * Gets {@link Ad} {@code ad} by id and delete it, if status is not ACCEPTED
-	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
-	 * @throws NonExistedAdException if {@code Ad} with such id doesn't exist
-	 * @throws IllegalActionForAcceptedAd if {@code Ad} with such id exists,
-	 * but {@code ad.status==ACCEPTED}
+	 * Gets {@link Ad} {@code ad} by id and {@link Translator} {@code translator}
+	 * by email from data storage.
+	 * If {@code ad} and {@code translator} have relationships and {@code ad} has 
+	 * {@link AdStatus#PAYED PAYED} status,
+	 * deletes relationships between {@code ad} and {@code translator}. Deletes all
+	 * {@code RespondedAd}s, which belongs to {@code ad} and {@code translator}, as well.
+	 * <p>If {@link ArchievedAd} {@code archievedAd}, related to ad, exists in data storage,
+	 * retrieves it and sets {@code translator} to it, if no one {@code ArchievedAd} object, related
+	 * to that {@code ad}, exists, creates new one ,sets {@code translator} and
+	 * {@code ad} to it. Saves it in data storage. 
+	 * <p>Implementation prodives, that all body of method is locked by {@code ReentrantLock} object,
+	 * the same lock is used in {@link #deleteFromAssociationsWithClientAndArchieveAd(long, String)} for avoiding situation,
+	 * when client and translator simultaneously get {@code Ad} and update it, and check on existing {@code ArchievedAd}.
+	 * 
+	 * @param id - id of {@code Ad}
+	 * @param email - email of authenticated {@code Translator}
+	 * @throws InvalidIdentifier if {@code ad} or {@code translator} is {@code null}, 
+	 * or {@code ad} isn't linked to {@code translator}
 	 */
-	public void deleteById(long id) throws NonExistedAdException, IllegalActionForAcceptedAd;
-
-	
+	public abstract void deleteFromAssociationsWithTranslatorAndArchieveAd(long id,String email) 
+					throws InvalidIdentifier;
 	
 }

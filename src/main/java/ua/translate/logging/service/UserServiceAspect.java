@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.User;
+import ua.translate.model.UserEntity;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
@@ -32,7 +32,7 @@ public class UserServiceAspect {
 	@Around(value = "ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public void registerUser(..)) && "
 			 + "args(user)")
-	public void registerUser(ProceedingJoinPoint thisJoinPoint, User user) throws Throwable {
+	public void registerUser(ProceedingJoinPoint thisJoinPoint, UserEntity user) throws Throwable {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		try {
@@ -165,10 +165,24 @@ public class UserServiceAspect {
 		}
 		if(respondedAds.size()>0){
 			respondedAds.stream().forEach(rad->{
+				Translator translator = rad.getTranslator();
+				Client client = rad.getClient();
+				String translatorEmail;
+				String clientEmail;
+				if(translator==null){
+					translatorEmail="null";
+				}else{
+					translatorEmail=translator.getEmail();
+				}
+				if(client==null){
+					clientEmail="null";
+				}else{
+					clientEmail=client.getEmail();
+				}
 				logger.debug("{}.{}(email={},page={},numberOfRespondedAdsOnPage={}):"
 						+ "translator email='{}',client email={}, status='{}', ad name='{}' ad id='{}'",
 						className,methodName,email,page,numberOfRespondedAdsOnPage,
-						rad.getTranslator().getEmail(),rad.getClient().getEmail(),
+						translatorEmail,clientEmail,
 						rad.getStatus(),rad.getAd().getName(),rad.getAd().getId());
 			});
 		}else logger.debug("{}.{}(email={},page={},numberOfRespondedAdsOnPage={}): "

@@ -56,6 +56,12 @@ public class TranslatorDaoImpl  extends TranslatorDao{
 	}
 	
 	@Override
+	public void clear() {
+		Session session = sessionFactory.getCurrentSession();
+		session.clear();
+	}
+	
+	@Override
 	public Translator getTranslatorByEmail(String email) {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.getNamedQuery("translatorByEmail");

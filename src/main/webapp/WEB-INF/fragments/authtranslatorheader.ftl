@@ -14,7 +14,8 @@
 			<@security.authentication property = "principal.username"/>
 		</kbd>
 		<a href = "<@spring.url "/translator/profile"/>" class="btn btn-info" role="button">My Profile</a>
-		<a href = "<@spring.url "/ads"/>" class="btn btn-info" role="button">Find orders</a>
+		<a href = "<@spring.url "/translator/balance"/>" class="btn btn-info" role="button">Balance</a>
+		<a href = "<@spring.url "/adsw"/>" class="btn btn-info" role="button">Find orders</a>
 		<a href = "<@spring.url "/translator/responses"/>" class="btn btn-info" role="button">Responses</a>
 		<a href = "<@spring.url "/translator/currentOrder"/>" class="btn btn-info" role="button">Current order</a>
 		<a href = "javascript:formSubmit()" class="btn btn-info" role="button">Log out</a>

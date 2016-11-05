@@ -12,4 +12,5 @@ public interface AbstractDao<PK extends Serializable,T> {
 	public void delete(T entity);
 	public T update(T t);
 	public void flush() throws ConstraintViolationException;
+	public void clear();
 }

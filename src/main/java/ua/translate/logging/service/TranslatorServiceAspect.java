@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.RespondedAd;
 
@@ -128,9 +129,16 @@ public class TranslatorServiceAspect {
 			logger.debug("{}.{}(translator email={}): RespondedAd with ACCEEPTED status doesn't exist",
 					className,methodName,email);
 		}else{
+			Client client = currentOrder.getClient();
+			String clientEmail;
+			if(client==null){
+				clientEmail="null";
+			}else{
+				clientEmail=client.getEmail();
+			}
 			logger.debug("{}.{}(translator email={}): RespondedAd[id={},ad name={},client email={}]",
 				className,methodName,email,currentOrder.getId(),
-				currentOrder.getAd().getName(),currentOrder.getClient().getEmail());
+				currentOrder.getAd().getName(),clientEmail);
 		}
 		return currentOrder;
 	}

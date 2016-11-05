@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.User;
+import ua.translate.model.UserEntity;
 
 
 @Aspect
@@ -26,7 +26,7 @@ public class AbstractUserDaoAspect {
 	@Around("ua.translate.logging.SystemArchitecture.inDaoLayer() && "
 			+ "(execution(Long save(ua.translate.model.Client)) || "
 			+ "execution(Long save(ua.translate.model.Translator))) && args(user)")
-	public Long saving(ProceedingJoinPoint thisJoinPoint, User user) {
+	public Long saving(ProceedingJoinPoint thisJoinPoint, UserEntity user) {
 		String className = thisJoinPoint.getTarget().getClass().getName();
 		String methodName = thisJoinPoint.getSignature().getName();
 		Long id = 0L;

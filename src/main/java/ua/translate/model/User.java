@@ -1,96 +1,38 @@
 package ua.translate.model;
 
-import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 
-import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
-import org.springframework.stereotype.Component;
 
 import ua.translate.model.status.EmailStatus;
-import ua.translate.model.status.UserStatus;
 
 @Entity
 @NamedQueries({
-		@NamedQuery(name =  "userByEmail",
-					query = "from User user where user.email = :email"),
-		@NamedQuery(name =  "userByConfirmationUrl",
-					query = "from User user where user.confirmationUrl = :confirmationUrl")
+	@NamedQuery(name =  "userByConfirmationUrl",
+				query = "from User user where user.confirmationUrl = :confirmationUrl")
 })
 @Table(name = "USER_TEST")
-@Inheritance(strategy=InheritanceType.JOINED)
-@Component
-public class User implements Serializable{
+public class User extends UserEntity{
 	
-	/**
-	 * Version of this class in production 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	@Id
-	@SequenceGenerator(name = "standart",initialValue = 1)
-	@GeneratedValue(generator = "standart",strategy =GenerationType.SEQUENCE)
-	@Column(name = "ID")
-	private long id;
-	
-	@Email
-	/*!!!!Can be replaced with required=false and then need delete not needed hidden input!!!!*/
-	@NotEmpty
-	@Column(name = "EMAIL",nullable =false,unique = true)
-	private String email;
-	
-	@Size(min = 4, max = 100)
-	@Column(name = "PASSWORD",nullable = false)
-	private String password;
-
 	@Lob
 	@Column(name = "AVATAR")
 	private byte[] avatar;
 	
-	@Size(min = 3, max = 15)
-	@Column(name = "FIRST_NAME",nullable = false)
-	private String firstName;
-	
-	@Size(min = 3, max = 15)
-	@Column(name = "LAST_NAME",nullable = false)
-	private String lastName;
-	
-	@NotNull
-	@Column(name = "PHONE_NUMBER", nullable = false)
-	@Pattern(regexp = "^[+]380\\d{9}$")
-	private String phoneNumber;
-	
-	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
-	 /*!!!!Добавить проверку валидности даты!!!!*/
-	@NotNull
-	@Column(name = "BIRTHDAY",nullable = false)
-	private LocalDate birthday;
-
 	@NotBlank
 	@Column(name = "COUNTRY",nullable = false)
 	private String country;
@@ -99,13 +41,16 @@ public class User implements Serializable{
 	@Column(name = "CITY",nullable = false)
 	private String city;
 	
-	@Column(name = "ROLE", nullable = false)
-	@Enumerated(EnumType.STRING)
-	private UserRole role;
-
-	@Column(name = "STATUS",nullable = false)
-	@Enumerated(EnumType.STRING)
-	private UserStatus status;
+	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
+	 /*!!!!Добавить проверку валидности даты!!!!*/
+	@NotNull
+	@Column(name = "BIRTHDAY",nullable = false)
+	private LocalDate birthday;
+	
+	@NotNull
+	@Column(name = "PHONE_NUMBER", nullable = false)
+	@Pattern(regexp = "^[+]380\\d{9}$")
+	private String phoneNumber;
 	
 	@Column(name = "EMAIL_STATUS",nullable = false)
 	@Enumerated(EnumType.STRING)
@@ -114,45 +59,17 @@ public class User implements Serializable{
 	@Column(name = "CONFIRM_URL")
 	private String confirmationUrl;
 	
-	@Column(name = "REGISTRATION_DATE",nullable = false)
-	private LocalDateTime registrationTime;
+	@Column(name = "BALANCE",nullable = false)
+	private Double balance;
 	
-	public User(){}
-	
-	public long getId() {
-		return id;
-	}
-	
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	public String getEmail() {
-		return email;
-	}
-	public void setEmail(String email) {
-		this.email = email;
-	}
-	
-	public UserStatus getStatus() {
-		return status;
-	}
-	public void setStatus(UserStatus status) {
-		this.status = status;
-	}
-
-	public UserRole getRole() {
-		return role;
-	}
-
-	public void setRole(UserRole role) {
-		this.role = role;
+	/**
+	 * Sets {@link #emailStatus} to {@link EmailStatus#NOTCONFIRMED 
+	 * EmailStatus.NOTCONFIRMED}  
+	 */
+	public User(){
+		super();
+		emailStatus = EmailStatus.NOTCONFIRMED;
+		balance = 0.0;
 	}
 
 	public byte[] getAvatar() {
@@ -161,37 +78,6 @@ public class User implements Serializable{
 
 	public void setAvatar(byte[] avatar) {
 		this.avatar = avatar;
-	}
-
-	public String getPhoneNumber() {
-		return phoneNumber;
-	}
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
-	
-	public String getFirstName() {
-		return firstName;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public String getLastName() {
-		return lastName;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-
-	public LocalDate getBirthday() {
-		return birthday;
-	}
-
-	public void setBirthday(LocalDate birthday) {
-		this.birthday = birthday;
 	}
 
 	public String getCountry() {
@@ -209,15 +95,23 @@ public class User implements Serializable{
 	public void setCity(String city) {
 		this.city = city;
 	}
-	
-	public LocalDateTime getRegistrationTime() {
-		return registrationTime;
+
+	public LocalDate getBirthday() {
+		return birthday;
 	}
 
-	public void setRegistrationTime(LocalDateTime registrationTime) {
-		this.registrationTime = registrationTime;
+	public void setBirthday(LocalDate birthday) {
+		this.birthday = birthday;
 	}
-	
+
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
 	public EmailStatus getEmailStatus() {
 		return emailStatus;
 	}
@@ -226,10 +120,6 @@ public class User implements Serializable{
 		this.emailStatus = emailStatus;
 	}
 
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-	
 	public String getConfirmationUrl() {
 		return confirmationUrl;
 	}
@@ -238,19 +128,14 @@ public class User implements Serializable{
 		this.confirmationUrl = confirmationUrl;
 	}
 
-	@Override
-	public boolean equals(Object obj){
-		if ( obj == null || getClass() != obj.getClass() ) {
-            return false;
-        }
-		User user = (User)obj;
-		return Objects.equals(email, user.getEmail());
+	public Double getBalance() {
+		return balance;
+	}
+
+	public void setBalance(Double balance) {
+		this.balance = balance;
 	}
 	
-	@Override
-	public int hashCode(){
-		return Objects.hash(email);
-	}
-		
+	
 	
 }

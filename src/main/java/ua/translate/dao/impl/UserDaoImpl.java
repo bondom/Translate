@@ -50,6 +50,12 @@ public class UserDaoImpl extends UserDao{
 		Session session = sessionFactory.getCurrentSession();
 		session.flush();
 	}
+	
+	@Override
+	public void clear() {
+		Session session = sessionFactory.getCurrentSession();
+		session.clear();
+	}
 
 
 }

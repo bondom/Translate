@@ -9,12 +9,16 @@
 </head>
 <body>
 	<div class="panel-heading">
-		<a href = "<@spring.url "/"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
+		<a href = "<@spring.url "/bulbular/adminPage"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
 		<kbd>
 			<@security.authentication property = "principal.username"/>
 		</kbd>
 		<a href = "<@spring.url "/translators"/>" class="btn btn-info" role="button">Translators</a>
 		<a href = "<@spring.url "/bulbular/notCheckedAds"/>" class="btn btn-info" role="button">Not Checked Ads</a>
+		<a href = "<@spring.url "/bulbular/adsw"/>" class="btn btn-info" role="button">Ads</a>
+		<a href = "<@spring.url "/bulbular/admsgs"/>" class="btn btn-info" role="button">Ad Statuses</a>
+		<a href = "<@spring.url "/bulbular/settings"/>" class="btn btn-info" role="button">Settings</a>
+		<a href = "<@spring.url "/bulbular/archieve"/>" class="btn btn-info" role="button">Archieved Ads</a>
 		<a href = "javascript:formSubmit()" class="btn btn-info" role="button">Log out</a>
 	</div>
 	<form action = "<@spring.url "/bulbular/logout"/>" method = "post" id = "logoutForm">

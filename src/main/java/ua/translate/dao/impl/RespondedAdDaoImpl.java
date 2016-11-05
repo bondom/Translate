@@ -59,6 +59,12 @@ public class RespondedAdDaoImpl implements RespondedAdDao{
 	}
 	
 	@Override
+	public void clear() {
+		Session session = sessionFactory.getCurrentSession();
+		session.clear();
+	}
+	
+	@Override
 	public Set<RespondedAd> getRespondedAdsByClient(Client client, int page, int numberRespondedAdsOnPage) {
 		Session session = sessionFactory.getCurrentSession();
 		Query query = session.getNamedQuery("getRadsByClient");

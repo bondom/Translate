@@ -36,6 +36,7 @@ public class ClientServiceTest {
 
 	@InjectMocks
 	private ClientServiceImpl clientService;
+	
 	Logger logger = LoggerFactory.getLogger(ClientServiceTest.class);
 
 	@Before

@@ -32,6 +32,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -53,14 +54,6 @@ import ua.translate.model.status.AdStatus;
 import ua.translate.model.validator.FieldNotMatch;
 
 @Entity
-@NamedQueries({
-	@NamedQuery(name =  "getAllAds",
-			query = "from Ad"),
-	@NamedQuery(name =  "getAdsByStatusAndDescOrderByPubDate",
-	query = "from Ad ad where ad.status = :status order by ad.publicationDateTime desc"),
-	@NamedQuery(name =  "getAdsByStatusAndAscOrderByPubDate",
-	query = "from Ad ad where ad.status = :status order by ad.publicationDateTime asc")
-})
 @FieldNotMatch(first = "initLanguage",second = "resultLanguage", message = "Languages must be different")
 @Table(name = "AD_TEST")
 @Inheritance(strategy=InheritanceType.JOINED)
@@ -78,7 +71,7 @@ public class Ad  implements Serializable{
 	private long id;
 	
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "CLIENT",nullable = false)
+	@JoinColumn(name = "AD_CLIENT")
 	private Client client;
 	
 	@NotBlank
@@ -91,9 +84,7 @@ public class Ad  implements Serializable{
 	@Size(min = 0, max = 1000)
 	private String description;
 
-	
-	 /*!!!!Добавить проверку валидности даты!!!!*/
-	 
+	/*!!!!Добавить проверку валидности даты!!!!*/
 	@Column(name = "AD_INIT_LANGUAGE",nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Language initLanguage;
@@ -103,6 +94,8 @@ public class Ad  implements Serializable{
 	private Language resultLanguage;
 	
 	@Column(name = "AD_COST",nullable = false)
+	@NotNull
+	@Min(1)
 	private Integer cost;
 	
 	@Column(name = "AD_CURRENCY",nullable = false)
@@ -123,35 +116,21 @@ public class Ad  implements Serializable{
 	
 	@Column(name = "AD_TRANSLATE_TYPE",nullable = false)
 	@Enumerated(EnumType.STRING)
-	private TranslateType translateType;
+	protected TranslateType translateType;
 	
-	/**
-	 * Properties for Ad with translateType={@link TranslateType#ORAL}
-	 */
-	@Column(name = "ORAL_AD_COUNTRY")
-	private String country;
+	public enum TranslateType {
+		ORAL,WRITTEN;
+	}	
 	
-	@Column(name = "ORAL_AD_CITY")
-	private String city;
+	@OneToOne(optional = true)
+	@JoinColumn(
+	    	name="TRANSLATOR_ID",unique = true)
+	private Translator translator;
 	
-	@DateTimeFormat(iso = ISO.DATE_TIME,pattern = "dd.MM.yyyy HH:mm:ss")
-	@Column(name = "ORAL_AD_INIT_DATE")
-	private LocalDateTime initialDateTime;
-	
-	@DateTimeFormat(iso = ISO.DATE_TIME,pattern = "dd.MM.yyyy HH:mm:ss")
-	@Column(name = "ORAL_AD_FINISH_DATE")
-	private LocalDateTime finishDateTime;
-	
-	/**
-	 * Properties for Ad with translateType={@link TranslateType#WRITTEN}
-	 */
-	@DateTimeFormat(iso = ISO.DATE,pattern = "dd.MM.yyyy")
-	@Column(name = "WRITTEN_AD_END_DATE")
-	private LocalDate endDate;
-	
-	@OneToOne(mappedBy = "ad",fetch = FetchType.EAGER,orphanRemoval = true)
+	@OneToMany(fetch = FetchType.LAZY,mappedBy = "ad")
+	@Fetch(FetchMode.SELECT)
 	@Cascade(CascadeType.ALL)
-	private Document document;
+	private Set<ArchievedAd> archievedAds = new LinkedHashSet<>();
 	
 	public Ad(){}
 
@@ -260,57 +239,22 @@ public class Ad  implements Serializable{
 	public TranslateType getTranslateType() {
 		return translateType;
 	}
-
-	public void setTranslateType(TranslateType translateType) {
-		this.translateType = translateType;
+	
+	public Translator getTranslator() {
+		return translator;
 	}
 
-	public String getCountry() {
-		return country;
+	public void setTranslator(Translator translator) {
+		this.translator = translator;
 	}
 
-	public void setCountry(String country) {
-		this.country = country;
-	}
-
-	public String getCity() {
-		return city;
-	}
-
-	public void setCity(String city) {
-		this.city = city;
-	}
-
-	public LocalDateTime getInitialDateTime() {
-		return initialDateTime;
-	}
-
-	public void setInitialDateTime(LocalDateTime initialDateTime) {
-		this.initialDateTime = initialDateTime;
-	}
-
-	public LocalDateTime getFinishDateTime() {
-		return finishDateTime;
-	}
-
-	public void setFinishDateTime(LocalDateTime finishDateTime) {
-		this.finishDateTime = finishDateTime;
-	}
-
-	public LocalDate getEndDate() {
-		return endDate;
-	}
-
-	public void setEndDate(LocalDate endDate) {
-		this.endDate = endDate;
+	public Set<ArchievedAd> getArchievedAds() {
+		return archievedAds;
 	}
 	
-	public Document getDocument() {
-		return document;
-	}
-
-	public void setDocument(Document document) {
-		this.document = document;
+	public void addArchievedAd(ArchievedAd archievedAd){
+		archievedAds.add(archievedAd);
+		archievedAd.setAd(this);
 	}
 
 	@Override

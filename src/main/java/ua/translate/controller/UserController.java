@@ -2,6 +2,7 @@ package ua.translate.controller;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,20 +10,28 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
 import ua.translate.model.Language;
-import ua.translate.model.User;
-import ua.translate.model.UserRole;
+import ua.translate.model.UserEntity;
+import ua.translate.model.UserEntity.UserRole;
+import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.ad.Currency;
-import ua.translate.model.ad.TranslateType;
 import ua.translate.model.security.UserImpl;
 
 public class UserController {
+	
+	Logger logger = LoggerFactory.getLogger(UserController.class);
+	
+	private static final String[] ALLOWED_CONTENT_TYPES_FOR_TEXT=
+		{"application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document"};
 	
 	@Autowired
 	private AuthenticationTrustResolver authenticationTrustResolver;
@@ -60,7 +69,7 @@ public class UserController {
 	 * Sets {@code targetUrl} attribute to session depending of {@link UserRole}
 	 */
 	@SuppressWarnings("unused")
-	protected void setRememberMeTargetUrlToSession(User user, HttpServletRequest request){
+	protected void setRememberMeTargetUrlToSession(UserEntity user, HttpServletRequest request){
 		HttpSession session = request.getSession(false);
 		if(session!=null){
 			UserRole role= user.getRole();
@@ -99,6 +108,18 @@ public class UserController {
     	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserImpl userDetails = (UserImpl) authentication.getPrincipal();
         userDetails.setUsername(newUsername);
+    }
+    
+    
+    /**
+     * Checks if ContentType of {@code file} with text is allowed for uploading
+     * <br>Allowed content types are placed in {@link #ALLOWED_CONTENT_TYPES_FOR_TEXT}
+     * @param file
+     */
+    protected boolean isfileContentTypeAllowed(MultipartFile file){
+  	  logger.debug("Content type of text file is: " + file.getContentType());
+  	  return Arrays.asList(ALLOWED_CONTENT_TYPES_FOR_TEXT)
+  			  	   .contains(file.getContentType());
     }
     
     /**

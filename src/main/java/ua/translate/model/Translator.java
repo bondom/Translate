@@ -10,7 +10,9 @@ import org.hibernate.annotations.SortComparator;
 
 import ua.translate.controller.support.CommentComparatorByDate;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ArchievedAd;
 import ua.translate.model.ad.RespondedAd;
+import ua.translate.model.ad.ResultDocument;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -79,6 +81,23 @@ public class Translator extends User{
 	@Column(nullable = false)
 	private LocalDateTime publishingTime;
 	
+	@OneToOne(optional=true, mappedBy="translator")
+	private Ad ad;
+	
+	@OneToMany(fetch = FetchType.LAZY,mappedBy = "translator")
+	@Fetch(FetchMode.SELECT)
+	@Cascade(CascadeType.ALL)
+	public Set<ArchievedAd> archievedAds = new LinkedHashSet<>();
+	
+	/**
+	 * Sets {@link #role} to {@link UserRole#ROLE_TRANSLATOR UserRole.ROLE_TRANSLATOR}
+	 * and {@link #publishingTime} to {@link LocalDateTime#now() LocalDateTime.now}
+	 */
+	public Translator(){
+		super();
+		role = UserRole.ROLE_TRANSLATOR;
+		publishingTime = LocalDateTime.now();
+	}
 	public LocalDateTime getPublishingTime() {
 		return publishingTime;
 	}
@@ -144,5 +163,21 @@ public class Translator extends User{
 	public void removeRespondedAd(RespondedAd respondedAd){
 		respondedAds.remove(respondedAd);
 	}
+	public Ad getAd() {
+		return ad;
+	}
+	public void setAd(Ad ad) {
+		this.ad = ad;
+	}
+	public Set<ArchievedAd> getArchievedAds() {
+		return archievedAds;
+	}
+	
+	public void addArchievedAd(ArchievedAd archievedAd){
+		archievedAds.add(archievedAd);
+		archievedAd.setTranslator(this);
+	}
+	
+	
 	
 }

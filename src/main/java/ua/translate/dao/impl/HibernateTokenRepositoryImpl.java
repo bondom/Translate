@@ -103,6 +103,12 @@ public class HibernateTokenRepositoryImpl implements AbstractDao<String,Persiste
 		return t;
 	}
 
+	@Override
+	public void clear() {
+		Session session = sessionFactory.getCurrentSession();
+		session.clear();
+	}
+	
 	private Criteria createEntityCriteria(){
 		return sessionFactory.getCurrentSession().createCriteria(PersistentLogin.class);
 	}

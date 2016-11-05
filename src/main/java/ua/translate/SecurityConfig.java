@@ -51,7 +51,7 @@ public class SecurityConfig {
 					
 					.authorizeRequests()
 					.antMatchers("/client/registration*").anonymous()
-					.antMatchers("/index","/translators","/orders","/client/login*","/client/confirmation").permitAll()
+					.antMatchers("/index","/translators","/ads*","/client/login*","/client/confirmation").permitAll()
 					.antMatchers("/client/**").hasRole("CLIENT")
 				.and()
 					.formLogin()
@@ -93,7 +93,8 @@ public class SecurityConfig {
 					.authorizeRequests()
 					.antMatchers("/translator/registration*").anonymous()
 					.antMatchers("/translator/index","/translator/login*",
-							"/translator/confirmation","/translator/download/**").permitAll()
+							"/translator/confirmation").permitAll()
+					.antMatchers("/translator/download/**","/translator/downloadr/**").authenticated()
 					.antMatchers("/translator/**").hasRole("TRANSLATOR")
 					.anyRequest().authenticated()
 				.and()

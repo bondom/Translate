@@ -10,7 +10,7 @@
 <body>
 	<div class="panel-heading">
 		<a href = "<@spring.url "/translator/index"/>" class="btn btn-info" role="button">LANGUAGES.RU</a>
-		<a href = "<@spring.url "/ads"/>" class="btn btn-info" role="button">Find orders</a>
+		<a href = "<@spring.url "/adsw"/>" class="btn btn-info" role="button">Find orders</a>
 		<a href = "<@spring.url "/translator/login"/>" class="btn btn-info" role="button">Log In</a>
 		<a href = "<@spring.url "/"/>"  role="button">To Client</a>
 	</div>

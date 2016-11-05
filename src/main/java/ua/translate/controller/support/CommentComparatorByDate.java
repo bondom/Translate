@@ -1,5 +1,6 @@
 package ua.translate.controller.support;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import ua.translate.model.Comment;

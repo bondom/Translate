@@ -20,6 +20,9 @@
 				<#if Editmsg??>
 					<div class="alert alert-success">${Editmsg}</div>
 				</#if>
+				<#if error??>
+					<div class="alert alert-danger">${error}</div>
+				</#if>
 				
 				<form method="post" action="<@spring.url formUrl/>">
 				<table>
@@ -116,6 +119,7 @@
 					
 				</table>
 				</form>
+				<a href="<@spring.url "/client/adbuilder"/>">Back</a>
 		</div>
 	</div>
 	</div>

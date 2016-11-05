@@ -20,7 +20,9 @@
 				<#if Editmsg??>
 					<div class="alert alert-success">${Editmsg}</div>
 				</#if>
-				
+				<#if error??>
+					<div class="alert alert-danger">${error}</div>
+				</#if>
 				<form method="post" action="<@spring.url formUrl/>" enctype="multipart/form-data">
 				<table>
 					<tr><td>Name: </td><td>
@@ -79,8 +81,8 @@
 										<input type="file" name="multipartFile"/></br></br>${(ad.document.fileName)!""}
 										</br>
 										</br>
-										<#if error??>
-											<div class="alert alert-warning">${error}</div>
+										<#if errorFile??>
+											<div class="alert alert-warning">${errorFile}</div>
 										</#if>
 					</td></tr>
 					<tr><td></td><td></td><@spring.bind "ad.id"/>
@@ -97,6 +99,7 @@
 					
 				</table>
 				</form>
+				<a href="<@spring.url "/client/adbuilder"/>">Back</a>
 		</div>
 	</div>
 	</div>

@@ -40,7 +40,7 @@
 				</#list>
 			<#else>
 				<p> You haven't responded yet to any one advertisement
-				<p><a href = "<@spring.url "/ads"/>">Find advertisements</a>
+				<p><a href = "<@spring.url "/adsw"/>">Find advertisements</a>
 			</#if>
 		</div>
 	</div>

@@ -12,7 +12,12 @@
 	<div class="panel panel-default">
 			<#include "/fragments/authadminheader.ftl">
 		<div class="panel-body" style = "margin: 0px">
-			
+			<#if success??>
+				<div class="alert alert-success">${success}</div>
+			</#if>
+			<#if error??>
+				<div class="alert alert-error">${error}</div>
+			</#if>
 			<#list notCheckedAds as ad>
 				<div>
 					<p>Name: ${ad.getName()}
@@ -21,29 +26,43 @@
 					<p>Init Language: ${ad.getInitLanguage()}
 					<p>Result Language${ad.getResultLanguage()}
 					<p>TranslateType: ${ad.getTranslateType()}
-					<#if ad.translateType.name()=="ORAL">
-						<p>Country: ${ad.getCountry()} City: ${ad.getCity()}
-						<p>From: ${ad.getInitialDateTime()} To: ${ad.getFinishDateTime()}
-					</#if>
-					<#if ad.translateType.name()=="WRITTEN">
-						<p>End Date: ${ad.getEndDate()} 
-						<p>File:
-						 <@security.authorize access="hasRole('ROLE_TRANSLATOR') or hasRole('ROLE_ADMIN')">
-							<a href="<@spring.url "/translator/download/${ad.id}"/>" target="_blank" >
-								${ad.document.fileName}
-							</a>
-						 </@security.authorize>
-						 <@security.authorize access="hasRole('ROLE_CLIENT') or ! isAuthenticated()">
-								${ad.document.fileName}
-						 </@security.authorize>
-					</#if>
+					<p>End Date: ${ad.getEndDate()} 
+					<p>File:
+					<a href="<@spring.url "/download/${ad.id}"/>" target="_blank" >
+						${ad.document.fileName}
+					</a>
+					<p>Result File:
+					<a href="<@spring.url "/downloadr/${ad.id}"/>" target="_blank" >
+						${ad.resultDocument.fileName}
+					</a>
 					<p>Cost: ${ad.getCost()} ${ad.getCurrency()}
+					<form action = "<@spring.url "/bulbular/markAsChecked"/>" method = "Post" role = "form">
+						<input name="adId" type="hidden" value="${ad.id}"/>
+						<button type = "submit" class="btn btn-info">
+							Mark as CHECKED
+						</button>
+						<input type="hidden"
+								name="${_csrf.parameterName}"
+								value="${_csrf.token}"/>
+					</form>
+					<form action = "<@spring.url "/bulbular/sendForRework"/>" method = "Post" role = "form">
+						<input name="adId" type="hidden" value="${ad.id}"/>
+						<input name="message" type="text" placeholder="Message for translator"/>
+						<button type = "submit" class="btn btn-info">
+							Send for rework
+						</button>
+						<input type="hidden"
+								name="${_csrf.parameterName}"
+								value="${_csrf.token}"/>
+					</form>
 				</div>
 				</br>
 			</#list>
-		<#list 1..numberOfPages as page>
-			<a href="<@spring.url "/ads?page=${page}"/>">${page}</a>&nbsp
-		</#list>
+		<#if numberOfPages gt 1>
+			<#list 1..numberOfPages as page>
+				<a href="<@spring.url "/bulbular/notCheckedAds?page=${page}"/>">${page}</a>&nbsp
+			</#list>
+		</#if>
 		</div>
 	</div>
 	</div>

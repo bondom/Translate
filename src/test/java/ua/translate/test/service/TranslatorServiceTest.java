@@ -29,8 +29,7 @@ import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.RespondedAdStatus;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.InvalidPasswordException;
-import ua.translate.service.exception.NonExistedAdException;
-import ua.translate.service.exception.NonExistedTranslatorException;
+import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.NumberExceedsException;
 import ua.translate.service.exception.TranslatorDistraction;
 import ua.translate.service.exception.WrongPageNumber;
@@ -72,7 +71,7 @@ public class TranslatorServiceTest {
 	
 	
 	@Test
-	public void testGetTranslatorById() throws NonExistedTranslatorException{
+	public void testGetTranslatorById() throws InvalidIdentifier{
 		long translatorId = 3L;
 		logger.debug("-----------------testGetTranslatorById------------");
 		logger.debug("Stubbing TranslatorDao.get({}) "
@@ -85,8 +84,8 @@ public class TranslatorServiceTest {
 		verify(translatorDao).get(translatorId);
 	}
 	
-	@Test(expected = NonExistedTranslatorException.class)
-	public void testGetTranslatorByInvalidId() throws NonExistedTranslatorException{
+	@Test(expected = InvalidIdentifier.class)
+	public void testGetTranslatorByInvalidId() throws InvalidIdentifier{
 		long nonExistedTranslatorId = 2L;
 		logger.debug("-----------------testGetTranslatorByInvalidId------------");
 		logger.debug("Stubbing TranslatorDao.get({}) "
@@ -94,11 +93,11 @@ public class TranslatorServiceTest {
 		when(translatorDao.get(nonExistedTranslatorId)).thenReturn(null);
 		try{
 			logger.debug("Calling TranslatorService.getTranslatorById({}) should"
-					+ " throw NonExistedTranslatorException",
+					+ " throw InvalidIdentifier",
 					nonExistedTranslatorId);
 			translatorService.getTranslatorById(nonExistedTranslatorId);
-		}catch(NonExistedTranslatorException ex){
-			logger.debug("NonExistedTranslatorException has been thrown");
+		}catch(InvalidIdentifier ex){
+			logger.debug("InvalidIdentifier has been thrown");
 			throw ex;
 		}
 	}
@@ -155,10 +154,10 @@ public class TranslatorServiceTest {
 			.thenReturn(translatorFromDao);
 	}
 	
-	@Test(expected = NonExistedAdException.class)
-	public void testSaveRespondedAdForInvalidAdId() throws 
-				NumberExceedsException, TranslatorDistraction,NonExistedAdException{
-		logger.debug("-----------------testSaveRespondedAdForInvalidAdId------------");
+	@Test(expected = InvalidIdentifier.class)
+	public void testCreateAndSaveRespondedAdForInvalidAdId() throws 
+				NumberExceedsException, TranslatorDistraction,InvalidIdentifier{
+		logger.debug("-----------------testCreateAndSaveRespondedAdForInvalidAdId------------");
 		String translatorEmail = translatorFromDao.getEmail();
 		long adId = adFromDao.getId();
 		int maxNumberOfSendedRespondedAds = 3;
@@ -169,18 +168,18 @@ public class TranslatorServiceTest {
 			logger.debug("Calling TranslatorService.saveRespondedAd({},{},{})"
 					+ " should throw NonExistedAdException()",
 					translatorEmail,adId,maxNumberOfSendedRespondedAds);
-			translatorService.saveRespondedAd(
+			translatorService.createAndSaveRespondedAd(
 					translatorEmail,adId,maxNumberOfSendedRespondedAds);
-		}catch(NonExistedAdException ex){
+		}catch(InvalidIdentifier ex){
 			logger.debug("NonExistedAdException has been thrown");
 			throw ex;
 		}
 	}
 	
 	@Test(expected = TranslatorDistraction.class)
-	public void testSaveRespondedAdForTranslatorWithAcceptedRespondedAd() throws 
-				NumberExceedsException, TranslatorDistraction,NonExistedAdException{
-		logger.debug("-----------------testSaveRespondedAdForTranslatorWithAcceptedRespondedAd------------");
+	public void testCreateAndSaveRespondedAdForTranslatorWithAcceptedRespondedAd() throws 
+				NumberExceedsException, TranslatorDistraction,InvalidIdentifier{
+		logger.debug("-----------------testCreateAndSaveRespondedAdForTranslatorWithAcceptedRespondedAd------------");
 		String translatorEmail = translatorFromDao.getEmail();
 		
 		//adding ACCEPTED RespondedAd to translator
@@ -203,7 +202,7 @@ public class TranslatorServiceTest {
 			logger.debug("Calling TranslatorService.saveRespondedAd({},{},{})"
 					+ " should throw TranslatorDistraction()",
 					translatorEmail,adId,maxNumberOfSendedRespondedAds);
-			translatorService.saveRespondedAd(
+			translatorService.createAndSaveRespondedAd(
 					translatorEmail,adId,maxNumberOfSendedRespondedAds);
 		}catch(TranslatorDistraction ex){
 			logger.debug("TranslatorDistraction has been thrown");
@@ -212,9 +211,9 @@ public class TranslatorServiceTest {
 	}
 	
 	@Test(expected = NumberExceedsException.class)
-	public void testSaveRespondedAdForTranslatorWithMaxNumberSendedRespondedAd() throws 
-				NumberExceedsException, TranslatorDistraction,NonExistedAdException{
-		logger.debug("-----------------testSaveRespondedAdForTranslatorWithMaxNumberSendedRespondedAd------------");
+	public void testCreateAndSaveRespondedAdForTranslatorWithMaxNumberSendedRespondedAd() throws 
+				NumberExceedsException, TranslatorDistraction,InvalidIdentifier{
+		logger.debug("-----------------testCreateAndSaveRespondedAdForTranslatorWithMaxNumberSendedRespondedAd------------");
 		String translatorEmail = translatorFromDao.getEmail();
 		int numberOfSendedResponsedAd = 2;
 		//adding 2 SENDED RespondedAd to translator
@@ -242,7 +241,7 @@ public class TranslatorServiceTest {
 			logger.debug("Calling TranslatorService.saveRespondedAd({},{},{})"
 					+ " should throw NumberExceedsException()",
 					translatorEmail,adId,maxNumberOfSendedRespondedAds);
-			translatorService.saveRespondedAd(
+			translatorService.createAndSaveRespondedAd(
 					translatorEmail,adId,maxNumberOfSendedRespondedAds);
 		}catch(NumberExceedsException ex){
 			logger.debug("NumberExceedsException has been thrown");
@@ -433,129 +432,5 @@ public class TranslatorServiceTest {
 		}
 	}
 	
-	@Test
-	public void testMarkAsNotChecked(){
-		logger.debug("-----------------testMarkAsNotChecked------------");
-		
-		final String email = translatorFromDao.getEmail();
-		final Long adId = 23L;
-		
-		//Preparing right relations between Translator, Ad and RespondedAd
-		adFromDao.setStatus(AdStatus.ACCEPTED);
-		adFromDao.setId(adId);
-		adFromDao.setName("Test");
-		RespondedAd respondedAd = new RespondedAd();
-		respondedAd.setStatus(RespondedAdStatus.ACCEPTED);
-		adFromDao.addRespondedAd(respondedAd);
-		translatorFromDao.addRespondedAd(respondedAd);
-		
-		logger.debug("Stubbing TranslatorDao.getTranslatorByEmail({}) "
-				+ "to return Translator, which has one ACCEPTED RespondedAd",
-				email);
-		when(translatorDao.getTranslatorByEmail(email))
-							.thenReturn(translatorFromDao);
-		
-		logger.debug("Stubbing AdDao.get({}) "
-				+ "to return ACCEPTED Ad, which has ACCEPTED RespondedAd, which"
-				+ " belongs to translator with email={}",adId,
-				email);
-		when(adDao.get(adId)).thenReturn(adFromDao);
-		logger.debug("Calling TranslatorService.markAsNotChecked({},{})"
-				+ " should return true",email,adId);
-		boolean expected = true;
-		boolean actual= translatorService.markAsNotChecked(email, adId);
-		assertEquals(expected, actual);
 	
-	}
-	
-	@Test
-	public void testMarkAsNotCheckedAnotherAcceptedAd(){
-		logger.debug("-----------------testMarkAsNotCheckedAnotherAcceptedAd------------");
-		
-		final String email = translatorFromDao.getEmail();
-		final Long adId = 23L;
-		final Long anotherAdId = 99L;
-		Ad anotherAd = new Ad();
-		anotherAd.setId(anotherAdId);
-		anotherAd.setName("Test another");
-		anotherAd.setStatus(AdStatus.ACCEPTED);
-		
-		//Preparing right relations between Translator, Ad and RespondedAd
-		adFromDao.setStatus(AdStatus.ACCEPTED);
-		adFromDao.setId(adId);
-		adFromDao.setName("Test");
-		RespondedAd respondedAd = new RespondedAd();
-		respondedAd.setStatus(RespondedAdStatus.ACCEPTED);
-		adFromDao.addRespondedAd(respondedAd);
-		translatorFromDao.addRespondedAd(respondedAd);
-		
-		logger.debug("Stubbing TranslatorDao.getTranslatorByEmail({}) "
-				+ "to return Translator, which has one ACCEPTED RespondedAd",
-				email);
-		when(translatorDao.getTranslatorByEmail(email))
-							.thenReturn(translatorFromDao);
-		
-		logger.debug("Stubbing AdDao.get({}) "
-				+ "to return ACCEPTED Ad, which hasn't ACCEPTED RespondedAd",anotherAdId);
-		when(adDao.get(anotherAdId)).thenReturn(anotherAd);
-		logger.debug("Calling TranslatorService.markAsNotChecked({},{})"
-				+ " should return false",email,adId);
-		boolean expected = false;
-		boolean actual= translatorService.markAsNotChecked(email, anotherAdId);
-		assertEquals(expected, actual);
-	
-	}
-	
-	
-	@Test
-	public void testMarkAsNotCheckedNotAcceptedAd(){
-		logger.debug("-----------------testMarkAsNotCheckedNotAcceptedAd------------");
-		
-		final String email = translatorFromDao.getEmail();
-		final Long adId = 23L;
-		
-		adFromDao.setStatus(AdStatus.SHOWED);
-		adFromDao.setId(adId);
-		
-		logger.debug("Stubbing TranslatorDao.getTranslatorByEmail({}) "
-				+ "to return Translator, which has one ACCEPTED RespondedAd",
-				email);
-		when(translatorDao.getTranslatorByEmail(email))
-							.thenReturn(translatorFromDao);
-		
-		logger.debug("Stubbing AdDao.get({}) "
-				+ "to return SHOWED Ad",adId);
-		when(adDao.get(adId)).thenReturn(adFromDao);
-		logger.debug("Calling TranslatorService.markAsNotChecked({},{})"
-				+ " should return false",email,adId);
-		boolean expected = false;
-		boolean actual= translatorService.markAsNotChecked(email, adId);
-		assertEquals(expected, actual);
-	
-	}
-	
-	@Test
-	public void testMarkAsNotCheckedNotExistedAd(){
-		logger.debug("-----------------testMarkAsNotCheckedNotExistedAd------------");
-		
-		final String email = translatorFromDao.getEmail();
-		final Long adId = 23L;
-		
-		
-		logger.debug("Stubbing TranslatorDao.getTranslatorByEmail({}) "
-				+ "to return Translator, which has one ACCEPTED RespondedAd",
-				email);
-		when(translatorDao.getTranslatorByEmail(email))
-							.thenReturn(translatorFromDao);
-		
-		logger.debug("Stubbing AdDao.get({}) "
-				+ "to return null",adId);
-		when(adDao.get(adId)).thenReturn(null);
-		logger.debug("Calling TranslatorService.markAsNotChecked({},{})"
-				+ " should return false",email,adId);
-		boolean expected = false;
-		boolean actual= translatorService.markAsNotChecked(email, adId);
-		assertEquals(expected, actual);
-	
-	}
 }

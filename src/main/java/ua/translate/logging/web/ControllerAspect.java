@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
 
-import ua.translate.model.User;
+import ua.translate.model.UserEntity;
 import ua.translate.model.viewbean.ChangeEmailBean;
 import ua.translate.model.viewbean.ChangePasswordBean;
 

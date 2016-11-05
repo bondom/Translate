@@ -3,6 +3,8 @@ package ua.translate.service.impl;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -13,13 +15,17 @@ import ua.translate.dao.RespondedAdDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.Ad.TranslateType;
+import ua.translate.model.ad.OralAd;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.RespondedAdStatus;
+import ua.translate.service.BalanceService;
 import ua.translate.service.RespondedAdService;
-import ua.translate.service.exception.IllegalActionForAcceptedAd;
-import ua.translate.service.exception.IllegalActionForRejectedAd;
-import ua.translate.service.exception.NonExistedRespondedAdException;
+import ua.translate.service.exception.IllegalActionForAd;
+import ua.translate.service.exception.IllegalActionForRespondedAd;
+import ua.translate.service.exception.InsufficientFunds;
+import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.TranslatorDistraction;
 
 @Service
@@ -31,40 +37,66 @@ public class RespondedAdServiceImpl implements RespondedAdService {
 	
 	@Autowired
 	private ClientDao clientDao;
+	
+	@Autowired
+	private BalanceService balanceService;
+	
+	
+	
+	private static Logger logger = LoggerFactory.getLogger(RespondedAdServiceImpl.class);
+	
+	/**
+	 * Percentage pledge for transfering from client's account to translator's account
+	 */
+	public static int DEFAULT_PLEDGE = 20;
 
-	public RespondedAd get(long id) throws NonExistedRespondedAdException{
+	public RespondedAd get(long id) throws InvalidIdentifier{
 		RespondedAd respondedAd = respondedAdDao.get(id);
 		if(respondedAd==null){
-			throw new NonExistedRespondedAdException();
+			throw new InvalidIdentifier();
 		}
 		return respondedAd;
 	}
 	
-	public void accept(String email,long id) throws NonExistedRespondedAdException,
-									   IllegalActionForAcceptedAd,
-									   IllegalActionForRejectedAd,
-									   TranslatorDistraction{
+	public RespondedAd acceptRespondedAdAndTransferPledge(final String email,
+												   final long id, 
+												   final int pledge) 
+															throws InvalidIdentifier,
+																   IllegalActionForRespondedAd,
+																   TranslatorDistraction,
+																   InsufficientFunds{
 		final ReentrantLock lock = new ReentrantLock();
 		lock.lock();
 		try{
-			RespondedAd respondedAd = get(id);
-			if(!clientOwnsRespondedAd(email, id)){
-				throw new NonExistedRespondedAdException();
+			final RespondedAd respondedAd = get(id);
+			final Client client = clientDao.getClientByEmail(email);
+			if(!clientOwnsRespondedAd(client, id)){
+				throw new InvalidIdentifier();
 			}
-			if(respondedAd.getStatus().equals(RespondedAdStatus.ACCEPTED)){
-				throw new IllegalActionForAcceptedAd();
+			if(!respondedAd.getStatus().equals(RespondedAdStatus.SENDED)){
+				throw new IllegalActionForRespondedAd();
 			}
 			
-			if(respondedAd.getStatus().equals(RespondedAdStatus.REJECTED)){
-				throw new IllegalActionForRejectedAd();
+			final Ad mainAd = respondedAd.getAd();
+			if(pledge>0){
+				if(client.getBalance()<mainAd.getCost()*pledge/100){
+					throw new InsufficientFunds();
+				}
+			}else{
+				if(client.getBalance()<mainAd.getCost()*DEFAULT_PLEDGE/100){
+					throw new InsufficientFunds();
+				}
 			}
-			Translator translator = respondedAd.getTranslator();
+			
+			final Translator translator = respondedAd.getTranslator();
 			if(hasAcceptedAd(translator)){
 				throw new TranslatorDistraction();
 			}
 			
-			Ad mainAd = respondedAd.getAd();
 			mainAd.setStatus(AdStatus.ACCEPTED);
+			mainAd.setTranslator(translator);
+			translator.setAd(mainAd);
+			
 			Set<RespondedAd> respondedAds = mainAd.getRespondedAds();
 			respondedAds.forEach(rad->{
 				if(respondedAd.equals(rad)){
@@ -74,33 +106,46 @@ public class RespondedAdServiceImpl implements RespondedAdService {
 				}
 			});
 			
+			
+			if(pledge>0){
+				balanceService.transferMoneyFromClientToTranslator(client, translator, 
+						mainAd.getCost()*pledge/100);
+			}else{
+				balanceService.transferMoneyFromClientToTranslator(client, translator, 
+						mainAd.getCost()*DEFAULT_PLEDGE/100);
+				logger.debug("pledge = {}, default value={} is used",
+						pledge,DEFAULT_PLEDGE);
+			}
+			
 			respondedAdDao.flush();
 		}finally{
 			lock.unlock();
 		}
+		RespondedAd updatedRespondedAd = respondedAdDao.get(id);
+		return updatedRespondedAd;
 	}
 	
-	public void reject(String email,long id) throws NonExistedRespondedAdException,
-									   IllegalActionForAcceptedAd{
+	public void reject(String email,long id) throws InvalidIdentifier,
+													IllegalActionForRespondedAd{
 		RespondedAd respondedAd= get(id);
 		if(respondedAd.getStatus().equals(RespondedAdStatus.REJECTED)){
 			return;
 		}
-		
-		if(!clientOwnsRespondedAd(email, id)){
-			throw new NonExistedRespondedAdException();
+		final Client client = clientDao.getClientByEmail(email);
+		if(!clientOwnsRespondedAd(client, id)){
+			throw new InvalidIdentifier();
 		}
 		
 		if(respondedAd.getStatus().equals(RespondedAdStatus.ACCEPTED)){
-			throw new IllegalActionForAcceptedAd();
+			throw new IllegalActionForRespondedAd();
 		}
 		respondedAd.setStatus(RespondedAdStatus.REJECTED);
 	}
 	
 	/**
-	 * Checks if {@link Translator} {@code translator} has ResponsedAd with ACCEPTED status
+	 * Checks if {@link Translator} {@code translator} has RespondedAd with ACCEPTED status
 	 * @param translator - {@code Translator} object, representation of authenticated user with Translator role
-	 * @return true - if {@code translator} has ResponsedAd with ACCEPTED status, else false
+	 * @return true - if {@code translator} has RespondedAd with ACCEPTED status, else false
 	 */
 	private boolean hasAcceptedAd(Translator translator) {
 		Set<RespondedAd> respondedAds = translator.getRespondedAds();
@@ -113,18 +158,16 @@ public class RespondedAdServiceImpl implements RespondedAdService {
 	
 	/**
 	 * Checks if {@link RespondedAd} with id={@code radId} belongs to client with email={@code email}
-	 * @param email - email of authenticated client, <b>must</b> be retrieved from Principal object
+	 * @param client - {@link Client} object, represents authenticated user
 	 * @param radId - id of respondedAd
 	 * @return true if client owns respondedAd with id={@code radId}, else false
 	 */
-	private boolean clientOwnsRespondedAd(String email,long radId){
-		Client client = clientDao.getClientByEmail(email);
+	private boolean clientOwnsRespondedAd(Client client,long radId){
 		Set<RespondedAd> respondedAd = client.getRespondedAds();
 		boolean clientOwns = 
 				respondedAd.stream().anyMatch(rad -> (new Long(rad.getId())).equals(radId));
 		return clientOwns;
 	}
 	
-
 }
 

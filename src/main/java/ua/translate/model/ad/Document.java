@@ -10,16 +10,16 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import ua.translate.model.validator.FieldNotMatch;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 @Entity
-@Table(name = "DOCUMENT_TEST")
+@Table(name = "INIT_DOCUMENT_TEST")
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Document {
 
 	
@@ -43,7 +43,7 @@ public class Document {
 	@JoinColumn(name = "DOCUMENT_AD_ID")
 	private Ad ad;
 	
-	
+	public Document(){}
 	public Document(Ad ad,byte[] file, String fileName, String contentType) {
 		super();
 		this.ad = ad;
@@ -58,8 +58,6 @@ public class Document {
 		this.fileName = fileName;
 		this.contentType = contentType;
 	}
-	
-	public Document(){}
 	
 	public long getId() {
 		return id;
@@ -92,6 +90,50 @@ public class Document {
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
 	}
+
+	public Ad getAd() {
+		return ad;
+	}
+
+	public void setAd(Ad ad) {
+		this.ad = ad;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((ad == null) ? 0 : ad.hashCode());
+		result = prime * result + ((fileName == null) ? 0 : fileName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Document other = (Document) obj;
+		if (ad == null) {
+			if (other.ad != null)
+				return false;
+		} else if (!ad.equals(other.ad))
+			return false;
+		if (fileName == null) {
+			if (other.fileName != null)
+				return false;
+		} else if (!fileName.equals(other.fileName))
+			return false;
+		return true;
+	}
+	
+	
+	
+	
+	
 	
 	
 	

@@ -1,5 +1,6 @@
 package ua.translate.model.ad;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -38,8 +39,7 @@ import ua.translate.model.status.RespondedAdStatus;
 			query = "from RespondedAd rad where rad.translator = :translator "
 					+ "order by rad.dateTimeOfResponse desc")
 })
-@Component
-public class RespondedAd {
+public class RespondedAd implements Serializable{
 	
 	@Id
 	@SequenceGenerator(name = "standart",initialValue = 1)
@@ -47,7 +47,6 @@ public class RespondedAd {
 	private long id;
 	
 	@ManyToOne(fetch = FetchType.EAGER)
-	@Cascade(CascadeType.REMOVE)
 	@JoinColumn(name = "AD",nullable = false)
 	private Ad ad;
 	
@@ -55,11 +54,11 @@ public class RespondedAd {
 	private LocalDateTime dateTimeOfResponse;
 	
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "CLIENT",nullable = false)
+	@JoinColumn(name = "CLIENT")
 	private Client client;
 	
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "TRANSLATOR",nullable = false)
+	@JoinColumn(name = "TRANSLATOR")
 	private Translator translator;
 	
 	@Column(nullable = false)

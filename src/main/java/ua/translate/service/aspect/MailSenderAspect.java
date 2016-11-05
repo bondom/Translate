@@ -22,10 +22,11 @@ import freemarker.template.Configuration;
 import freemarker.template.Template;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.User;
+import ua.translate.model.UserEntity;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.EmailStatus;
+import ua.translate.service.AbstractAdService;
 import ua.translate.service.AdService;
 import ua.translate.service.ClientService;
 import ua.translate.service.RespondedAdService;
@@ -49,7 +50,8 @@ public class MailSenderAspect {
 	private TranslatorService translatorService;
 	
 	@Autowired
-	private AdService adService;
+	@Qualifier("defaultImpl")
+	private AbstractAdService adService;
 	
 	@Autowired
 	private RespondedAdService responsedAdService;
@@ -72,7 +74,7 @@ public class MailSenderAspect {
 			logger.info("{}.{}:{}:{}",className,methodName,e.getClass(),e.getMessage());
 			throw e;
 		}
-		User user = clientService.getUserByEmail(email);
+		UserEntity user = clientService.getUserByEmail(email);
 		String namespace="";
 		if(user instanceof Client){
 			namespace="/client";

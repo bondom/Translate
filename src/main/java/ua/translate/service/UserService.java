@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ua.translate.dao.UserDao;
 import ua.translate.model.Client;
 import ua.translate.model.User;
-import ua.translate.model.UserRole;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
@@ -70,9 +69,7 @@ public abstract class UserService<T extends User> {
 	
 	/**
 	 * Saves {@code newUser} in data storage.
-	 * <p>Sets status of email to NOTCONFIRMED and user's status to ACTIVE;
-	 * sets {@link UserRole},encoded password
-	 * and registration time
+	 * <p>Sets encoded password instead password, entered by user
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @throws DuplicateEmailException  if email of user is registered already 
 	 */
@@ -159,7 +156,7 @@ public abstract class UserService<T extends User> {
 	 * ordered by {@link RespondedAd#getDateTimeOfResponse()} 
 	 * from latest to earliest.
 	 * <p>If {@code numberOfRespondedAdsOnPage} is less then 1, default
-	 * number is used. If {@code page} is less then 1, exception is thrown
+	 * value is used. If {@code page} is less then 1, exception is thrown
 	 * <p>Size of result {@code Set} is not more than {@code numberOfRespondedAdsOnPage}
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated user,
@@ -177,6 +174,8 @@ public abstract class UserService<T extends User> {
 	 * Returns number of pages for all {@link RespondedAd}s,
 	 *   related to object type subclass of {@link User} with email={@code email},
 	 * if on one page can be displayed only {@code numberOfRespondedAdsOnPage}  RespondedAds
+	 * <p>If {@code numberOfRespondedAdsOnPage} is less then 1, default
+	 * value is used.
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param numberOfRespondedAdsOnPage - number of {@code RespondedAd}s, which can be displayed on one page
 	 * @param email - email of authenticated user,

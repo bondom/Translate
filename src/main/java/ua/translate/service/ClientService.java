@@ -6,14 +6,16 @@ import java.util.Set;
 
 import ua.translate.model.Client;
 import ua.translate.model.ad.Ad;
+import ua.translate.model.ad.ArchievedAd;
 import ua.translate.model.ad.RespondedAd;
+import ua.translate.model.status.AdStatus;
 import ua.translate.service.exception.WrongPageNumber;
 
 public abstract class ClientService extends UserService<Client>{
 	
 	
 	/**
-	 * Returns all {@link Ad}s, related to this client
+	 * Returns Set of {@link Ad}s, related to this client.
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated client, 
 	 * usually is retrieved from {@link Principal} object

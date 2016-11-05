@@ -16,6 +16,9 @@
 		<@security.authorize access="hasRole('ROLE_CLIENT')">
 			<#include "/fragments/authclientheader.ftl">
 		</@security.authorize>
+		<@security.authorize access="hasRole('ROLE_ADMIN')">
+			<#include "/fragments/authadminheader.ftl">
+		</@security.authorize>
 		<div class="panel-body" style = "margin: 0px">
 				<img  src="data:image/jpeg;base64,${image!""}" />
 				<table>

@@ -6,29 +6,39 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
-/*!!!!This class is leaved, because creation of ad can be changed!!!!*/
-/*@Entity
+
+@Entity
 @Table(name="ORAL_AD")
-@PrimaryKeyJoinColumn(name= "oral_ad_id")*/
+@PrimaryKeyJoinColumn(name= "oral_ad_id")
 public class OralAd extends Ad{
 
 	@Column(name = "ORAL_AD_COUNTRY", nullable = false)
+	@NotEmpty
 	private String country;
 	
 	@Column(name = "ORAL_AD_CITY", nullable = false)
+	@NotEmpty
 	private String city;
 	
 	@DateTimeFormat(iso = ISO.DATE_TIME,pattern = "dd.MM.yyyy HH:mm:ss")
 	@Column(name = "ORAL_AD_INIT_DATE",nullable = false)
+	@NotNull
 	private LocalDateTime initialDateTime;
 	
 	@DateTimeFormat(iso = ISO.DATE_TIME,pattern = "dd.MM.yyyy HH:mm:ss")
 	@Column(name = "ORAL_AD_FINISH_DATE",nullable = false)
+	@NotNull
 	private LocalDateTime finishDateTime;
-
+	
+	public OralAd(){
+		super();
+		this.translateType = TranslateType.ORAL;
+	}
 	public String getCountry() {
 		return country;
 	}
@@ -60,5 +70,7 @@ public class OralAd extends Ad{
 	public void setFinishDateTime(LocalDateTime finishDateTime) {
 		this.finishDateTime = finishDateTime;
 	}
+	
+	
 	
 }

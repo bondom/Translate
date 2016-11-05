@@ -16,10 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import ua.translate.controller.GetTranslatorController;
+import ua.translate.controller.translator.GetTranslatorController;
 import ua.translate.dao.UserDao;
-import ua.translate.model.User;
-import ua.translate.model.UserRole;
+import ua.translate.model.UserEntity;
 import ua.translate.model.security.UserImpl;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
@@ -35,7 +34,7 @@ public class UserDetailsServiceImpl implements UserDetailsService{
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		User user = userDao.getUserByEmail(username); 
+		UserEntity user = userDao.getUserEntityByEmail(username); 
 		if(user!=null){
 			logger.info("User exists, his role={}",user.getRole());
 			boolean enabled = user.getStatus().equals(UserStatus.ACTIVE);

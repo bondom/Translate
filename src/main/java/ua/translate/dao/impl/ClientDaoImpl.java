@@ -38,6 +38,12 @@ public class ClientDaoImpl extends ClientDao{
 	}
 
 	@Override
+	public void clear() {
+		Session session = sessionFactory.getCurrentSession();
+		session.clear();
+	}
+	
+	@Override
 	public Client update(Client t) {
 		Session session = sessionFactory.getCurrentSession();
 		session.update(t);

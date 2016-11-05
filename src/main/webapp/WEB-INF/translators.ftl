@@ -33,10 +33,12 @@
 				</div>
 				</br>
 			</#list>
-
-			<#list 1..numberOfPages as page>
-				<a href="<@spring.url "/translators?page=${page}"/>">${page}</a>&nbsp
-			</#list>
+			
+			<#if numberOfPages gt 1>
+				<#list 1..numberOfPages as page>
+					<a href="<@spring.url "/translators?page=${page}"/>">${page}</a>&nbsp
+				</#list>
+			</#if>
 		</div>
 	</div>
 	</div>

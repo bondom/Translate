@@ -19,9 +19,11 @@ import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.RespondedAdStatus;
-import ua.translate.service.exception.IllegalActionForAcceptedAd;
-import ua.translate.service.exception.IllegalActionForRejectedAd;
-import ua.translate.service.exception.NonExistedRespondedAdException;
+import ua.translate.service.BalanceService;
+import ua.translate.service.exception.IllegalActionForAd;
+import ua.translate.service.exception.IllegalActionForRespondedAd;
+import ua.translate.service.exception.InsufficientFunds;
+import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.TranslatorDistraction;
 import ua.translate.service.impl.RespondedAdServiceImpl;
 
@@ -30,6 +32,7 @@ public class RespondedAdServiceTest {
 	
 	@Mock private RespondedAdDao respondedAdDao;
 	@Mock private ClientDao clientDao;
+	@Mock private BalanceService balanceService;
 	
 	private RespondedAd respondedAd;
 	private Client client;
@@ -43,17 +46,20 @@ public class RespondedAdServiceTest {
 	@Before
 	public void init(){
 		ad = new Ad();
+		ad.setCost(150);
 		respondedAd = new RespondedAd();
 		client = new Client();
 		client.setEmail("test@mail.ru");
+		client.setBalance(1000.0);
 		translator = new Translator();
+		translator.setBalance(0.0);
 		ad.addRespondedAd(respondedAd);
 		client.addRespondedAd(respondedAd);
 		translator.addRespondedAd(respondedAd);
 	}
 	
 	@Test
-	public void testGetRespondedAdById() throws NonExistedRespondedAdException{
+	public void testGetRespondedAdById() throws InvalidIdentifier{
 		long adId = 3L;
 		logger.debug("-----------------testGetRespondedAdById------------");
 		logger.debug("Stubbing RespondedAdDao.get({}) "
@@ -66,8 +72,8 @@ public class RespondedAdServiceTest {
 		verify(respondedAdDao).get(adId);
 	}
 	
-	@Test(expected = NonExistedRespondedAdException.class)
-	public void testGetRespondedAdByInvalidId() throws NonExistedRespondedAdException{
+	@Test(expected = InvalidIdentifier.class)
+	public void testGetRespondedAdByInvalidId() throws InvalidIdentifier{
 		long nonExistedAdId = 2L;
 		logger.debug("-----------------testGetRespondedAdByInvalidId------------");
 		logger.debug("Stubbing RespondedAdDao.get({}) "
@@ -75,20 +81,18 @@ public class RespondedAdServiceTest {
 		when(respondedAdDao.get(nonExistedAdId)).thenReturn(null);
 		try{
 			logger.debug("Calling RespondedAdService.get({}) should"
-					+ " throw NonExistedRespondedAdException",
+					+ " throw InvalidIdentifier",
 					nonExistedAdId);
 			respondedService.get(nonExistedAdId);
-		}catch(NonExistedRespondedAdException ex){
-			logger.debug("NonExistedRespondedAdException has been thrown");
+		}catch(InvalidIdentifier ex){
+			logger.debug("InvalidIdentifier has been thrown");
 			throw ex;
 		}
 	}
 	
 	@Test
-	public void testAcceptAd() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd, 
-										IllegalActionForRejectedAd, 
-										TranslatorDistraction{
+	public void testAcceptAd() throws InvalidIdentifier,IllegalActionForRespondedAd, 
+										TranslatorDistraction, InsufficientFunds{
 		long adId = 3L;
 		String email = client.getEmail();
 		respondedAd.setStatus(RespondedAdStatus.SENDED);
@@ -104,20 +108,20 @@ public class RespondedAdServiceTest {
 		when(clientDao.getClientByEmail(email)).thenReturn(client);
 		logger.debug("Calling RespondedAdService.accept({},{})",
 				email,adId);
-		respondedService.accept(email,adId);
+		respondedService.acceptRespondedAdAndTransferPledge(email,adId,0);
 		logger.debug("Verifying respondedAdDao.get({}) is called",adId); 
-		verify(respondedAdDao).get(adId);
+		verify(respondedAdDao,times(2)).get(adId);
 		logger.debug("Verifying clientDao.getClientByEmail({}) is called",email); 
 		verify(clientDao).getClientByEmail(email);
 		logger.debug("Verifying respondedAdDao.flush() is called"); 
 		verify(respondedAdDao).flush();
 	}
 	
-	@Test(expected = NonExistedRespondedAdException.class)
-	public void testAcceptNonExistedAd() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd, 
-										IllegalActionForRejectedAd, 
-										TranslatorDistraction{
+	@Test(expected = InvalidIdentifier.class)
+	public void testAcceptNonExistedAd() throws InvalidIdentifier,
+										IllegalActionForRespondedAd, 
+										TranslatorDistraction,
+										InsufficientFunds{
 		long nonExistedadId = 3L;
 		String email = client.getEmail();
 		respondedAd.setId(nonExistedadId);
@@ -128,11 +132,11 @@ public class RespondedAdServiceTest {
 		
 		try{
 			logger.debug("Calling RespondedAdService.accept({},{}) should"
-					+ " throw NonExistedRespondedAdException",
+					+ " throw InvalidIdentifier",
 					email,nonExistedadId);
-			respondedService.accept(email,nonExistedadId);
-		}catch(NonExistedRespondedAdException ex){
-			logger.debug("NonExistedRespondedAdException has been thrown");
+			respondedService.acceptRespondedAdAndTransferPledge(email,nonExistedadId,0);
+		}catch(InvalidIdentifier ex){
+			logger.debug("InvalidIdentifier has been thrown");
 			verify(clientDao,times(0)).getClientByEmail(email);
 			logger.debug("Verified clientDao.getClientByEmail({}) is not called",email);
 			verify(respondedAdDao,times(0)).flush();
@@ -141,11 +145,11 @@ public class RespondedAdServiceTest {
 		}
 	}
 	
-	@Test(expected = NonExistedRespondedAdException.class)
-	public void testAcceptAdWithoutRight() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd, 
-										IllegalActionForRejectedAd, 
-										TranslatorDistraction{
+	@Test(expected = InvalidIdentifier.class)
+	public void testAcceptAdWithoutRight() throws InvalidIdentifier,
+											IllegalActionForRespondedAd, 
+											TranslatorDistraction,
+											InsufficientFunds{
 		long adId = 3L;
 		Client notOwnerOfAd= new Client();
 		notOwnerOfAd.setEmail("notOwner@mail.ru");
@@ -163,11 +167,11 @@ public class RespondedAdServiceTest {
 		
 		try{
 			logger.debug("Calling RespondedAdService.accept({},{}) should"
-					+ " throw NonExistedRespondedAdException",
+					+ " throw InvalidIdentifier",
 					email,adId);
-			respondedService.accept(email,adId);
-		}catch(NonExistedRespondedAdException ex){
-			logger.debug("NonExistedRespondedAdException has been thrown");
+			respondedService.acceptRespondedAdAndTransferPledge(email,adId,0);
+		}catch(InvalidIdentifier ex){
+			logger.debug("InvalidIdentifier has been thrown");
 			verify(clientDao,times(1)).getClientByEmail(email);
 			logger.debug("Verified clientDao.getClientByEmail({}) is called",email);
 			verify(respondedAdDao,times(1)).get(adId);
@@ -179,11 +183,11 @@ public class RespondedAdServiceTest {
 		
 	}
 	
-	@Test(expected = IllegalActionForAcceptedAd.class)
-	public void testAcceptAlreadyAcceptedAd() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd, 
-										IllegalActionForRejectedAd, 
-										TranslatorDistraction{
+	@Test(expected = IllegalActionForRespondedAd.class)
+	public void testAcceptAlreadyAcceptedAd() throws InvalidIdentifier,
+													IllegalActionForRespondedAd, 
+													TranslatorDistraction,
+													InsufficientFunds{
 		long adId = 3L;
 		String email = client.getEmail();
 		respondedAd.setId(adId);
@@ -200,11 +204,11 @@ public class RespondedAdServiceTest {
 		
 		try{
 			logger.debug("Calling RespondedAdService.accept({},{}) should"
-					+ " throw IllegalActionForAcceptedAd",
+					+ " throw IllegalActionForRespondedAd",
 					email,adId);
-			respondedService.accept(email,adId);
-		}catch(IllegalActionForAcceptedAd ex){
-			logger.debug("IllegalActionForAcceptedAd has been thrown");
+			respondedService.acceptRespondedAdAndTransferPledge(email,adId,0);
+		}catch(IllegalActionForRespondedAd ex){
+			logger.debug("IllegalActionForRespondedAd has been thrown");
 			verify(clientDao,times(1)).getClientByEmail(email);
 			logger.debug("Verified clientDao.getClientByEmail({}) is called",email);
 			verify(respondedAdDao,times(1)).get(adId);
@@ -217,11 +221,11 @@ public class RespondedAdServiceTest {
 	}
 	
 	
-	@Test(expected = IllegalActionForRejectedAd.class)
-	public void testAcceptRejectedAd() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd, 
-										IllegalActionForRejectedAd, 
-										TranslatorDistraction{
+	@Test(expected = IllegalActionForRespondedAd.class)
+	public void testAcceptRejectedAd() throws InvalidIdentifier,
+												IllegalActionForRespondedAd, 
+												TranslatorDistraction,
+												InsufficientFunds{
 		long adId = 3L;
 		String email = client.getEmail();
 		respondedAd.setId(adId);
@@ -238,11 +242,11 @@ public class RespondedAdServiceTest {
 		
 		try{
 			logger.debug("Calling RespondedAdService.accept({},{}) should"
-					+ " throw IllegalActionForRejectedAd",
+					+ " throw IllegalActionForRespondedAd",
 					email,adId);
-			respondedService.accept(email,adId);
-		}catch(IllegalActionForRejectedAd ex){
-			logger.debug("IllegalActionForRejectedAd has been thrown");
+			respondedService.acceptRespondedAdAndTransferPledge(email,adId,0);
+		}catch(IllegalActionForRespondedAd ex){
+			logger.debug("IllegalActionForRespondedAd has been thrown");
 			verify(clientDao,times(1)).getClientByEmail(email);
 			logger.debug("Verified clientDao.getClientByEmail({}) is called",email);
 			verify(respondedAdDao,times(1)).get(adId);
@@ -255,10 +259,10 @@ public class RespondedAdServiceTest {
 	}
 	
 	@Test(expected = TranslatorDistraction.class)
-	public void testAcceptOneMoreAdForTranslator() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd, 
-										IllegalActionForRejectedAd, 
-										TranslatorDistraction{
+	public void testAcceptOneMoreAdForTranslator() throws InvalidIdentifier,
+										IllegalActionForRespondedAd, 
+										TranslatorDistraction,
+										InsufficientFunds{
 		long adId = 3L;
 		String email = client.getEmail();
 		respondedAd.setId(adId);
@@ -281,7 +285,7 @@ public class RespondedAdServiceTest {
 			logger.debug("Calling RespondedAdService.accept({},{}) should"
 					+ " throw TranslatorDistraction",
 					email,adId);
-			respondedService.accept(email,adId);
+			respondedService.acceptRespondedAdAndTransferPledge(email,adId,0);
 		}catch(TranslatorDistraction ex){
 			logger.debug("TranslatorDistraction has been thrown");
 			verify(clientDao,times(1)).getClientByEmail(email);
@@ -296,8 +300,8 @@ public class RespondedAdServiceTest {
 	
 	
 	@Test
-	public void testRejectAd() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd{
+	public void testRejectAd() throws InvalidIdentifier,
+										IllegalActionForRespondedAd{
 		long adId = 3L;
 		String email = client.getEmail();
 		respondedAd.setStatus(RespondedAdStatus.SENDED);
@@ -320,9 +324,9 @@ public class RespondedAdServiceTest {
 		verify(clientDao).getClientByEmail(email);
 	}
 	
-	@Test(expected = NonExistedRespondedAdException.class)
-	public void testRejectNonExistedAd() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd{
+	@Test(expected = InvalidIdentifier.class)
+	public void testRejectNonExistedAd() throws InvalidIdentifier,
+												IllegalActionForRespondedAd{
 		long nonExistedadId = 3L;
 		String email = client.getEmail();
 		respondedAd.setId(nonExistedadId);
@@ -333,11 +337,11 @@ public class RespondedAdServiceTest {
 		
 		try{
 			logger.debug("Calling RespondedAdService.reject({},{}) should"
-					+ " throw NonExistedRespondedAdException",
+					+ " throw InvalidIdentifier",
 					email,nonExistedadId);
 			respondedService.reject(email,nonExistedadId);
-		}catch(NonExistedRespondedAdException ex){
-			logger.debug("NonExistedRespondedAdException has been thrown");
+		}catch(InvalidIdentifier ex){
+			logger.debug("InvalidIdentifier has been thrown");
 			verify(clientDao,times(0)).getClientByEmail(email);
 			logger.debug("Verified clientDao.getClientByEmail({}) is not called",email);
 			verify(respondedAdDao,times(0)).flush();
@@ -345,9 +349,9 @@ public class RespondedAdServiceTest {
 		}
 	}
 	
-	@Test(expected = NonExistedRespondedAdException.class)
-	public void testRejectAdWithoutRight() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd{
+	@Test(expected = InvalidIdentifier.class)
+	public void testRejectAdWithoutRight() throws InvalidIdentifier,
+													IllegalActionForRespondedAd{
 		long adId = 3L;
 		Client notOwnerOfAd= new Client();
 		notOwnerOfAd.setEmail("notOwner@mail.ru");
@@ -366,11 +370,11 @@ public class RespondedAdServiceTest {
 		
 		try{
 			logger.debug("Calling RespondedAdService.reject({},{}) should"
-					+ " throw NonExistedRespondedAdException",
+					+ " throw InvalidIdentifier",
 					email,adId);
 			respondedService.reject(email,adId);
-		}catch(NonExistedRespondedAdException ex){
-			logger.debug("NonExistedRespondedAdException has been thrown");
+		}catch(InvalidIdentifier ex){
+			logger.debug("InvalidIdentifier has been thrown");
 			verify(clientDao,times(1)).getClientByEmail(email);
 			logger.debug("Verified clientDao.getClientByEmail({}) is called",email);
 			verify(respondedAdDao,times(1)).get(adId);
@@ -380,9 +384,9 @@ public class RespondedAdServiceTest {
 		
 	}
 	
-	@Test(expected = IllegalActionForAcceptedAd.class)
-	public void testRejectAlreadyAcceptedAd() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd{
+	@Test(expected = IllegalActionForRespondedAd.class)
+	public void testRejectAlreadyAcceptedAd() throws InvalidIdentifier,
+														IllegalActionForRespondedAd{
 		long adId = 3L;
 		String email = client.getEmail();
 		respondedAd.setId(adId);
@@ -399,11 +403,11 @@ public class RespondedAdServiceTest {
 		
 		try{
 			logger.debug("Calling RespondedAdService.reject({},{}) should"
-					+ " throw IllegalActionForAcceptedAd",
+					+ " throw IllegalActionForRespondedAd",
 					email,adId);
 			respondedService.reject(email,adId);
-		}catch(IllegalActionForAcceptedAd ex){
-			logger.debug("IllegalActionForAcceptedAd has been thrown");
+		}catch(IllegalActionForRespondedAd ex){
+			logger.debug("IllegalActionForRespondedAd has been thrown");
 			verify(clientDao,times(1)).getClientByEmail(email);
 			logger.debug("Verified clientDao.getClientByEmail({}) is called",email);
 			verify(respondedAdDao,times(1)).get(adId);
@@ -413,8 +417,8 @@ public class RespondedAdServiceTest {
 	}
 	
 	@Test
-	public void testRejectAlreadyRejectedAd() throws NonExistedRespondedAdException,
-										IllegalActionForAcceptedAd{
+	public void testRejectAlreadyRejectedAd() throws InvalidIdentifier,
+												IllegalActionForRespondedAd{
 		long adId = 3L;
 		String email = client.getEmail();
 		respondedAd.setStatus(RespondedAdStatus.REJECTED);
