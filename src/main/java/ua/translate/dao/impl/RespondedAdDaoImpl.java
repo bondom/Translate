@@ -15,9 +15,7 @@ import org.springframework.stereotype.Repository;
 import ua.translate.dao.RespondedAdDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.status.AdStatus;
 
 @Repository
 public class RespondedAdDaoImpl implements RespondedAdDao{
@@ -74,6 +72,7 @@ public class RespondedAdDaoImpl implements RespondedAdDao{
 		final int firstResult = numberRespondedAdsOnPage*(page-1);
 		query.setFirstResult(firstResult);
 		
+		@SuppressWarnings("unchecked")
 		List<RespondedAd> respondedAds = (List<RespondedAd>)query.list();
 		Set<RespondedAd> setOfRespondedAds = new LinkedHashSet<>(respondedAds);
 		return setOfRespondedAds;
@@ -104,6 +103,7 @@ public class RespondedAdDaoImpl implements RespondedAdDao{
 		final int firstResult = numberRespondedAdsOnPage*(page-1);
 		query.setFirstResult(firstResult);
 		
+		@SuppressWarnings("unchecked")
 		List<RespondedAd> respondedAds = (List<RespondedAd>)query.list();
 		Set<RespondedAd> setOfRespondedAds = new LinkedHashSet<>(respondedAds);
 		return setOfRespondedAds;

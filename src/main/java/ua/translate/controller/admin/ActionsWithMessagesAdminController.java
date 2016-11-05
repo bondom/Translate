@@ -1,7 +1,6 @@
 package ua.translate.controller.admin;
 
 import java.security.Principal;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,7 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -20,23 +18,11 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
-import ua.translate.model.Order;
-import ua.translate.model.UserEntity;
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.ad.AdStatusMessage;
-import ua.translate.model.ad.WrittenAd;
-import ua.translate.model.settings.Settings;
 import ua.translate.model.status.AdStatus;
-import ua.translate.model.viewbean.AdView;
-import ua.translate.service.AdService;
 import ua.translate.service.AdStatusMessageService;
-import ua.translate.service.WrittenAdService;
-import ua.translate.service.exception.AccessDeniedException;
-import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InvalidIdentifier;
-import ua.translate.service.exception.WrongPageNumber;
-
 @Controller
 @RequestMapping("/bulbular")
 public class ActionsWithMessagesAdminController {

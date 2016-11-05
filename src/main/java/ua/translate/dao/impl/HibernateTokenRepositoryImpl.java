@@ -71,7 +71,9 @@ public class HibernateTokenRepositoryImpl implements AbstractDao<String,Persiste
 	public void removeUserTokens(String username) {
 		Criteria crit = createEntityCriteria();
         crit.add(Restrictions.eq("username", username));
-        List<PersistentLogin> persistentLogins = (List<PersistentLogin>) crit.list();
+        
+        @SuppressWarnings("unchecked")
+		List<PersistentLogin> persistentLogins = (List<PersistentLogin>) crit.list();
         for(PersistentLogin persistenLogin: persistentLogins){
         	delete(persistenLogin);
         }

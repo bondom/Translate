@@ -1,10 +1,8 @@
 package ua.translate.test.service;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
-import java.time.Month;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -16,7 +14,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ua.translate.dao.AdDao;
 import ua.translate.dao.ClientDao;
 import ua.translate.dao.GetAdDao;
 import ua.translate.dao.TranslatorDao;
@@ -24,7 +21,6 @@ import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.ad.ResultDocument;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.RespondedAdStatus;
 import ua.translate.service.exception.DuplicateAdException;

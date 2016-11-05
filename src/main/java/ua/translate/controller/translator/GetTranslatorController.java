@@ -1,15 +1,9 @@
 package ua.translate.controller.translator;
 
 import java.io.UnsupportedEncodingException;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,7 +25,6 @@ import ua.translate.model.Translator;
 import ua.translate.model.viewbean.TranslatorView;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.InvalidIdentifier;
-import ua.translate.service.exception.WrongPageNumber;
 
 @Controller
 @RequestMapping("/translators")
@@ -54,14 +47,7 @@ public class GetTranslatorController {
 	public ModelAndView translators(@RequestParam(name="page",
 														required = false,
 														defaultValue="1") int page){
-		Set<Translator> translators = null;
-		try {
-			translators = translatorService.getTranslators(page, TRANSLATORS_ON_PAGE);
-		} catch (WrongPageNumber e1) {
-			try {
-				translators = translatorService.getTranslators(1, TRANSLATORS_ON_PAGE);
-			} catch (WrongPageNumber unused) {}
-		}
+		Set<Translator> translators = translatorService.getTranslators(page, TRANSLATORS_ON_PAGE);
 		
 		Set<TranslatorView> translatorsForRendering = new LinkedHashSet<>();
 		translators.forEach(translator->{

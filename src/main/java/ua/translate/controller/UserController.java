@@ -1,10 +1,8 @@
 package ua.translate.controller;
 
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -68,7 +66,6 @@ public class UserController {
 	/**
 	 * Sets {@code targetUrl} attribute to session depending of {@link UserRole}
 	 */
-	@SuppressWarnings("unused")
 	protected void setRememberMeTargetUrlToSession(UserEntity user, HttpServletRequest request){
 		HttpSession session = request.getSession(false);
 		if(session!=null){

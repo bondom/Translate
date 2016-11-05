@@ -27,11 +27,9 @@ import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.service.AbstractAdService;
-import ua.translate.service.AdService;
 import ua.translate.service.ClientService;
 import ua.translate.service.RespondedAdService;
 import ua.translate.service.TranslatorService;
-import ua.translate.service.UserService;
 
 @Aspect
 @Component

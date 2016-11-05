@@ -1,11 +1,8 @@
 package ua.translate.service;
 
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.Ad.TranslateType;
-import ua.translate.model.ad.OralAd;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.RespondedAdStatus;
-import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.IllegalActionForRespondedAd;
 import ua.translate.service.exception.InsufficientFunds;
 import ua.translate.service.exception.InvalidIdentifier;

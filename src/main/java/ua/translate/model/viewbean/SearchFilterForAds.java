@@ -1,11 +1,8 @@
 package ua.translate.model.viewbean;
 
-import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import org.springframework.format.annotation.NumberFormat;
 
-import ua.translate.model.validator.FieldNotMatch;
 
 /**
  * It is class, instance which is transmitted to user for getting restrictions on ads

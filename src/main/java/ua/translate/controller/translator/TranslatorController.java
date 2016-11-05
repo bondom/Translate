@@ -1,27 +1,17 @@
 package ua.translate.controller.translator;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,37 +21,24 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
 import ua.translate.controller.UserController;
-import ua.translate.controller.support.ControllerHelper;
 import ua.translate.model.Translator;
-import ua.translate.model.Language;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.settings.Settings;
 import ua.translate.model.ad.AdStatusMessage;
-import ua.translate.model.ad.Document;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.ad.ResultDocument;
 import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.viewbean.AdWithStatusMessageView;
-import ua.translate.model.viewbean.ChangeEmailBean;
-import ua.translate.model.viewbean.ChangePasswordBean;
-import ua.translate.service.AdService;
 import ua.translate.service.AdStatusMessageService;
-import ua.translate.service.DocumentService;
 import ua.translate.service.SettingsService;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.WrittenAdService;
-import ua.translate.service.exception.DownloadFileAccessDenied;
-import ua.translate.service.exception.DuplicateEmailException;
-import ua.translate.service.exception.EmailIsConfirmedException;
 import ua.translate.service.exception.IllegalActionForAd;
-import ua.translate.service.exception.InvalidConfirmationUrl;
-import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.NumberExceedsException;
 import ua.translate.service.exception.TranslatorDistraction;
-import ua.translate.service.exception.WrongPageNumber;
 
 @Controller
 @RequestMapping("/translator")
@@ -148,16 +125,8 @@ public class TranslatorController extends UserController{
 		
 		Settings settings = settingsService.getProjectSettings();
 		final int respondedAdsOnPage = settings.getMaxNumberOfRespondedAdsOnOnePage();
-		Set<RespondedAd> respondedAds = null;
-		try {
-			respondedAds = translatorService
-					.getRespondedAds(user.getName(),page,respondedAdsOnPage);
-		} catch (WrongPageNumber e) {
-			try {
-				respondedAds = translatorService
-						.getRespondedAds(user.getName(),1,respondedAdsOnPage);
-			} catch (WrongPageNumber unused) {}
-		}
+		Set<RespondedAd> respondedAds = translatorService
+						.getRespondedAds(user.getName(),page,respondedAdsOnPage);
 		
 		long nunmberOfPages = translatorService
 				.getNumberOfPagesForRespondedAds(user.getName(), respondedAdsOnPage);

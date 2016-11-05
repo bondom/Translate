@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import ua.translate.dao.CommentDao;
 import ua.translate.model.Comment;
-import ua.translate.model.ad.Ad;
 
 @Repository
 public class CommentDaoImpl implements CommentDao{

@@ -15,16 +15,11 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
 
-import org.hibernate.validator.constraints.NotBlank;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @Entity
 @Table(name = "COMMENT_TEST")
 public class Comment implements Serializable{
 	
-	/**
-	 * Version of this class in production 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	@Id

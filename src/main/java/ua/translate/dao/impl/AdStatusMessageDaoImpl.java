@@ -7,14 +7,12 @@ import java.util.Set;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ua.translate.dao.AdStatusMessageDao;
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.ad.AdStatusMessage;
 import ua.translate.model.status.AdStatus;
@@ -77,6 +75,7 @@ public class AdStatusMessageDaoImpl implements AdStatusMessageDao{
 	public Set<AdStatusMessage> getAllAdStatusMessages() {
 		Criteria criteria = 
 				sessionFactory.getCurrentSession().createCriteria(AdStatusMessage.class);
+		@SuppressWarnings("unchecked")
 		List<AdStatusMessage> adStatusMessages = (List<AdStatusMessage>)criteria.list();
 		Set<AdStatusMessage> resultSet = new LinkedHashSet<>(adStatusMessages);
 		return resultSet;

@@ -1,14 +1,10 @@
 package ua.translate.dao;
 
-import java.security.Principal;
-import java.util.List;
 import java.util.Set;
 
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.service.exception.WrongPageNumber;
 
 public interface RespondedAdDao extends AbstractDao<Long, RespondedAd>{
 	/**

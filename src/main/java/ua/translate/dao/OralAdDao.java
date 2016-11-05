@@ -3,8 +3,6 @@ package ua.translate.dao;
 import java.util.Set;
 
 import ua.translate.dao.impl.GetAdDaoImpl;
-import ua.translate.model.Order;
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.OralAd;
 import ua.translate.model.searchbean.SearchOralAdBean;
 import ua.translate.model.status.AdStatus;

@@ -21,7 +21,6 @@ import ua.translate.dao.RespondedAdDao;
 import ua.translate.model.Client;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.InvalidPasswordException;
-import ua.translate.service.exception.WrongPageNumber;
 import ua.translate.service.impl.ClientServiceImpl;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -188,7 +187,7 @@ public class ClientServiceTest {
 	
 	
 	@Test
-	public void testGetRespondedAds() throws WrongPageNumber{
+	public void testGetRespondedAds(){
 		logger.debug("-----------------testGetRespondedAds------------");
 		String email = clientFromDao.getEmail();
 		int page = 2;
@@ -209,27 +208,4 @@ public class ClientServiceTest {
 			getRespondedAdsByClient(clientFromDao, page, numberOfRespondedAdsOnPage);
 	}
 	
-	@Test(expected = WrongPageNumber.class)
-	public void testGetRespondedAdsWithWrongPageNumber() throws WrongPageNumber{
-		logger.debug("-----------------testGetRespondedAdsWithWrongPageNumber------------");
-		String email = clientFromDao.getEmail();
-		int invalidNumberOfPage = 0;
-		int numberOfRespondedAdsOnPage = 10;
-		try{
-			logger.debug("Calling ClientService.getRespondedAds({},{},{})"
-					+ " should throw WrongPageNumber",
-					email,invalidNumberOfPage,numberOfRespondedAdsOnPage);
-					clientService.getRespondedAds(email, invalidNumberOfPage, 
-							numberOfRespondedAdsOnPage);
-		}catch(WrongPageNumber ex){
-			logger.debug("WrongPageNumber has been thrown");
-			verify(clientDao,times(0)).getClientByEmail(email);
-			logger.debug("Verified ClientDao.getClientByEmail() is not called");
-			verify(respondedAdDao,times(0)).
-				getRespondedAdsByClient(clientFromDao, invalidNumberOfPage, numberOfRespondedAdsOnPage);
-			logger.debug("Verified RespondedAdDao.getRespondedAdsByClient(client object with id={},{},{}) "
-					+ "is not called",clientFromDao.getId(),invalidNumberOfPage,numberOfRespondedAdsOnPage);
-			throw ex;
-		}
-	}
 }

@@ -1,7 +1,6 @@
 package ua.translate.service;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 import ua.translate.model.Client;
 import ua.translate.model.ad.Ad;

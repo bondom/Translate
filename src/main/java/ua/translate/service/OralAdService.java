@@ -7,7 +7,6 @@ import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.OralAd;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.searchbean.SearchOralAdBean;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.viewbean.SearchFilterForOralAds;
@@ -16,7 +15,6 @@ import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InsufficientFunds;
 import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.TooEarlyPaying;
-import ua.translate.service.exception.WrongPageNumber;
 
 public abstract class OralAdService extends AbstractAdService{
 	
@@ -59,7 +57,7 @@ public abstract class OralAdService extends AbstractAdService{
 	 * {@link Ad#getPublicationDateTime() Ad.publicationDateTime}, order is assigned by {@link Order} 
 	 * {@code order}
 	 * <p>If {@code numberAdsOnPage} is less then 1, default
-	 * number is used. If {@code page} is less then 1, exception is thrown
+	 * number is used. If {@code page} is less than 1, 1 is being used instead
 	 * <p>Size of result {@code Set} is not more than {@code numberAdsOnPage}
 	 * <p><b>NOTE:</b>AfterReturning Logging via Spring AOP is present
 	 * @param page -  page number, can't be less than 1
@@ -68,7 +66,7 @@ public abstract class OralAdService extends AbstractAdService{
 	 * @throws WrongPageNumber if {@code page} is less than 1
 	 */
 	public abstract Set<OralAd> getOralAdsByStatusAndOrder(int page,int numberAdsOnPage,
-							AdStatus adStatus, Order order) throws WrongPageNumber;
+							AdStatus adStatus, Order order);
 	
 	/**
 	 * Gets {@code Set} of {@link OralAd}s from data storage,  
@@ -83,7 +81,7 @@ public abstract class OralAdService extends AbstractAdService{
 	 * properties of {@code searchAdBean} are assigned to {@code null}
 	 * (that is no filter for this properties won't be applied) 
 	 * <p>If {@code numberAdsOnPage} is less then 1, default
-	 * number is used. If {@code page} is less then 1, exception is thrown
+	 * number is used. If {@code page} is less than 1, 1 is being used instead
 	 * <br><p>Size of result {@code Set} is not more than {@code numberAdsOnPage}
 	 * <p><b>NOTE:</b>AfterReturning and Before Logging via Spring AOP is present
 	 * @param page -  page number, can't be less than 1
@@ -96,7 +94,7 @@ public abstract class OralAdService extends AbstractAdService{
 	 * @throws WrongPageNumber if {@code page} is less than 1
 	 */
 	public abstract Set<OralAd> getOralAdsForShowingByFilter(int page,int numberAdsOnPage,
-			SearchFilterForOralAds searchFilter,String valueWithoutFilter) throws WrongPageNumber;
+			SearchFilterForOralAds searchFilter,String valueWithoutFilter) ;
 	
 	/**
 	 * Returns number of pages for all existed {@link OralAd}s with status={@code adStatus},

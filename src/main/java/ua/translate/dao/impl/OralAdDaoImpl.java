@@ -5,30 +5,19 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.Criteria;
-import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ua.translate.dao.AdDao;
 import ua.translate.dao.OralAdDao;
-import ua.translate.model.Client;
 import ua.translate.model.Language;
-import ua.translate.model.UserEntity;
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.ad.Currency;
 import ua.translate.model.ad.OralAd;
-import ua.translate.model.ad.WrittenAd;
-import ua.translate.model.searchbean.SearchAdBean;
 import ua.translate.model.searchbean.SearchOralAdBean;
-import ua.translate.model.searchbean.SearchWrittenAdBean;
-import ua.translate.model.security.PersistentLogin;
 import ua.translate.model.status.AdStatus;
 
 @Repository
@@ -76,6 +65,7 @@ public class OralAdDaoImpl extends OralAdDao{
 		final int firstResult = numberAdsOnPage*(page-1);
 		criteria.setFirstResult(firstResult);
 
+		@SuppressWarnings("unchecked")
 		List<OralAd> ads = (List<OralAd>)criteria.list();
 		Set<OralAd> adsSet = new LinkedHashSet<>(ads);
 		return adsSet;

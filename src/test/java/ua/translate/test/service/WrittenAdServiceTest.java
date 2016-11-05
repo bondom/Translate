@@ -3,9 +3,6 @@ package ua.translate.test.service;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
-import java.lang.reflect.Field;
-import java.time.LocalDateTime;
-import java.time.Month;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -16,28 +13,19 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ua.translate.dao.AdDao;
 import ua.translate.dao.ClientDao;
 import ua.translate.dao.TranslatorDao;
 import ua.translate.dao.WrittenAdDao;
-import ua.translate.model.Admin;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.UserEntity;
-import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.Document;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.ad.ResultDocument;
 import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.RespondedAdStatus;
-import ua.translate.service.exception.DownloadFileAccessDenied;
 import ua.translate.service.exception.DuplicateAdException;
 import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InvalidIdentifier;
-import ua.translate.service.exception.TooManyAds;
-import ua.translate.service.exception.TooManyRefreshings;
-import ua.translate.service.impl.DefaultAdServiceImpl;
 import ua.translate.service.impl.WrittenAdServiceImpl;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -161,7 +149,6 @@ public class WrittenAdServiceTest {
 		logger.debug("-----------------testSaveResultDocAndMarkAsNotCheckedAnotherAcceptedAd------------");
 		
 		final String email = translator.getEmail();
-		final Long adId = writtenAd.getId();
 		final Long anotherAdId = 99L;
 		WrittenAd anotherAd = new WrittenAd();
 		anotherAd.setId(anotherAdId);

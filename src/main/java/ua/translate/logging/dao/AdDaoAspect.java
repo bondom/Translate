@@ -14,9 +14,6 @@ import ua.translate.model.Client;
 import ua.translate.model.Order;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.Document;
-import ua.translate.model.ad.ResultDocument;
-import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.status.AdStatus;
 
@@ -92,6 +89,7 @@ public class AdDaoAspect {
 		return numberOfAds;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inDaoLayer() &&"
 			 + " execution(public * getAdsByTranslateTypeAndStatusAndOrder(..)) && "
 			 + "args(page,numberAdsOnPage,translateType,adStatus,order)")

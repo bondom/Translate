@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ua.translate.dao.SettingsDao;
 import ua.translate.model.settings.Settings;
 import ua.translate.service.SettingsService;
-import ua.translate.service.exception.InvalidIdentifier;
 
 @Service
 @Transactional

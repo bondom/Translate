@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 
 import org.slf4j.Logger;
@@ -15,11 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import ua.translate.dao.AdDao;
 import ua.translate.dao.ArchievedAdDao;
 import ua.translate.dao.ClientDao;
 import ua.translate.dao.GetAdDao;
-import ua.translate.dao.RespondedAdDao;
 import ua.translate.dao.TranslatorDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;

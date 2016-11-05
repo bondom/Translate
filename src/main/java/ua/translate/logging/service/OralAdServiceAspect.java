@@ -2,24 +2,16 @@ package ua.translate.logging.service;
 
 import java.util.Set;
 
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ua.translate.model.Order;
-import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.Document;
-import ua.translate.model.ad.ResultDocument;
-import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.ad.OralAd;
-import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.status.AdStatus;
-import ua.translate.model.viewbean.SearchFilterForAds;
 import ua.translate.model.viewbean.SearchFilterForOralAds;
 
 @Aspect
@@ -49,6 +41,7 @@ public class OralAdServiceAspect {
 		return savedAd;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public * getOralAdsByStatusAndOrder(..)) && "
 			 + "args(page,numberAdsOnPage,adStatus,order)")
@@ -86,6 +79,7 @@ public class OralAdServiceAspect {
 		return ads;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public * getOralAdsForShowingByFilter(..)) "
 			 + "&& args(page,numberAdsOnPage,searchFilter,valueWithoutFilter)")

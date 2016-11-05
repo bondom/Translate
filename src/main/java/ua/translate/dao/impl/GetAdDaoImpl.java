@@ -43,6 +43,8 @@ public class GetAdDaoImpl extends GetAdDao {
 		criteria.setMaxResults(numberAdsOnPage);
 		final int firstResult = numberAdsOnPage*(page-1);
 		criteria.setFirstResult(firstResult);
+		
+		@SuppressWarnings("unchecked")
 		List<Long> ids = criteria.list();
 		
 		if(ids.isEmpty()){
@@ -54,6 +56,8 @@ public class GetAdDaoImpl extends GetAdDao {
 		criteria.setMaxResults(Integer.MAX_VALUE);
 		criteria.add(Restrictions.in("id", ids));
 		criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+		
+		@SuppressWarnings("unchecked")
 		List<Ad> ads = (List<Ad>)criteria.list();
 		
 		Set<Ad> adsSet = new LinkedHashSet<>(ads);
@@ -80,6 +84,8 @@ public class GetAdDaoImpl extends GetAdDao {
 		Criteria criteria = 
 				sessionFactory.getCurrentSession().createCriteria(Ad.class);
 		criteria.add(Restrictions.eq("status", adStatus));
+		
+		@SuppressWarnings("unchecked")
 		List<Ad> ads = (List<Ad>)criteria.list();
 		Set<Ad> adsSet = new LinkedHashSet<>(ads);
 		return adsSet;

@@ -1,7 +1,6 @@
 package ua.translate.service.impl;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,19 +18,16 @@ import ua.translate.dao.RespondedAdDao;
 import ua.translate.dao.TranslatorDao;
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
-import ua.translate.model.UserEntity.UserRole;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.RespondedAdStatus;
-import ua.translate.model.status.UserStatus;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.NumberExceedsException;
 import ua.translate.service.exception.TranslatorDistraction;
-import ua.translate.service.exception.WrongPageNumber;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED,
@@ -83,10 +79,9 @@ public class TranslatorServiceImpl extends TranslatorService {
 	}
 
 	@Override
-	public Set<Translator> getTranslators(int page,int numberTranslatorsOnPage) 
-			throws WrongPageNumber {
+	public Set<Translator> getTranslators(int page,int numberTranslatorsOnPage){
 		if(page<1){
-			throw new WrongPageNumber();
+			page=1;
 		}
 		if(numberTranslatorsOnPage<1){
 			logger.debug("numberTranslatorsOnPage = {}, default value={} is used",
@@ -222,9 +217,9 @@ public class TranslatorServiceImpl extends TranslatorService {
 	@Override
 	public Set<RespondedAd> getRespondedAds(String email,
 										    int page,
-										    int numberOfRespondedAdsOnPage) throws WrongPageNumber{
+										    int numberOfRespondedAdsOnPage) {
 		if(page<1){
-			throw new WrongPageNumber();
+			page=1;
 		}
 		
 		if(numberOfRespondedAdsOnPage<1){

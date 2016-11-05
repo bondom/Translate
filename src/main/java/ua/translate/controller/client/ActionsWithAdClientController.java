@@ -53,7 +53,6 @@ import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.TooManyAds;
 import ua.translate.service.exception.TooManyRefreshings;
-import ua.translate.service.exception.WrongPageNumber;
 
 
 /**
@@ -154,20 +153,10 @@ public class ActionsWithAdClientController extends UserController{
 	public ModelAndView respondedAds(Principal user,
 									 @RequestParam(name="page",defaultValue="1",required = false) int page){
 		
-		Set<RespondedAd> respondedAds = null;
-		
 		Settings settings = settingsService.getProjectSettings();
-		try {
-			respondedAds = clientService
-					.getRespondedAds(user.getName(),page,
-							settings.getMaxNumberOfRespondedAdsOnOnePage());
-		} catch (WrongPageNumber e) {
-			try {
-				respondedAds = clientService
-						.getRespondedAds(user.getName(),1,
-								settings.getMaxNumberOfRespondedAdsOnOnePage());
-			} catch (WrongPageNumber unused) {}
-		}
+		Set<RespondedAd> respondedAds = 
+					clientService.getRespondedAds(user.getName(),page,
+												  settings.getMaxNumberOfRespondedAdsOnOnePage());
 		
 		long nunmberOfPages = clientService
 				.getNumberOfPagesForRespondedAds(user.getName(), 

@@ -7,22 +7,18 @@ import java.util.Set;
 
 import org.hibernate.Criteria;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ua.translate.dao.WrittenAdDao;
 import ua.translate.model.Language;
 import ua.translate.model.ad.Currency;
-import ua.translate.model.ad.OralAd;
 import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.ad.Ad.TranslateType;
-import ua.translate.model.searchbean.SearchOralAdBean;
 import ua.translate.model.searchbean.SearchWrittenAdBean;
 import ua.translate.model.status.AdStatus;
 
@@ -68,6 +64,7 @@ public class WrittenAdDaoImpl extends WrittenAdDao {
 		final int firstResult = numberAdsOnPage*(page-1);
 		criteria.setFirstResult(firstResult);
 
+		@SuppressWarnings("unchecked")
 		List<WrittenAd> ads = (List<WrittenAd>)criteria.list();
 		Set<WrittenAd> adsSet = new LinkedHashSet<>(ads);
 		return adsSet;
@@ -112,6 +109,7 @@ public class WrittenAdDaoImpl extends WrittenAdDao {
 		});
 		Criterion[] criterionsArray = new Criterion[statuses.size()];
 		criteria.add(Restrictions.or(criterionsList.toArray(criterionsArray)));
+		@SuppressWarnings("unchecked")
 		List<WrittenAd> list = criteria.list();
 		return new LinkedHashSet<>(list);
 	}

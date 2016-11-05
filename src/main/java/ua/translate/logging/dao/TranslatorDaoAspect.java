@@ -1,6 +1,5 @@
 package ua.translate.logging.dao;
 
-import java.util.List;
 import java.util.Set;
 
 import org.aspectj.lang.JoinPoint;
@@ -13,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ua.translate.model.Translator;
-import ua.translate.model.UserEntity;
 
 @Aspect
 @Component

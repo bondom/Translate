@@ -1,6 +1,5 @@
 package ua.translate.logging.service;
 
-import java.util.List;
 import java.util.Set;
 
 import org.aspectj.lang.JoinPoint;

@@ -1,7 +1,6 @@
 package ua.translate.service;
 
 import ua.translate.model.settings.Settings;
-import ua.translate.service.exception.InvalidIdentifier;
 
 public interface SettingsService {
 	

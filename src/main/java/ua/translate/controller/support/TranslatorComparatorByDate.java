@@ -2,7 +2,6 @@ package ua.translate.controller.support;
 
 import java.util.Comparator;
 
-import ua.translate.model.Translator;
 import ua.translate.model.viewbean.TranslatorView;
 
 /**

@@ -1,7 +1,6 @@
 package ua.translate.test.service;
 
 import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
 
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
@@ -25,14 +24,12 @@ import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.RespondedAdStatus;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.InvalidPasswordException;
 import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.NumberExceedsException;
 import ua.translate.service.exception.TranslatorDistraction;
-import ua.translate.service.exception.WrongPageNumber;
 import ua.translate.service.impl.TranslatorServiceImpl;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -103,7 +100,7 @@ public class TranslatorServiceTest {
 	}
 	
 	@Test
-	public void testGetTranslators() throws WrongPageNumber{
+	public void testGetTranslators(){
 		int page=1;
 		int numberTranslatorsOnPage = 3;
 		logger.debug("-----------------testGetTranslators------------");
@@ -119,23 +116,6 @@ public class TranslatorServiceTest {
 		verify(translatorDao).getTranslators(page, numberTranslatorsOnPage);
 	}
 	
-	@Test(expected = WrongPageNumber.class)
-	public void testGetTranslatorsWithInvalidPageNumber() throws WrongPageNumber{
-		int invalidNumberPage=0;
-		int numberTranslatorsOnPage = 3;
-		logger.debug("-----------------testGetTranslatorByInvalidId------------");
-		try{
-			logger.debug("Calling TranslatorService.getTranslators({},{}) "
-					+ "should throw WrongPageNumber",
-					invalidNumberPage,numberTranslatorsOnPage);
-			translatorService.getTranslators(invalidNumberPage,numberTranslatorsOnPage);
-		}catch(WrongPageNumber ex){
-			logger.debug("WrongPageNumber has been thrown");
-			verify(translatorDao,times(0)).getTranslators(invalidNumberPage,numberTranslatorsOnPage);
-			logger.debug("Verified TranslatorDao.flush() is not called");
-			throw ex;
-		}
-	}
 	
 	@Test
 	public void testSaveRespondedAd(){
@@ -387,7 +367,7 @@ public class TranslatorServiceTest {
 	
 	
 	@Test
-	public void testGetRespondedAds() throws WrongPageNumber{
+	public void testGetRespondedAds(){
 		logger.debug("-----------------testGetRespondedAds------------");
 		String email = translatorFromDao.getEmail();
 		int page = 2;
@@ -408,29 +388,6 @@ public class TranslatorServiceTest {
 			getRespondedAdsByTranslator(translatorFromDao, page, numberOfRespondedAdsOnPage);
 	}
 	
-	@Test(expected = WrongPageNumber.class)
-	public void testGetRespondedAdsWithWrongPageNumber() throws WrongPageNumber{
-		logger.debug("-----------------testGetRespondedAdsWithWrongPageNumber------------");
-		String email = translatorFromDao.getEmail();
-		int invalidNumberOfPage = 0;
-		int numberOfRespondedAdsOnPage = 10;
-		try{
-			logger.debug("Calling TranslatorService.getRespondedAds({},{},{})"
-					+ " should throw WrongPageNumber",
-					email,invalidNumberOfPage,numberOfRespondedAdsOnPage);
-					translatorService.getRespondedAds(email, invalidNumberOfPage, 
-							numberOfRespondedAdsOnPage);
-		}catch(WrongPageNumber ex){
-			logger.debug("WrongPageNumber has been thrown");
-			verify(translatorDao,times(0)).getTranslatorByEmail(email);
-			logger.debug("Verified TranslatorDao.getTranslatorByEmail() is not called");
-			verify(respondedAdDao,times(0)).
-				getRespondedAdsByTranslator(translatorFromDao, invalidNumberOfPage, numberOfRespondedAdsOnPage);
-			logger.debug("Verified RespondedAdDao.getRespondedAdsByTranslator(translator object with id={},{},{}) "
-					+ "is not called",translatorFromDao.getId(),invalidNumberOfPage,numberOfRespondedAdsOnPage);
-			throw ex;
-		}
-	}
 	
 	
 }

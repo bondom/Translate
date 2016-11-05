@@ -43,6 +43,7 @@ public class WrittenAdServiceAspect {
 		return savedAd;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public * getWrittenAdsByStatusAndOrder(..)) && "
 			 + "args(page,numberAdsOnPage,adStatus,order)")
@@ -94,6 +95,7 @@ public class WrittenAdServiceAspect {
 		return ads;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public * getWrittenAdsForShowingByFilter(..)) "
 			 + "&& args(page,numberAdsOnPage,searchFilter,valueWithoutFilter)")

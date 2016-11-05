@@ -45,6 +45,7 @@ public class WrittenAdDaoAspect {
 		return writtenAd;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inDaoLayer() &&"
 			 + " execution(public * getFilteredWrittenAdsForShowing(..)) "
 			 + "&& args(page,numberAdsOnPage,searchAdBean)")

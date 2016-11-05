@@ -1,9 +1,7 @@
 package ua.translate.dao;
 
-import java.util.List;
 import java.util.Set;
 
-import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.ad.Ad;
 

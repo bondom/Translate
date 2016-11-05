@@ -7,18 +7,13 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ua.translate.dao.ArchievedAdDao;
-import ua.translate.model.Client;
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.ArchievedAd;
-import ua.translate.model.ad.WrittenAd;
 
 @Repository
 public class ArchievedAdDaoImpl implements ArchievedAdDao{
@@ -80,6 +75,8 @@ public class ArchievedAdDaoImpl implements ArchievedAdDao{
 		Criteria criteria = 
 				sessionFactory.getCurrentSession().createCriteria(ArchievedAd.class);
 		criteria.addOrder(Order.desc("creatingDateTime"));
+		
+		@SuppressWarnings("unchecked")
 		Set<ArchievedAd> resultSet = new LinkedHashSet<>(criteria.list());
 		return resultSet;
 	}

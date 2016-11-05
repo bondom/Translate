@@ -40,15 +40,12 @@ import ua.translate.model.viewbean.AdView;
 import ua.translate.model.viewbean.SearchFilterForAds;
 import ua.translate.model.viewbean.SearchFilterForOralAds;
 import ua.translate.model.viewbean.SearchFilterForWrittenAds;
-import ua.translate.service.AbstractAdService;
 import ua.translate.service.AdService;
 import ua.translate.service.OralAdService;
 import ua.translate.service.SettingsService;
 import ua.translate.service.TranslatorService;
 import ua.translate.service.WrittenAdService;
-import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InvalidIdentifier;
-import ua.translate.service.exception.WrongPageNumber;
 
 @Controller
 public class AdController extends UserController {
@@ -150,35 +147,18 @@ public class AdController extends UserController {
 		
 		if(extendedSearch){
 			//search with chosen user's parameters
-			try {
-				numberOfPages = oralAdService
-						.getNumberOfPagesForOralAdsByStatusAndFilter
-							(AdStatus.SHOWED, adsOnPage, searchBean, OPTION_NOT_CHOSEN);
-				ads = oralAdService.getOralAdsForShowingByFilter(
-						page, adsOnPage, searchBean,OPTION_NOT_CHOSEN);
+			numberOfPages = oralAdService
+					.getNumberOfPagesForOralAdsByStatusAndFilter
+						(AdStatus.SHOWED, adsOnPage, searchBean, OPTION_NOT_CHOSEN);
+			ads = oralAdService.getOralAdsForShowingByFilter(
+					page, adsOnPage, searchBean,OPTION_NOT_CHOSEN);
 				
-			}catch(WrongPageNumber e) {
-				try {
-					ads = oralAdService.getOralAdsForShowingByFilter(
-						1, adsOnPage, searchBean,OPTION_NOT_CHOSEN);
-				}catch (WrongPageNumber unused) {}	
-			}catch(IllegalArgumentException e){
-				logger.error("{}:{}",e.getClass(),e.getMessage());
-				return new ModelAndView("redirect:/ads");
-			}
 		}else{
 			//simple search without filters
 			numberOfPages = oralAdService
 					.getNumberOfPagesForOralAdsByStatus(AdStatus.SHOWED,adsOnPage);
-			try {
-				ads = oralAdService.getOralAdsByStatusAndOrder
-								(page,adsOnPage,AdStatus.SHOWED, Order.DESC);
-			} catch (WrongPageNumber e) {
-				try {
-					ads = oralAdService.getOralAdsByStatusAndOrder
-							(1,adsOnPage,AdStatus.SHOWED, Order.DESC);
-				} catch (WrongPageNumber unused) {}	
-			}
+			ads = oralAdService.getOralAdsByStatusAndOrder
+							(page,adsOnPage,AdStatus.SHOWED, Order.DESC);
 		}
 		
 		//Creating Set of AdView objects for rendering ad, publication date and  - 
@@ -269,35 +249,17 @@ public class AdController extends UserController {
 		
 		if(extendedSearch){
 			//search with chosen user's parameters
-			try {
-				numberOfPages = writtenAdService
-						.getNumberOfPagesForWrittenAdsByStatusAndFilter
-							(AdStatus.SHOWED, adsOnPage, searchBean, OPTION_NOT_CHOSEN);
-				ads = writtenAdService.getWrittenAdsForShowingByFilter(
-						page, adsOnPage, searchBean,OPTION_NOT_CHOSEN);
-				
-			}catch(WrongPageNumber e) {
-				try {
-					ads = writtenAdService.getWrittenAdsForShowingByFilter(
-						1, adsOnPage, searchBean,OPTION_NOT_CHOSEN);
-				}catch (WrongPageNumber unused) {}	
-			}catch(IllegalArgumentException e){
-				logger.error("{}:{}",e.getClass(),e.getMessage());
-				return new ModelAndView("redirect:/ads");
-			}
+			numberOfPages = writtenAdService
+					.getNumberOfPagesForWrittenAdsByStatusAndFilter
+						(AdStatus.SHOWED, adsOnPage, searchBean, OPTION_NOT_CHOSEN);
+			ads = writtenAdService.getWrittenAdsForShowingByFilter(
+					page, adsOnPage, searchBean,OPTION_NOT_CHOSEN);
 		}else{
 			//simple search without filters
 			numberOfPages = writtenAdService
 					.getNumberOfPagesForWrittenAdsByStatus(AdStatus.SHOWED,adsOnPage);
-			try {
-				ads = writtenAdService.getWrittenAdsByStatusAndOrder
-								(page,adsOnPage,AdStatus.SHOWED, Order.DESC);
-			} catch (WrongPageNumber e) {
-				try {
-					ads = writtenAdService.getWrittenAdsByStatusAndOrder
-							(1,adsOnPage,AdStatus.SHOWED, Order.DESC);
-				} catch (WrongPageNumber unused) {}	
-			}
+			ads = writtenAdService.getWrittenAdsByStatusAndOrder
+							(page,adsOnPage,AdStatus.SHOWED, Order.DESC);
 		}
 		
 		//Creating Set of AdView objects for rendering ad, publication date and  - 

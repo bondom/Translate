@@ -18,7 +18,6 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 
 import ua.translate.model.settings.Settings;
 import ua.translate.service.SettingsService;
-import ua.translate.service.exception.InvalidIdentifier;
 
 @Controller
 @RequestMapping("/bulbular/settings")

@@ -1,17 +1,13 @@
 package ua.translate.logging.dao;
 
-import java.util.List;
 
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.RespondedAd;
 
 @Aspect

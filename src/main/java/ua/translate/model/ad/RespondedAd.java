@@ -2,8 +2,6 @@ package ua.translate.model.ad;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,16 +12,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-import org.springframework.stereotype.Component;
 
 import ua.translate.model.Client;
 import ua.translate.model.Translator;
@@ -41,6 +35,8 @@ import ua.translate.model.status.RespondedAdStatus;
 })
 public class RespondedAd implements Serializable{
 	
+	private static final long serialVersionUID = 1L;
+
 	@Id
 	@SequenceGenerator(name = "standart",initialValue = 1)
 	@GeneratedValue(generator = "standart",strategy =GenerationType.SEQUENCE)

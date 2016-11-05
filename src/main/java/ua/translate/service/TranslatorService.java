@@ -1,7 +1,6 @@
 package ua.translate.service;
 
 
-import java.util.List;
 import java.util.Set;
 
 import ua.translate.model.Translator;
@@ -12,7 +11,6 @@ import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.NumberExceedsException;
 import ua.translate.service.exception.TranslatorDistraction;
-import ua.translate.service.exception.WrongPageNumber;
 
 public abstract class TranslatorService extends UserService<Translator>{
 	
@@ -38,13 +36,13 @@ public abstract class TranslatorService extends UserService<Translator>{
 	 * Size of result {@code Set} is not more than {@code numberTranslatorsOnPage}
 	 * <p><b>NOTE:</b>AfterReturning Logging via Spring AOP is present
 	 * <p>If {@code numberOfTranslatorsOnPage} is less than 1, default value is used
-	 * @param page -  page number, can't be less than 1
+	 * <p>If {@code page} is less than 1, 1 is being used instead
+	 * @param page -  page number
 	 * @param numberOfTranslatorsOnPage - number of {@link Translator}s, which can be displayed on 1 page
 	 * @return set of {@code Translator}s, never {@code null}
 	 * @throws WrongPageNumber if {@code page} is less then 1
 	 */
-	public abstract Set<Translator> getTranslators(int page,int numberOfTranslatorsOnPage) 
-								throws WrongPageNumber;
+	public abstract Set<Translator> getTranslators(int page,int numberOfTranslatorsOnPage);
 	
 	/**
 	 * First Gets {@link Ad} {@code ad} by id and {@link Translator} {@code translator} by email

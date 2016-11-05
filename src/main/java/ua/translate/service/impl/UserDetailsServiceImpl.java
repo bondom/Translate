@@ -6,7 +6,6 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,11 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import ua.translate.controller.translator.GetTranslatorController;
 import ua.translate.dao.UserDao;
 import ua.translate.model.UserEntity;
 import ua.translate.model.security.UserImpl;
-import ua.translate.model.status.EmailStatus;
 import ua.translate.model.status.UserStatus;
 
 @Service("userDetailsServiceImpl")

@@ -3,7 +3,6 @@ package ua.translate.service.impl;
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +21,8 @@ import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.ad.Currency;
 import ua.translate.model.ad.OralAd;
-import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.searchbean.SearchOralAdBean;
 import ua.translate.model.status.AdStatus;
-import ua.translate.model.status.RespondedAdStatus;
 import ua.translate.model.viewbean.SearchFilterForOralAds;
 import ua.translate.service.exception.DuplicateAdException;
 import ua.translate.service.exception.IllegalActionForAd;
@@ -35,7 +31,6 @@ import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.TooEarlyPaying;
 import ua.translate.service.BalanceService;
 import ua.translate.service.OralAdService;
-import ua.translate.service.exception.WrongPageNumber;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED)
@@ -96,9 +91,9 @@ public class OralAdServiceImpl extends OralAdService {
 	
 	@Override
 	public Set<OralAd> getOralAdsByStatusAndOrder(int page,int numberAdsOnPage,
-			AdStatus adStatus, Order order) throws WrongPageNumber{
+										AdStatus adStatus, Order order) {
 		if(page<1){
-			throw new WrongPageNumber();
+			page=1;
 		}
 		if(numberAdsOnPage<1){
 			//default value is used
@@ -122,10 +117,9 @@ public class OralAdServiceImpl extends OralAdService {
 	
 	@Override
 	public Set<OralAd> getOralAdsForShowingByFilter(int page, int numberAdsOnPage,
-			SearchFilterForOralAds searchFilter,String valueWithoutFilter)
-			throws WrongPageNumber {
+				SearchFilterForOralAds searchFilter,String valueWithoutFilter){
 		if(page<1){
-			throw new WrongPageNumber();
+			page=1;
 		}
 		if(numberAdsOnPage<1){
 			//default value is used

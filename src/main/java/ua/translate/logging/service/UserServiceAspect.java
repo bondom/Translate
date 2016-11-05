@@ -5,10 +5,8 @@ import java.util.Set;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -17,9 +15,6 @@ import ua.translate.model.Client;
 import ua.translate.model.Translator;
 import ua.translate.model.UserEntity;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.service.exception.DuplicateEmailException;
-import ua.translate.service.exception.EmailIsConfirmedException;
-import ua.translate.service.exception.InvalidPasswordException;
 
 
 @Aspect
@@ -145,6 +140,7 @@ public class UserServiceAspect {
 		return email;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public * getRespondedAds(..)) && "
 			 + "args(email,page,numberOfRespondedAdsOnPage)")

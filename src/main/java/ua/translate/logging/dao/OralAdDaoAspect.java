@@ -45,6 +45,7 @@ public class OralAdDaoAspect {
 		return oralAd;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inDaoLayer() &&"
 			 + " execution(public * getFilteredOralAdsForShowing(..)) "
 			 + "&& args(page,numberAdsOnPage,searchAdBean)")

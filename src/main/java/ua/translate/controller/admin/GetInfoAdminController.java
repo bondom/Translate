@@ -1,6 +1,5 @@
 package ua.translate.controller.admin;
 
-import java.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -17,21 +16,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import ua.translate.model.Order;
-import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.AdStatusMessage;
 import ua.translate.model.ad.ArchievedAd;
 import ua.translate.model.ad.OralAd;
 import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.settings.Settings;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.viewbean.SearchAdByStatus;
-import ua.translate.service.AdStatusMessageService;
 import ua.translate.service.ArchievedAdService;
 import ua.translate.service.OralAdService;
 import ua.translate.service.SettingsService;
 import ua.translate.service.WrittenAdService;
-import ua.translate.service.exception.InvalidIdentifier;
-import ua.translate.service.exception.WrongPageNumber;
 
 @Controller
 @RequestMapping("/bulbular")
@@ -76,22 +70,17 @@ public class GetInfoAdminController {
 		}
 		
 		long numberOfPages = 0;
-		Set<WrittenAd> ads = null;
 		
 		Settings settings = settingsService.getProjectSettings();
 		final int adsOnPage = settings.getMaxNumberOfAdsOnOnePage();
 		
 		numberOfPages = writtenAdService.getNumberOfPagesForWrittenAdsByStatus
 			(searchAdByStatus.getAdStatus(), adsOnPage);
-		try {
-			ads = writtenAdService.getWrittenAdsByStatusAndOrder
-					(page, adsOnPage, searchAdByStatus.getAdStatus(), Order.DESC);
-		} catch (WrongPageNumber e) {
-			try {
-				ads = writtenAdService.getWrittenAdsByStatusAndOrder
-						(1,adsOnPage,searchAdByStatus.getAdStatus(), Order.DESC);
-			} catch (WrongPageNumber unused) {}	
-		}
+		Set<WrittenAd> ads = 
+				writtenAdService.getWrittenAdsByStatusAndOrder
+											(page, adsOnPage, 
+											 searchAdByStatus.getAdStatus(), 
+											 Order.DESC);
 			
 		model.addObject("ads", ads);
 		model.addObject("numberOfPages",numberOfPages);
@@ -117,22 +106,17 @@ public class GetInfoAdminController {
 		}
 		
 		long numberOfPages = 0;
-		Set<OralAd> ads = null;
 		
 		Settings settings = settingsService.getProjectSettings();
 		final int adsOnPage = settings.getMaxNumberOfAdsOnOnePage();
 		
 		numberOfPages = oralAdService.getNumberOfPagesForOralAdsByStatus
 			(searchAdByStatus.getAdStatus(), adsOnPage);
-		try {
-			ads = oralAdService.getOralAdsByStatusAndOrder
-					(page, adsOnPage, searchAdByStatus.getAdStatus(), Order.DESC);
-		} catch (WrongPageNumber e) {
-			try {
-				ads = oralAdService.getOralAdsByStatusAndOrder
-						(1,adsOnPage,searchAdByStatus.getAdStatus(), Order.DESC);
-			} catch (WrongPageNumber unused) {}	
-		}
+		
+		Set<OralAd> ads = oralAdService.getOralAdsByStatusAndOrder
+											(page, adsOnPage, 
+											 searchAdByStatus.getAdStatus(), 
+											 Order.DESC);
 			
 		model.addObject("ads", ads);
 		model.addObject("numberOfPages",numberOfPages);

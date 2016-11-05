@@ -7,6 +7,8 @@ import org.springframework.security.core.userdetails.User;
 
 public class UserImpl extends User{
 
+	private static final long serialVersionUID = 1L;
+	
 	private String modifiableUsername;
 	
 	public UserImpl(String username, String password, boolean enabled, boolean accountNonExpired,

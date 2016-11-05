@@ -2,7 +2,6 @@ package ua.translate.dao;
 
 import java.util.Set;
 
-import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.ArchievedAd;
 
 public interface ArchievedAdDao extends AbstractDao<Long, ArchievedAd>{

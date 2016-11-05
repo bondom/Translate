@@ -1,11 +1,8 @@
 package ua.translate.logging.service;
 
-import java.util.List;
 import java.util.Set;
 
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
@@ -13,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.RespondedAd;
 
 @Aspect
 @Component
@@ -21,6 +17,7 @@ public class ClientServiceAspect {
 	
 	Logger logger = LoggerFactory.getLogger(ClientServiceAspect.class);
 	
+	@SuppressWarnings("unchecked")
 	@Around("ua.translate.logging.SystemArchitecture.inServiceLayer() &&"
 			 + " execution(public * getAds(..)) && args(email)")
 	public Set<Ad> getAds(ProceedingJoinPoint thisJoinPoint,String email) throws Throwable {

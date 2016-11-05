@@ -1,39 +1,24 @@
 package ua.translate.service.impl;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import ua.translate.dao.ArchievedAdDao;
 import ua.translate.dao.ClientDao;
 import ua.translate.dao.RespondedAdDao;
 import ua.translate.model.Client;
-import ua.translate.model.Translator;
-import ua.translate.model.UserEntity;
-import ua.translate.model.UserEntity.UserRole;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.ArchievedAd;
 import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.status.AdStatus;
 import ua.translate.model.status.EmailStatus;
-import ua.translate.model.status.UserStatus;
-import ua.translate.service.AbstractAdService;
 import ua.translate.service.ClientService;
 import ua.translate.service.exception.DuplicateEmailException;
-import ua.translate.service.exception.EmailIsConfirmedException;
-import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.InvalidPasswordException;
-import ua.translate.service.exception.WrongPageNumber;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED,rollbackFor = DuplicateEmailException.class)
@@ -43,9 +28,6 @@ public class ClientServiceImpl extends ClientService{
 	
 	@Autowired
 	private ClientDao clientDao;
-	
-	@Autowired
-	private ArchievedAdDao archievedAdDao;
 	
 	@Autowired
 	private RespondedAdDao respondedAdDao;
@@ -64,9 +46,9 @@ public class ClientServiceImpl extends ClientService{
 	@Override
 	public Set<RespondedAd> getRespondedAds(String email,
 										    int page,
-										    int numberOfRespondedAdsOnPage) throws WrongPageNumber{
+										    int numberOfRespondedAdsOnPage){
 		if(page<1){
-			throw new WrongPageNumber();
+			page=1;
 		}
 		if(numberOfRespondedAdsOnPage<1){
 			logger.debug("numberOfRespondedAdsOnPage = {}, default value={} is used",

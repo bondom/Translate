@@ -17,6 +17,8 @@ import org.springframework.format.annotation.DateTimeFormat.ISO;
 @PrimaryKeyJoinColumn(name= "oral_ad_id")
 public class OralAd extends Ad{
 
+	private static final long serialVersionUID = 1L;
+
 	@Column(name = "ORAL_AD_COUNTRY", nullable = false)
 	@NotEmpty
 	private String country;

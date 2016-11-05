@@ -1,7 +1,6 @@
 package ua.translate.service.impl;
 
 import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ua.translate.dao.AdStatusMessageDao;
 import ua.translate.dao.ClientDao;
 import ua.translate.dao.TranslatorDao;
-import ua.translate.dao.UserDao;
 import ua.translate.dao.WrittenAdDao;
 import ua.translate.model.Client;
 import ua.translate.model.Language;
@@ -26,7 +24,6 @@ import ua.translate.model.ad.Ad;
 import ua.translate.model.ad.Ad.TranslateType;
 import ua.translate.model.ad.AdStatusMessage;
 import ua.translate.model.ad.Currency;
-import ua.translate.model.ad.Document;
 import ua.translate.model.ad.ResultDocument;
 import ua.translate.model.ad.WrittenAd;
 import ua.translate.model.searchbean.SearchWrittenAdBean;
@@ -38,9 +35,7 @@ import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InsufficientFunds;
 import ua.translate.service.exception.InvalidIdentifier;
 import ua.translate.service.exception.AccessDeniedException;
-import ua.translate.service.exception.DownloadFileAccessDenied;
 import ua.translate.service.exception.DuplicateAdException;
-import ua.translate.service.exception.WrongPageNumber;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRED)
@@ -113,9 +108,9 @@ public class WrittenAdServiceImpl extends WrittenAdService {
 	
 	@Override
 	public Set<WrittenAd> getWrittenAdsByStatusAndOrder(int page,int numberAdsOnPage,
-			AdStatus adStatus, Order order) throws WrongPageNumber{
+										AdStatus adStatus, Order order){
 		if(page<1){
-			throw new WrongPageNumber();
+			page=1;
 		}
 		if(numberAdsOnPage<1){
 			//default value is used
@@ -141,10 +136,9 @@ public class WrittenAdServiceImpl extends WrittenAdService {
 	
 	@Override
 	public Set<WrittenAd> getWrittenAdsForShowingByFilter(int page, int numberAdsOnPage,
-			SearchFilterForWrittenAds searchFilter,String valueWithoutFilter)
-			throws WrongPageNumber {
+					SearchFilterForWrittenAds searchFilter,String valueWithoutFilter){
 		if(page<1){
-			throw new WrongPageNumber();
+			page=1;
 		}
 		if(numberAdsOnPage<1){
 			//default value is used

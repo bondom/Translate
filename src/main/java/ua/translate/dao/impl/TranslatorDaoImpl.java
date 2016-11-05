@@ -14,7 +14,6 @@ import org.springframework.stereotype.Repository;
 
 import ua.translate.dao.TranslatorDao;
 import ua.translate.model.Translator;
-import ua.translate.model.status.AdStatus;
 
 @Repository
 public class TranslatorDaoImpl  extends TranslatorDao{
@@ -79,6 +78,7 @@ public class TranslatorDaoImpl  extends TranslatorDao{
 		final int firstResult = numberTranslatorsOnPage*(page-1);
 		query.setFirstResult(firstResult);
 		
+		@SuppressWarnings("unchecked")
 		List<Translator> translators = (List<Translator>)query.list();
 		Set<Translator> setOfTranslators = new LinkedHashSet<>(translators);
 		return setOfTranslators;

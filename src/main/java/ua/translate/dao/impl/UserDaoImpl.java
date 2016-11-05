@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ua.translate.dao.UserDao;
-import ua.translate.model.Client;
 import ua.translate.model.User;
 
 

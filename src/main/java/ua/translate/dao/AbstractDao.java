@@ -2,7 +2,6 @@ package ua.translate.dao;
 
 import java.io.Serializable;
 
-import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 
 public interface AbstractDao<PK extends Serializable,T> {

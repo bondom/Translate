@@ -5,9 +5,7 @@ import java.util.Set;
 import ua.translate.model.Admin;
 import ua.translate.model.Order;
 import ua.translate.model.Translator;
-import ua.translate.model.UserEntity.UserRole;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.Document;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.ad.ResultDocument;
 import ua.translate.model.ad.WrittenAd;
@@ -15,12 +13,10 @@ import ua.translate.model.searchbean.SearchWrittenAdBean;
 import ua.translate.model.status.AdStatus;
 import ua.translate.model.viewbean.SearchFilterForWrittenAds;
 import ua.translate.service.exception.AccessDeniedException;
-import ua.translate.service.exception.DownloadFileAccessDenied;
 import ua.translate.service.exception.DuplicateAdException;
 import ua.translate.service.exception.IllegalActionForAd;
 import ua.translate.service.exception.InsufficientFunds;
 import ua.translate.service.exception.InvalidIdentifier;
-import ua.translate.service.exception.WrongPageNumber;
 
 public abstract class WrittenAdService extends AbstractAdService{
 	
@@ -77,16 +73,15 @@ public abstract class WrittenAdService extends AbstractAdService{
 	 * {@link Ad#getPublicationDateTime() Ad.publicationDateTime}, order is assigned by {@link Order} 
 	 * {@code order}
 	 * <p>If {@code numberAdsOnPage} is less then 1, default
-	 * number is used. If {@code page} is less then 1, exception is thrown
+	 * number is used. If {@code page} is less than 1, 1 is being used instead
 	 * <p>Size of result {@code Set} is not more than {@code numberAdsOnPage}
 	 * <p><b>NOTE:</b>AfterReturning Logging via Spring AOP is present
-	 * @param page -  page number, can't be less than 1
+	 * @param page -  page number
 	 * @param numberAdsOnPage - number {@link WrittenAd}s, which can be displayed on 1 page
 	 * @return set of {@code WrittenAd}s, never {@code null}
-	 * @throws WrongPageNumber if {@code page} is less than 1
 	 */
 	public abstract Set<WrittenAd> getWrittenAdsByStatusAndOrder(int page,int numberAdsOnPage,
-							AdStatus adStatus, Order order) throws WrongPageNumber;
+							AdStatus adStatus, Order order);
 	
 	
 	/**
@@ -101,10 +96,10 @@ public abstract class WrittenAdService extends AbstractAdService{
 	 * properties of {@code searchAdBean} are assigned to {@code null}
 	 * (that is no filter for this properties won't be applied) 
 	 * <p>If {@code numberAdsOnPage} is less then 1, default
-	 * number is used. If {@code page} is less then 1, exception is thrown
+	 * number is used. If {@code page} is less than 1, 1 is being used instead
 	 * <br><p>Size of result {@code Set} is not more than {@code numberAdsOnPage}
 	 * <p><b>NOTE:</b>AfterReturning and Before Logging via Spring AOP is present
-	 * @param page -  page number, can't be less than 1
+	 * @param page -  page number
 	 * @param numberAdsOnPage - number {@code WrittenAd}s, which can be displayed on 1 page
 	 * @param searchFilter - object, which represents filters, chosen by user
 	 * @param valueWithoutFilter - value, which is setted for user's 
@@ -114,7 +109,7 @@ public abstract class WrittenAdService extends AbstractAdService{
 	 * @throws WrongPageNumber if {@code page} is less than 1
 	 */
 	public abstract Set<WrittenAd> getWrittenAdsForShowingByFilter(int page,int numberAdsOnPage,
-							SearchFilterForWrittenAds searchFilter,String valueWithoutFilter) throws WrongPageNumber;
+							SearchFilterForWrittenAds searchFilter,String valueWithoutFilter);
 	
 	
 	/**

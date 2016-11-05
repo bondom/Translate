@@ -2,28 +2,22 @@ package ua.translate.service;
 
  
 import java.security.Principal;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import ua.translate.dao.UserDao;
-import ua.translate.model.Client;
 import ua.translate.model.User;
 import ua.translate.model.ad.RespondedAd;
 import ua.translate.model.status.EmailStatus;
-import ua.translate.model.status.UserStatus;
 import ua.translate.service.exception.DuplicateEmailException;
 import ua.translate.service.exception.EmailIsConfirmedException;
 import ua.translate.service.exception.InvalidConfirmationUrl;
 import ua.translate.service.exception.InvalidPasswordException;
-import ua.translate.service.exception.WrongPageNumber;
 
 /**
  * 
@@ -156,19 +150,17 @@ public abstract class UserService<T extends User> {
 	 * ordered by {@link RespondedAd#getDateTimeOfResponse()} 
 	 * from latest to earliest.
 	 * <p>If {@code numberOfRespondedAdsOnPage} is less then 1, default
-	 * value is used. If {@code page} is less then 1, exception is thrown
+	 * value is used. If {@code page} is less than 1, 1 is being used instead
 	 * <p>Size of result {@code Set} is not more than {@code numberOfRespondedAdsOnPage}
 	 * <p><b>NOTE:</b>Around Logging via Spring AOP is present
 	 * @param email - email of authenticated user,
 	 * 					usually is retrieved from {@link Principal} object
-	 * @param page -  page number, can't be less than 1
+	 * @param page -  page number
 	 * @param numberOfRespondedAdsOnPage - 
 	 * 			number {@code RespondedAd}s, which can be displayed on 1 page
-	 *  @throws WrongPageNumber if {@code page} is less than 1
 	 */
 	public abstract Set<RespondedAd> getRespondedAds
-					(String email,int page,int numberOfRespondedAdsOnPage) 
-														throws WrongPageNumber;
+					(String email,int page,int numberOfRespondedAdsOnPage);
 	
 	/**
 	 * Returns number of pages for all {@link RespondedAd}s,

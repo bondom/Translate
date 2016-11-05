@@ -2,7 +2,6 @@ package ua.translate.controller.support;
 
 import java.util.Comparator;
 
-import ua.translate.model.ad.Ad;
 import ua.translate.model.viewbean.AdView;
 
 /**

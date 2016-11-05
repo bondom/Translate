@@ -7,7 +7,6 @@ import javax.validation.ConstraintValidatorContext;
 
 import org.apache.commons.beanutils.BeanUtils;
 
-import ua.translate.model.Language;
 
 public class FieldMatchValidator implements ConstraintValidator<FieldMatch, Object>{
 

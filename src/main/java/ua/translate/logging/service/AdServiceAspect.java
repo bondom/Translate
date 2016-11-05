@@ -1,27 +1,14 @@
 package ua.translate.logging.service;
 
-import java.util.List;
-import java.util.Set;
 
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import ua.translate.model.Order;
 import ua.translate.model.ad.Ad;
-import ua.translate.model.ad.Ad.TranslateType;
-import ua.translate.model.ad.Document;
-import ua.translate.model.ad.RespondedAd;
-import ua.translate.model.ad.ResultDocument;
-import ua.translate.model.ad.WrittenAd;
-import ua.translate.model.status.AdStatus;
-import ua.translate.model.viewbean.SearchFilterForAds;
 
 @Aspect
 @Component
