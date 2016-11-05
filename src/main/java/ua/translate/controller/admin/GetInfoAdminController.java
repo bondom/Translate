@@ -78,10 +78,7 @@ public class GetInfoAdminController {
 		long numberOfPages = 0;
 		Set<WrittenAd> ads = null;
 		
-		Settings settings = new Settings();
-		try {
-			settingsService.getProjectSettings();
-		} catch (InvalidIdentifier e1) {}
+		Settings settings = settingsService.getProjectSettings();
 		final int adsOnPage = settings.getMaxNumberOfAdsOnOnePage();
 		
 		numberOfPages = writtenAdService.getNumberOfPagesForWrittenAdsByStatus
@@ -122,10 +119,7 @@ public class GetInfoAdminController {
 		long numberOfPages = 0;
 		Set<OralAd> ads = null;
 		
-		Settings settings = new Settings();
-		try {
-			settingsService.getProjectSettings();
-		} catch (InvalidIdentifier e1) {}
+		Settings settings = settingsService.getProjectSettings();
 		final int adsOnPage = settings.getMaxNumberOfAdsOnOnePage();
 		
 		numberOfPages = oralAdService.getNumberOfPagesForOralAdsByStatus

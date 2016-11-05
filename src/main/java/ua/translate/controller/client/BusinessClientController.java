@@ -145,10 +145,7 @@ public class BusinessClientController extends UserController{
 															@RequestParam("cost") double cost,
 															Principal user){
 		
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		ModelAndView model = new ModelAndView("/client/acceptconfwritten");
 		model.addObject("id",respondedAdId);
 		model.addObject("cost",cost);
@@ -165,10 +162,7 @@ public class BusinessClientController extends UserController{
 	public ModelAndView confirmationForAcceptingRespondedAdRelatedToOralAd(@RequestParam("id") long respondedAdId,
 															@RequestParam("cost") double cost,
 															Principal user){
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		ModelAndView model = new ModelAndView("/client/acceptconforal");
 		model.addObject("id",respondedAdId);
 		model.addObject("cost",cost);
@@ -187,10 +181,7 @@ public class BusinessClientController extends UserController{
 	public ModelAndView acceptRespondedAd(@RequestParam("id") long respondedAdId,
 										Principal user,RedirectAttributes attr){
 		
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		
 		try {
 			RespondedAd updatedRespondedAd = 
@@ -226,10 +217,7 @@ public class BusinessClientController extends UserController{
 	public ModelAndView payRestPriceAndGetTranslate(Principal user,
 									@RequestParam("adId") long adId,
 									RedirectAttributes attr){
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		try {
 			writtenAdService.transferRestPriceAndChangeStatusAndIncrementExecutedAds(user.getName(), adId, 100-settings.getInitPledgeInPercent());
 			attr.addFlashAttribute("success", "Paying was successfull");
@@ -246,10 +234,7 @@ public class BusinessClientController extends UserController{
 	public ModelAndView payRestPriceForOralAd(Principal user,
 									@RequestParam("adId") long adId,
 									RedirectAttributes attr){
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		try {
 			oralAdService.transferRestPriceAndChangeStatusAndIncrementExecutedAds(user.getName(), adId, 100 - settings.getInitPledgeInPercent());
 			attr.addFlashAttribute("success", "Paying was successfull");

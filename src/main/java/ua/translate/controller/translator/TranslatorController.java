@@ -106,10 +106,7 @@ public class TranslatorController extends UserController{
 	@RequestMapping(value="/response",method = RequestMethod.POST)
 	public ModelAndView response(@RequestParam(name="id",required = false) long adId,
 								Principal user,RedirectAttributes attr){
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		try {
 			translatorService.createAndSaveRespondedAd(
 					user.getName(),adId,settings.getMaxNumberOfSendedRespondedAdsForTranslator());
@@ -149,10 +146,7 @@ public class TranslatorController extends UserController{
 	public ModelAndView respondedAds(Principal user,
 									 @RequestParam(name="page",defaultValue="1",required = false) int page){
 		
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		final int respondedAdsOnPage = settings.getMaxNumberOfRespondedAdsOnOnePage();
 		Set<RespondedAd> respondedAds = null;
 		try {

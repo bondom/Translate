@@ -21,13 +21,12 @@ public class SettingsServiceImpl implements SettingsService{
 	Logger logger = LoggerFactory.getLogger(SettingsServiceImpl.class);
 	
 	@Override
-	public Settings getProjectSettings() throws InvalidIdentifier{
+	public Settings getProjectSettings(){
 		Settings settings = settingsDao.get(1);
 		if(settings==null){
 			logger.warn("Settings doesn't exist in data storage");
-			throw new InvalidIdentifier();
 		}
-		return settings;
+		return new Settings();
 	}
 
 	@Override

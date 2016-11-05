@@ -145,10 +145,7 @@ public class AdController extends UserController {
 		Set<OralAd> ads = null;
 		long numberOfPages = 0;
 		
-		Settings settings = new Settings();
-		try {
-			settings = settingsService.getProjectSettings();
-		} catch (InvalidIdentifier e1) {}
+		Settings settings = settingsService.getProjectSettings();
 		final int adsOnPage = settings.getMaxNumberOfAdsOnOnePage();
 		
 		if(extendedSearch){
@@ -267,10 +264,7 @@ public class AdController extends UserController {
 		
 		Set<WrittenAd> ads = null;
 		long numberOfPages = 0;
-		Settings settings = new Settings();
-		try {
-			settings = settingsService.getProjectSettings();
-		} catch (InvalidIdentifier e1) {}
+		Settings settings = settingsService.getProjectSettings();
 		final int adsOnPage = settings.getMaxNumberOfAdsOnOnePage();
 		
 		if(extendedSearch){

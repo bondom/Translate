@@ -34,11 +34,8 @@ public class ActionsWithSettingsAdminController {
 		final Map<String, ?> inputFlashMap = 
 				RequestContextUtils.getInputFlashMap(request);
 		if(inputFlashMap == null || !inputFlashMap.containsKey("settings")){
-			Settings settings;
-			try {
-				settings = settingsService.getProjectSettings();
-				model.addObject("settings", settings);
-			} catch (InvalidIdentifier e) {}
+			Settings settings = settingsService.getProjectSettings();
+			model.addObject("settings", settings);
 		}
 		
 		return model;
@@ -51,11 +48,8 @@ public class ActionsWithSettingsAdminController {
 		final Map<String, ?> inputFlashMap = 
 				RequestContextUtils.getInputFlashMap(request);
 		if(inputFlashMap == null || !inputFlashMap.containsKey("settings")){
-			Settings settings;
-			try {
-				settings = settingsService.getProjectSettings();
-				model.addObject("settings", settings);
-			} catch (InvalidIdentifier e) {}
+			Settings settings = settingsService.getProjectSettings();
+			model.addObject("settings", settings);
 		}
 		
 		return model;

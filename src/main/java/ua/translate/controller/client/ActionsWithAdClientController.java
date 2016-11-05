@@ -156,10 +156,7 @@ public class ActionsWithAdClientController extends UserController{
 		
 		Set<RespondedAd> respondedAds = null;
 		
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		try {
 			respondedAds = clientService
 					.getRespondedAds(user.getName(),page,
@@ -281,10 +278,7 @@ public class ActionsWithAdClientController extends UserController{
 		}
 		Long adId;
 		try {
-			Settings settings = new Settings();
-			try {
-				settings = settingsService.getProjectSettings();
-			} catch (InvalidIdentifier e) {}
+			Settings settings = settingsService.getProjectSettings();
 				
 			adId = adService.saveAd(ad, user.getName(),settings.getMaxNumberOfAdsForClient());
 			attr.addFlashAttribute("adUrl",webRootPath+"/ads/"+adId);
@@ -350,10 +344,7 @@ public class ActionsWithAdClientController extends UserController{
 		}
 		Long adId;
 		try {
-			Settings settings = new Settings();
-			try {
-				settings = settingsService.getProjectSettings();
-			} catch (InvalidIdentifier e) {}
+			Settings settings = settingsService.getProjectSettings();
 			adId = writtenAdService.saveAd(ad, user.getName(),settings.getMaxNumberOfAdsForClient());
 			attr.addFlashAttribute("adUrl",webRootPath+"/ads/"+adId);
 			attr.addFlashAttribute("adId",adId);
@@ -606,10 +597,7 @@ public class ActionsWithAdClientController extends UserController{
 								  RedirectAttributes attr){
 		ModelAndView model = new ModelAndView("redirect:/client/ads");
 		
-		Settings settings = new Settings();
-		try{
-			settings = settingsService.getProjectSettings();
-		}catch(InvalidIdentifier e){}
+		Settings settings = settingsService.getProjectSettings();
 		
 		try {
 			adService.refreshPubDate(user.getName(), adId, settings.getMinHoursBetweenRefreshings());
