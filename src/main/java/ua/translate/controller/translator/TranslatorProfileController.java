@@ -3,18 +3,27 @@ package ua.translate.controller.translator;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -39,7 +48,7 @@ import ua.translate.service.exception.InvalidPasswordException;
 
 /**
  * Contains handler methods for executing
- * translator's authentication, registration and actions with
+ * translator's authentication and actions with
  * his account, such as :
  * <ul>
  * 	<li>Editing email,password,profile info</li>
@@ -114,65 +123,6 @@ public class TranslatorProfileController extends UserController{
 		return new ModelAndView("/translator/login");
 	}
 	
-	/**
-	 * Returns translator's registration form, check on existing attributeName {@code translator}
-	 * in flash attributes, if such doesn't exist, adds empty {@link Translator} object to view.
-	 * Adds {@link Language#values()} to resulting view
-	 * @param request
-	 */
-	@RequestMapping(value = "/registration",method = RequestMethod.GET)
-	public ModelAndView registrationForm(HttpServletRequest request){
-		ModelAndView model = new ModelAndView("/translator/registration");
-		Map<String, ?> inputFlashMap = RequestContextUtils.getInputFlashMap(request);
-	    if (inputFlashMap == null || !inputFlashMap.containsKey("translator")) {
-			Translator translator = new Translator();
-			model.addObject("translator", translator);
-	    }
-		model.addObject("languages",Language.values());
-		return model;
-	}
-	
-	/**
-	 * Attempts to register translator, if some errors exist, redirects to
-	 * registration view and adds flash attribute {@code translator} and {@code result}.
-	 * <br>If user inputted all data right, chosen {@code stringLanguages} are converted to
-	 * appropriate {@code Language}s, and added to {@code translator}
-	 * <p> If user with such email is registered, he is redirected to initial page with added
-	 * flash attribute {@code resultRegistration}. 
-	 * <br> If user is successfully registered redirects to login page with added
-	 * flash attribute {@code resultRegistration}. 
-	 * @param translator
-	 * @param result
-	 * @param stringLanguages
-	 * @param attr
-	 */
-	@RequestMapping(value = "/registrationConfirm",method = RequestMethod.POST)
-	public ModelAndView registration(@Valid @ModelAttribute("translator") Translator translator,
-									 BindingResult result,
-									 @RequestParam(name = "selectedLanguages",required = true) List<String> stringLanguages,
-									 RedirectAttributes attr){
-		if(result.hasErrors()){
-			attr.addFlashAttribute("org.springframework.validation.BindingResult.translator", 
-					result);
-			attr.addFlashAttribute("translator",translator);
-			return new ModelAndView("redirect:/translator/registration");
-		}
-		
-		Set<Language> enumLanguages= new LinkedHashSet<>();
-		for(String language:stringLanguages){
-			enumLanguages.add(Language.valueOf(language));
-		}
-		translator.setLanguages(enumLanguages);
-		try {
-			translatorService.registerUser(translator);
-			attr.addFlashAttribute("resultRegistration", 
-										"Success registration!");
-			return new ModelAndView("redirect:/translator/login");
-		} catch (DuplicateEmailException e) {
-			attr.addFlashAttribute("resultRegistration",e.getMessage());
-			return new ModelAndView("redirect:/translator/registration");
-		}
-	}
 	
 	/**
 	 * Saves confirmation url in data storage, if email is confirmed, adds to result view {@code error} object
@@ -428,4 +378,9 @@ public class TranslatorProfileController extends UserController{
 		return model;
 		
 	}
+	
+	
+	
+	
+	
 }

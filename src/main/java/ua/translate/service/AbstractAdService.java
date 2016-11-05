@@ -71,6 +71,7 @@ public abstract class AbstractAdService implements AdService{
 	private ArchievedAdDao archievedAdDao;
 	
 	private final ReentrantLock archieveAdLock = new ReentrantLock();
+	
 	@Override
 	public Ad get(long id) throws InvalidIdentifier {
 		Ad ad = adDao.get(id);
